@@ -11,7 +11,9 @@ Usage
 
 2. Run the timer:
 
-    ./sm_room_timer.py [-f <filename.csv>]
+```
+./sm_room_timer.py [-f <filename.csv>]
+```
 
 Whenever you enter a new room, the script will capture the room time,
 door time, and lag time, and optionally record those times in a CSV
