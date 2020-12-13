@@ -237,7 +237,6 @@ class Store(object):
     else:
       color = 196
 
-    # return '%s (%s)' % (ttime, atimes)
     return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, atimes)
 
   def transitioned(self, transition):
