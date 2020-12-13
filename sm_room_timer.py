@@ -219,6 +219,27 @@ class Store(object):
       self.file = None
       self.writer = None
 
+  def colorize(self, ttime, atimes):
+    p0 = atimes.best()
+    p50 = atimes.median()
+    p25_est = FrameCount.from_seconds((p0.to_seconds() + p50.to_seconds()) / 2.0)
+    p75_est = FrameCount.from_seconds(p50.to_seconds() + (p50.to_seconds() - p25_est.to_seconds()))
+
+    color = 7
+    if ttime <= p0:
+      color = 214
+    elif ttime <= p25_est:
+      color = 40
+    elif ttime <= p50:
+      color = 148
+    elif ttime <= p75_est:
+      color = 204
+    else:
+      color = 196
+
+    # return '%s (%s)' % (ttime, atimes)
+    return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, atimes)
+
   def transitioned(self, transition):
     attempts = self.history.record(transition)
     # history_report(self.history)
@@ -228,10 +249,10 @@ class Store(object):
       self.file.flush()
 
     print('%s #%s:' % (transition.id, len(attempts)))
-    print('Game: %s (%s)' % (transition.time.gametime, attempts.gametimes))
-    print('Real: %s (%s)' % (transition.time.realtime, attempts.realtimes))
-    print('Lag:  %s (%s)' % (transition.time.lag, attempts.lagtimes))
-    print('Door: %s (%s)' % (transition.time.door, attempts.doortimes))
+    print('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
+    print('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
+    print('Lag:  %s' % self.colorize(transition.time.lag, attempts.lagtimes))
+    print('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
     print('')
 
   def close(self):
