@@ -33,7 +33,9 @@ class Rooms(object):
       room_id = int(name, 0)
       room = self.from_id(room_id)
     else:
-      room = self.by_name[name]
+      room = self.by_name.get(name, None)
+      if room is None:
+        raise RuntimeError("Could not find room with name `%s'" % name)
     self.check_invariants()
     return room
 
