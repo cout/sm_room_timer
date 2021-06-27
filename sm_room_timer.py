@@ -38,22 +38,22 @@ class FrameCount(object):
 
 class TransitionId(object):
   room: Room
-  from_room: Room
-  to_room: Room
+  entry_room: Room
+  exit_room: Room
 
-  def __init__(self, room, from_room, to_room):
+  def __init__(self, room, entry_room, exit_room):
     self.room = room
-    self.from_room = from_room
-    self.to_room = to_room
+    self.entry_room = entry_room
+    self.exit_room = exit_room
 
   def __hash__(self):
-    return hash((self.room, self.to_room))
+    return hash((self.room, self.exit_room))
 
   def __eq__(self, other):
-    return (self.room, self.to_room) == (other.room, other.to_room)
+    return (self.room, self.exit_room) == (other.room, other.exit_room)
 
   def __repr__(self):
-    return '%s (exiting to %s)' % (self.room, self.to_room)
+    return '%s (exiting to %s)' % (self.room, self.exit_room)
 
 class TransitionTime(NamedTuple):
   gametime: FrameCount
@@ -77,7 +77,7 @@ class Transition(NamedTuple):
 
   def as_csv_row(self):
       return (
-        self.id.room, self.id.to_room, self.time.gametime.to_seconds(),
+        self.id.room, self.id.exit_room, self.time.gametime.to_seconds(),
         self.time.realtime.to_seconds(), self.time.lag.to_seconds(),
         self.time.door.to_seconds())
 
@@ -85,8 +85,8 @@ class Transition(NamedTuple):
   def from_csv_row(self, rooms, row):
     transition_id = TransitionId(
         room=rooms.from_name(row['room']),
-        to_room=rooms.from_name(row['exit']),
-        from_room=None)
+        exit_room=rooms.from_name(row['exit']),
+        entry_room=None)
     transition_time = TransitionTime(
         FrameCount.from_seconds(float(row['gametime'])),
         FrameCount.from_seconds(float(row['realtime'])),
@@ -178,17 +178,17 @@ class History(object):
     return self.history[key]
 
 def history_report(history):
-  for tid in sorted(history.keys(), key=lambda tid: (tid.room.room_id, tid.to_room.room_id)):
+  for tid in sorted(history.keys(), key=lambda tid: (tid.room.room_id, tid.exit_room.room_id)):
     a = history[tid]
     # str(tid)
     # str(len(a))
     # str(tid.room.room_id)
     # str(id(tid.room))
-    # str(tid.to_room.room_id)
-    # str(id(tid.to_room))
+    # str(tid.exit_room.room_id)
+    # str(id(tid.exit_room))
     print("%s: %s (%s/%s to %s/%s)" % (tid, len(a),
-      tid.room.room_id, id(tid.room), tid.to_room.room_id,
-      id(tid.to_room)))
+      tid.room.room_id, id(tid.room), tid.exit_room.room_id,
+      id(tid.exit_room)))
   print()
 
 def read_history_file(filename, rooms):
