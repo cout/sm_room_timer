@@ -195,11 +195,14 @@ def read_history_file(filename, rooms):
   history = History()
   with open(filename) as csvfile:
     reader = csv.DictReader(csvfile)
+    n = 0
     for row in reader:
-      transition = Transition.from_csv_row(rooms, row)
+      n += 1
+      try:
+        transition = Transition.from_csv_row(rooms, row)
+      except Exception as e:
+        raise RuntimeError("Error reading history file, line %d" % n) from e
       history.record(transition)
-  # print(history)
-  # history_report(history)
   print("Read history for {} rooms.".format(len(history)))
   return history
 
@@ -313,14 +316,16 @@ class RoomTimer(object):
       self.last_room = self.current_room
       self.current_room = room
 
-    if igt < self.prev_igt and game_state == 'doorTransition':
-      # print('Reset detected (%s < %s); igoring next transition' %
-          # (gametime_room, self.prev_igt))
-      self.ignore_next_transition = True
+    # Check in-game-time to see if we reset state
+    if igt < self.prev_igt:
+      # If we reset state to the middle of a door transition, then we
+      # don't want to count the next transition, because it has already
+      # been counted.
+      if game_state == 'doorTransition':
+        self.ignore_next_transition = True
 
     if self.prev_game_state == 'doorTransition' and game_state == 'normalGameplay':
       if self.ignore_next_transition:
-        # print('Ignoring this transition')
         pass
       else:
         transition_id = TransitionId(
