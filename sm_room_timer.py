@@ -269,7 +269,7 @@ class RoomTimer(object):
     self.last_last_room = None
     self.last_room = None
     self.prev_game_state = None
-    self.prev_igt = datetime.timedelta(0)
+    self.prev_igt = FrameCount(0)
     self.ignore_next_transition = False
 
   def poll(self):
@@ -294,8 +294,7 @@ class RoomTimer(object):
     igt_minutes = region2[0x9DE]
     igt_hours = region2[0x9E0]
     fps = 60.0 # TODO
-    igt = datetime.timedelta(seconds=igt_hours * 3600 + igt_minutes
-        * 60 + igt_seconds + igt_frames / fps)
+    igt = FrameCount(216000 * igt_hours + 3600 * igt_minutes + 60 * igt_seconds + igt_frames)
 
     # Practice hack
     gametime_room = FrameCount(region6.short(0x1FB00))
@@ -312,6 +311,7 @@ class RoomTimer(object):
       pass
 
     if game_state == 'normalGameplay' and self.current_room is not room:
+      print("Transition to %s" % room)
       self.last_last_room = self.last_room
       self.last_room = self.current_room
       self.current_room = room
@@ -321,6 +321,7 @@ class RoomTimer(object):
       # If we reset state to the middle of a door transition, then we
       # don't want to count the next transition, because it has already
       # been counted.
+      print("Reset detected")
       if game_state == 'doorTransition':
         self.ignore_next_transition = True
 
