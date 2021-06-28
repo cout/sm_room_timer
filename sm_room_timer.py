@@ -260,11 +260,32 @@ class Store(object):
   def close(self):
     self.file.close()
 
+class Timeline(object):
+  def __init__(self):
+    self.transitions = [ ]
+
+  def transitioned(self, igt, transition):
+    self.transitions.append((igt, transition.id))
+
+  def last_transition(self):
+    return self.transitions[-1][1]
+
+  def last_transition_before(self, igt):
+    return next(lambda t: t[0] < igt, reversed(self.transitions))[1]
+
+  def reset(self, igt):
+    idx = next(i for i, t in enumerate(self.transitions) if t[0] > igt)
+    self.transitions = self.transitions[0:idx]
+
+  def __repr__(self):
+    return 'Timeline(%s)' % repr(self.transitions)
+
 class RoomTimer(object):
-  def __init__(self, rooms, store):
+  def __init__(self, rooms, store, timeline):
     self.sock = NetworkCommandSocket()
     self.rooms = rooms
     self.store = store
+    self.timeline = timeline
     self.current_room = None
     self.last_last_room = None
     self.last_room = None
@@ -311,17 +332,21 @@ class RoomTimer(object):
       pass
 
     if game_state == 'normalGameplay' and self.current_room is not room:
-      print("Transition to %s" % room)
+      print("Transition to %s at %s" % (room, igt))
       self.last_last_room = self.last_room
       self.last_room = self.current_room
       self.current_room = room
 
-    # Check in-game-time to see if we reset state
+    # Check in-game-time to see if we reset state.  This also catches
+    # when a preset is loaded, because loading a preset resets IGT to
+    # zero.
     if igt < self.prev_igt:
       # If we reset state to the middle of a door transition, then we
       # don't want to count the next transition, because it has already
       # been counted.
-      print("Reset detected")
+      print("Reset detected to %s" % igt)
+      self.timeline.reset(igt)
+      print("Last entry was %s" % self.timeline.last_transition().entry_room)
       if game_state == 'doorTransition':
         self.ignore_next_transition = True
 
@@ -336,6 +361,7 @@ class RoomTimer(object):
             last_door_lag_frames)
         transition = Transition(transition_id, transition_time)
         self.store.transitioned(transition)
+        self.timeline.transitioned(igt, transition)
       self.ignore_next_transition = False
 
     self.prev_game_state = game_state
@@ -349,7 +375,8 @@ if __name__ == '__main__':
 
   rooms = Rooms.read(args.rooms_filename)
   store = Store(rooms, args.filename)
-  timer = RoomTimer(rooms, store)
+  timeline = Timeline()
+  timer = RoomTimer(rooms, store, timeline)
 
   while True:
     timer.poll()
