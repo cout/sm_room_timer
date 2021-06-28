@@ -74,20 +74,20 @@ class Transition(NamedTuple):
 
   @classmethod
   def csv_headers(self):
-    return [ 'room', 'exit', 'gametime', 'realtime', 'lagtime', 'doortime' ]
+    return [ 'room', 'entry', 'exit', 'gametime', 'realtime', 'lagtime', 'doortime' ]
 
   def as_csv_row(self):
       return (
-        self.id.room, self.id.exit_room, self.time.gametime.to_seconds(),
-        self.time.realtime.to_seconds(), self.time.lag.to_seconds(),
-        self.time.door.to_seconds())
+        self.id.room, self.id.entry_room, self.id.exit_room,
+        self.time.gametime.to_seconds(), self.time.realtime.to_seconds(),
+        self.time.lag.to_seconds(), self.time.door.to_seconds())
 
   @classmethod
   def from_csv_row(self, rooms, row):
     transition_id = TransitionId(
         room=rooms.from_name(row['room']),
-        exit_room=rooms.from_name(row['exit']),
-        entry_room=None)
+        entry_room=rooms.from_name(row['entry']),
+        exit_room=rooms.from_name(row['exit']))
     transition_time = TransitionTime(
         FrameCount.from_seconds(float(row['gametime'])),
         FrameCount.from_seconds(float(row['realtime'])),
