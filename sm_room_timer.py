@@ -25,7 +25,7 @@ class FrameCount(object):
 
   @classmethod
   def from_seconds(cls, secs):
-    return cls(secs * 60)
+    return cls(round(secs * 60, 0))
 
   def __eq__(self, other):
     return self.count == other.count
@@ -82,8 +82,10 @@ class Transition(NamedTuple):
         '%04x' % self.id.entry_room.room_id,
         '%04x' % self.id.exit_room.room_id,
         self.id.room, self.id.entry_room, self.id.exit_room,
-        self.time.gametime.to_seconds(), self.time.realtime.to_seconds(),
-        self.time.lag.to_seconds(), self.time.door.to_seconds())
+        round(self.time.gametime.to_seconds(), 3),
+        round(self.time.realtime.to_seconds(), 3),
+        round(self.time.lag.to_seconds(), 3),
+        round(self.time.door.to_seconds(), 3))
 
   @classmethod
   def from_csv_row(self, rooms, row):
