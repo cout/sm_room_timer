@@ -40,21 +40,25 @@ class TransitionId(object):
   room: Room
   entry_room: Room
   exit_room: Room
+  items: str
+  beams: str
 
-  def __init__(self, room, entry_room, exit_room):
+  def __init__(self, room, entry_room, exit_room, items, beams):
     self.room = room
     self.entry_room = entry_room
     self.exit_room = exit_room
+    self.items = items
+    self.beams = beams
 
   def __hash__(self):
-    return hash((self.room, self.entry_room, self.exit_room))
+    return hash((self.room, self.entry_room, self.exit_room, self.items, self.beams))
 
   def __eq__(self, other):
-    return (self.room, self.entry_room, self.exit_room) == \
-           (other.room, other.entry_room, other.exit_room)
+    return (self.room, self.entry_room, self.exit_room, self.items, self.beams) == \
+           (other.room, other.entry_room, other.exit_room, other.items, other.beams)
 
   def __repr__(self):
-    return '%s (entering from %s, exiting to %s)' % (self.room, self.entry_room, self.exit_room)
+    return '%s (entering from %s, exiting to %s, %s%s)' % (self.room, self.entry_room, self.exit_room)
 
 class TransitionTime(NamedTuple):
   gametime: FrameCount
@@ -74,14 +78,18 @@ class Transition(NamedTuple):
 
   @classmethod
   def csv_headers(self):
-    return [ 'room_id', 'entry_id', 'exit_id', 'room', 'entry', 'exit', 'gametime', 'realtime', 'lagtime', 'doortime' ]
+    return [ 'room_id', 'entry_id', 'exit_id', 'room', 'entry', 'exit', 'items', 'beams', 'gametime', 'realtime', 'lagtime', 'doortime' ]
 
   def as_csv_row(self):
       return (
         '%04x' % self.id.room.room_id,
         '%04x' % self.id.entry_room.room_id,
         '%04x' % self.id.exit_room.room_id,
-        self.id.room, self.id.entry_room, self.id.exit_room,
+        self.id.room,
+        self.id.entry_room,
+        self.id.exit_room,
+        self.id.items,
+        self.id.beams,
         round(self.time.gametime.to_seconds(), 3),
         round(self.time.realtime.to_seconds(), 3),
         round(self.time.lag.to_seconds(), 3),
@@ -92,7 +100,9 @@ class Transition(NamedTuple):
     transition_id = TransitionId(
         room=rooms.from_id(int(row['room_id'], 16)),
         entry_room=rooms.from_id(int(row['entry_id'], 16)),
-        exit_room=rooms.from_id(int(row['exit_id'], 16)))
+        exit_room=rooms.from_id(int(row['exit_id'], 16)),
+        items=row['items'],
+        beams=row['beams'])
     transition_time = TransitionTime(
         FrameCount.from_seconds(float(row['gametime'])),
         FrameCount.from_seconds(float(row['realtime'])),
@@ -215,6 +225,7 @@ class Store(object):
     if filename is not None:
       self.file = open(filename, 'a')
       self.writer = csv.writer(self.file)
+      # TODO: this incorrectly appends headers to a file that only has a header line
       if len(self.history) == 0:
         print(','.join(Transition.csv_headers()), file=self.file)
     else:
@@ -282,6 +293,34 @@ class Timeline(object):
   def __repr__(self):
     return 'Timeline(%s)' % repr(self.transitions)
 
+def items_string(imask):
+  a = [
+    's' if (imask & 0x2000) else '.', # speed
+    'b' if (imask & 0x1000) else '.', # bombs
+    '@' if (imask & 0x0200) else '.', # space jump
+    'h' if (imask & 0x0100) else '.', # hi jump boots
+    'g' if (imask & 0x0020) else '.', # gravity
+    '*' if (imask & 0x0008) else '.', # screw attack
+    'm' if (imask & 0x0004) else '.', # morph ball
+    '#' if (imask & 0x0002) else '.', # spring ball
+    '.' if (imask & 0x0001) else '.', # varia
+  ]
+
+  return ''.join(a)
+
+def beams_string(bmask, imask):
+  a = [
+    'X' if (imask & 0x8000) else '.', # x-ray
+    'G' if (imask & 0x4000) else '.', # grapple
+    'C' if (bmask & 0x1000) else '.', # charge
+    'P' if (bmask & 0x0008) else '.', # plasma
+    'S' if (bmask & 0x0004) else '.', # spazer
+    'I' if (bmask & 0x0002) else '.', # ice
+    'W' if (bmask & 0x0001) else '.', # wave
+  ]
+
+  return ''.join(a)
+
 class State(object):
   def __init__(self, **attrs):
     for name in attrs:
@@ -304,6 +343,9 @@ class State(object):
 
     game_state_id = region2.short(0x998)
     game_state = GameStates.get(game_state_id, hex(game_state_id))
+
+    collected_items_bitmask = region2.short(0x9A4)
+    collected_beams_bitmask = region2.short(0x9A8)
 
     igt_frames = region2.short(0x9DA)
     igt_seconds = region2[0x9DC]
@@ -332,7 +374,9 @@ class State(object):
         last_realtime_room=last_realtime_room,
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
-        last_lag_counter=last_lag_counter)
+        last_lag_counter=last_lag_counter,
+        items=items_string(collected_items_bitmask),
+        beams=beams_string(collected_items_bitmask, collected_beams_bitmask))
 
 class RoomTimer(object):
   def __init__(self, rooms, store, timeline):
@@ -391,7 +435,8 @@ class RoomTimer(object):
     else:
       entry_room = NullRoom
     transition_id = TransitionId(
-        self.last_room, entry_room, self.current_room)
+        self.last_room, entry_room, self.current_room,
+        state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_lag_counter, state.last_door_lag_frames)
