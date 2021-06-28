@@ -47,10 +47,11 @@ class TransitionId(object):
     self.exit_room = exit_room
 
   def __hash__(self):
-    return hash((self.room, self.exit_room))
+    return hash((self.room, self.entry_room, self.exit_room))
 
   def __eq__(self, other):
-    return (self.room, self.exit_room) == (other.room, other.exit_room)
+    return (self.room, self.entry_room, self.exit_room) == \
+           (other.room, other.entry_room, other.exit_room)
 
   def __repr__(self):
     return '%s (entering from %s, exiting to %s)' % (self.room, self.entry_room, self.exit_room)
