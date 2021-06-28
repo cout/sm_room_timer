@@ -268,7 +268,10 @@ class Timeline(object):
     self.transitions.append((igt, transition.id))
 
   def last_transition(self):
-    return self.transitions[-1][1]
+    if len(self.transitions) > 0:
+      return self.transitions[-1][1]
+    else:
+      return None
 
   def last_transition_before(self, igt):
     return next(lambda t: t[0] < igt, reversed(self.transitions))[1]
@@ -287,7 +290,6 @@ class RoomTimer(object):
     self.store = store
     self.timeline = timeline
     self.current_room = None
-    self.last_last_room = None
     self.last_room = None
     self.prev_game_state = None
     self.prev_igt = FrameCount(0)
@@ -333,7 +335,6 @@ class RoomTimer(object):
 
     if game_state == 'normalGameplay' and self.current_room is not room:
       print("Transition to %s at %s" % (room, igt))
-      self.last_last_room = self.last_room
       self.last_room = self.current_room
       self.current_room = room
 
@@ -354,8 +355,12 @@ class RoomTimer(object):
       if self.ignore_next_transition:
         pass
       else:
+        if len(self.timeline.transitions) > 0:
+          entry_room = self.timeline.transitions[-1][1].room
+        else:
+          entry_room = None
         transition_id = TransitionId(
-            self.last_room, self.last_last_room, self.current_room)
+            self.last_room, entry_room, self.current_room)
         transition_time = TransitionTime(
             last_gametime_room, last_realtime_room, last_lag_counter,
             last_door_lag_frames)
