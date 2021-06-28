@@ -287,8 +287,9 @@ class Timeline(object):
     return next(lambda t: t[0] < igt, reversed(self.transitions))[1]
 
   def reset(self, igt):
-    idx = next(i for i, t in enumerate(self.transitions) if t[0] > igt)
-    self.transitions = self.transitions[0:idx]
+    if len(self.transitions) > 0:
+      idx = next(i for i, t in enumerate(self.transitions) if t[0] > igt)
+      self.transitions = self.transitions[0:idx]
 
   def __repr__(self):
     return 'Timeline(%s)' % repr(self.transitions)
