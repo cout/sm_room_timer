@@ -371,7 +371,6 @@ class RoomTimer(object):
       # been counted.
       print("Reset detected to %s" % state.igt)
       self.timeline.reset(state.igt)
-      print("Last entry was %s" % self.timeline.last_transition().entry_room)
       if state.game_state == 'doorTransition':
         self.ignore_next_transition = True
 
