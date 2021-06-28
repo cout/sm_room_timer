@@ -283,28 +283,22 @@ class Timeline(object):
   def __repr__(self):
     return 'Timeline(%s)' % repr(self.transitions)
 
-class RoomTimer(object):
-  def __init__(self, rooms, store, timeline):
-    self.sock = NetworkCommandSocket()
-    self.rooms = rooms
-    self.store = store
-    self.timeline = timeline
-    self.current_room = None
-    self.last_room = None
-    self.prev_game_state = None
-    self.prev_igt = FrameCount(0)
-    self.ignore_next_transition = False
+class State(object):
+  def __init__(self, **attrs):
+    for name in attrs:
+      setattr(self, name, attrs[name])
 
-  def poll(self):
-    region1 = MemoryRegion.read_from(self.sock, 0x0790, 0x1f)
-    region2 = MemoryRegion.read_from(self.sock, 0x0990, 0xef)
-    # region3 = MemoryRegion.read_from(self.sock, 0xD800, 0x8f)
-    # region4 = MemoryRegion.read_from(self.sock, 0x0F80, 0x4f)
-    # region5 = MemoryRegion.read_from(self.sock, 0x05B0, 0x0f)
-    region6 = MemoryRegion.read_from(self.sock, 0x1FB00, 0x100)
+  @staticmethod
+  def read_from(sock, rooms):
+    region1 = MemoryRegion.read_from(sock, 0x0790, 0x1f)
+    region2 = MemoryRegion.read_from(sock, 0x0990, 0xef)
+    # region3 = MemoryRegion.read_from(sock, 0xD800, 0x8f)
+    # region4 = MemoryRegion.read_from(sock, 0x0F80, 0x4f)
+    # region5 = MemoryRegion.read_from(sock, 0x05B0, 0x0f)
+    region6 = MemoryRegion.read_from(sock, 0x1FB00, 0x100)
 
     room_id = region1.short(0x79B)
-    room = self.rooms.from_id(room_id)
+    room = rooms.from_id(room_id)
 
     region_id = region1.short(0x79F) 
     area = Areas.get(region_id, hex(region_id))
@@ -328,10 +322,33 @@ class RoomTimer(object):
     transition_counter = FrameCount(region6.short(0x1FB0E))
     last_lag_counter = FrameCount(region6.short(0x1FB98))
 
-    if game_state != self.prev_game_state:
-      # print("Game state changed to %s at time %s" % (game_state, igt))
-      # print('')
-      pass
+    return State(
+        room=room,
+        area=area,
+        game_state=game_state,
+        igt=igt,
+        gametime_room=gametime_room,
+        last_gametime_room=last_gametime_room,
+        realtime_room=realtime_room,
+        last_realtime_room=last_realtime_room,
+        last_door_lag_frames=last_door_lag_frames,
+        transition_counter=transition_counter,
+        last_lag_counter=last_lag_counter)
+
+class RoomTimer(object):
+  def __init__(self, rooms, store, timeline):
+    self.sock = NetworkCommandSocket()
+    self.rooms = rooms
+    self.store = store
+    self.timeline = timeline
+    self.current_room = None
+    self.last_room = None
+    self.prev_game_state = None
+    self.prev_igt = FrameCount(0)
+    self.ignore_next_transition = False
+
+  def poll(self):
+    state = State.read_from(self.sock, rooms)
 
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
@@ -340,25 +357,25 @@ class RoomTimer(object):
     # TODO: if we just started the room timer, or if we just loaded a
     # preset, then we won't know wha the previous room was.  I think
     # that would require changes to the practice ROM.
-    if game_state == 'normalGameplay' and self.current_room is not room:
-      print("Transition to %s at %s" % (room, igt))
+    if state.game_state == 'normalGameplay' and self.current_room is not state.room:
+      print("Transition to %s at %s" % (state.room, state.igt))
       self.last_room = self.current_room
-      self.current_room = room
+      self.current_room = state.room
 
     # Check in-game-time to see if we reset state.  This also catches
     # when a preset is loaded, because loading a preset resets IGT to
     # zero.
-    if igt < self.prev_igt:
+    if state.igt < self.prev_igt:
       # If we reset state to the middle of a door transition, then we
       # don't want to count the next transition, because it has already
       # been counted.
-      print("Reset detected to %s" % igt)
-      self.timeline.reset(igt)
+      print("Reset detected to %s" % state.igt)
+      self.timeline.reset(state.igt)
       print("Last entry was %s" % self.timeline.last_transition().entry_room)
-      if game_state == 'doorTransition':
+      if state.game_state == 'doorTransition':
         self.ignore_next_transition = True
 
-    if self.prev_game_state == 'doorTransition' and game_state == 'normalGameplay':
+    if self.prev_game_state == 'doorTransition' and state.game_state == 'normalGameplay':
       if self.ignore_next_transition:
         pass
       else:
@@ -369,15 +386,15 @@ class RoomTimer(object):
         transition_id = TransitionId(
             self.last_room, entry_room, self.current_room)
         transition_time = TransitionTime(
-            last_gametime_room, last_realtime_room, last_lag_counter,
-            last_door_lag_frames)
+            state.last_gametime_room, state.last_realtime_room,
+            state.last_lag_counter, state.last_door_lag_frames)
         transition = Transition(transition_id, transition_time)
         self.store.transitioned(transition)
-        self.timeline.transitioned(igt, transition)
+        self.timeline.transitioned(state.igt, transition)
       self.ignore_next_transition = False
 
-    self.prev_game_state = game_state
-    self.prev_igt = igt
+    self.prev_game_state = state.game_state
+    self.prev_igt = state.igt
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='SM Room Timer')
