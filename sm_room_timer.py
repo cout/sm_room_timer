@@ -376,25 +376,26 @@ class RoomTimer(object):
         self.ignore_next_transition = True
 
     if self.prev_game_state == 'doorTransition' and state.game_state == 'normalGameplay':
-      if self.ignore_next_transition:
-        pass
-      else:
-        if len(self.timeline.transitions) > 0:
-          entry_room = self.timeline.transitions[-1][1].room
-        else:
-          entry_room = None
-        transition_id = TransitionId(
-            self.last_room, entry_room, self.current_room)
-        transition_time = TransitionTime(
-            state.last_gametime_room, state.last_realtime_room,
-            state.last_lag_counter, state.last_door_lag_frames)
-        transition = Transition(transition_id, transition_time)
-        self.store.transitioned(transition)
-        self.timeline.transitioned(state.igt, transition)
+      if not self.ignore_next_transition:
+        self.handle_transition(state)
       self.ignore_next_transition = False
 
     self.prev_game_state = state.game_state
     self.prev_igt = state.igt
+
+  def handle_transition(self, state):
+    if len(self.timeline.transitions) > 0:
+      entry_room = self.timeline.transitions[-1][1].room
+    else:
+      entry_room = None
+    transition_id = TransitionId(
+        self.last_room, entry_room, self.current_room)
+    transition_time = TransitionTime(
+        state.last_gametime_room, state.last_realtime_room,
+        state.last_lag_counter, state.last_door_lag_frames)
+    transition = Transition(transition_id, transition_time)
+    self.store.transitioned(transition)
+    self.timeline.transitioned(state.igt, transition)
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='SM Room Timer')
