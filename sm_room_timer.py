@@ -11,7 +11,7 @@ from typing import NamedTuple
 
 from retroarch.network_command_socket import NetworkCommandSocket
 from memory_region import MemoryRegion
-from rooms import Room, Rooms
+from rooms import Room, Rooms, NullRoom
 from areas import Areas
 from game_states import GameStates
 
@@ -74,10 +74,13 @@ class Transition(NamedTuple):
 
   @classmethod
   def csv_headers(self):
-    return [ 'room', 'entry', 'exit', 'gametime', 'realtime', 'lagtime', 'doortime' ]
+    return [ 'room_id', 'entry_id', 'exit_id', 'room', 'entry', 'exit', 'gametime', 'realtime', 'lagtime', 'doortime' ]
 
   def as_csv_row(self):
       return (
+        '%04x' % self.id.room.room_id,
+        '%04x' % self.id.entry_room.room_id,
+        '%04x' % self.id.exit_room.room_id,
         self.id.room, self.id.entry_room, self.id.exit_room,
         self.time.gametime.to_seconds(), self.time.realtime.to_seconds(),
         self.time.lag.to_seconds(), self.time.door.to_seconds())
@@ -85,9 +88,9 @@ class Transition(NamedTuple):
   @classmethod
   def from_csv_row(self, rooms, row):
     transition_id = TransitionId(
-        room=rooms.from_name(row['room']),
-        entry_room=rooms.from_name(row['entry']),
-        exit_room=rooms.from_name(row['exit']))
+        room=rooms.from_id(int(row['room_id'], 16)),
+        entry_room=rooms.from_id(int(row['entry_id'], 16)),
+        exit_room=rooms.from_id(int(row['exit_id'], 16)))
     transition_time = TransitionTime(
         FrameCount.from_seconds(float(row['gametime'])),
         FrameCount.from_seconds(float(row['realtime'])),
@@ -391,7 +394,7 @@ class RoomTimer(object):
     if len(self.timeline.transitions) > 0:
       entry_room = self.timeline.transitions[-1][1].room
     else:
-      entry_room = None
+      entry_room = NullRoom
     transition_id = TransitionId(
         self.last_room, entry_room, self.current_room)
     transition_time = TransitionTime(

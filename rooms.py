@@ -8,6 +8,8 @@ class Room(object):
   def __repr__(self):
     return self.name
 
+NullRoom = Room(0, 'None')
+
 class Rooms(object):
   def __init__(self, raw_rooms):
     self.rooms = [ Room(room_id=int(room_id, 16), name=room_name)
@@ -15,6 +17,8 @@ class Rooms(object):
 
     self.by_id = { room.room_id : room for room in self.rooms }
     self.by_name = { room.name : room for room in self.rooms }
+
+    self.add_room(NullRoom)
 
     self.check_invariants()
 
