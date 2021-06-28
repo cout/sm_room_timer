@@ -359,7 +359,11 @@ class RoomTimer(object):
     # preset, then we won't know wha the previous room was.  I think
     # that would require changes to the practice ROM.
     if state.game_state == 'normalGameplay' and self.current_room is not state.room:
-      print("Transition to %s at %s" % (state.room, state.igt))
+      if self.current_room is None:
+        print("Starting in room %s at %s" % (state.room, state.igt))
+        print()
+      else:
+        print("Transition to %s at %s" % (state.room, state.igt))
       self.last_room = self.current_room
       self.current_room = state.room
 
