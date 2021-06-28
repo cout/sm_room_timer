@@ -333,6 +333,13 @@ class RoomTimer(object):
       # print('')
       pass
 
+    # When the room changes (and we're not in demo mode), we want to
+    # take note.  Most of the time, the previous game state was
+    # doorTransition, and we'll record the transition below.
+    #
+    # TODO: if we just started the room timer, or if we just loaded a
+    # preset, then we won't know wha the previous room was.  I think
+    # that would require changes to the practice ROM.
     if game_state == 'normalGameplay' and self.current_room is not room:
       print("Transition to %s at %s" % (room, igt))
       self.last_room = self.current_room
