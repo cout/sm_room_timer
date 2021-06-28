@@ -185,14 +185,7 @@ class History(object):
 
 def history_report(history):
   for tid in sorted(history.keys(), key=lambda tid: (tid.room.room_id, tid.exit_room.room_id)):
-    a = history[tid]
-    # str(tid)
-    # str(len(a))
-    # str(tid.room.room_id)
-    # str(id(tid.room))
-    # str(tid.exit_room.room_id)
-    # str(id(tid.exit_room))
-    print("%s: %s (%s/%s to %s/%s)" % (tid, len(a),
+    print("%s: %s (%s/%s to %s/%s)" % (tid, len(history[tid]),
       tid.room.room_id, id(tid.room), tid.exit_room.room_id,
       id(tid.exit_room)))
   print()
