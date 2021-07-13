@@ -204,7 +204,7 @@ class RoomTimer(object):
         print("Starting in room %s at %s" % (state.room, state.igt))
         print()
       else:
-        print("Transition to %s at %s" % (state.room, state.igt))
+        print("Transition to %s (%x) at %s" % (state.room, state.room.room_id, state.igt))
       self.last_room = self.current_room
       self.current_room = state.room
 
