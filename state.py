@@ -38,13 +38,14 @@ class State(object):
 
   @staticmethod
   def read_from(sock, rooms):
-    region1 = MemoryRegion.read_from(sock, 0x0790, 0x1f)
+    region1 = MemoryRegion.read_from(sock, 0x0770, 0x3f)
     region2 = MemoryRegion.read_from(sock, 0x0990, 0xef)
     # region3 = MemoryRegion.read_from(sock, 0xD800, 0x8f)
     # region4 = MemoryRegion.read_from(sock, 0x0F80, 0x4f)
     # region5 = MemoryRegion.read_from(sock, 0x05B0, 0x0f)
     region6 = MemoryRegion.read_from(sock, 0x1FB00, 0x100)
 
+    door_id = region1.short(0x78D)
     room_id = region1.short(0x79B)
     room = rooms.from_id(room_id)
 
@@ -74,6 +75,7 @@ class State(object):
     last_lag_counter = FrameCount(region6.short(0x1FB98))
 
     return State(
+        door_id=door_id,
         room=room,
         area=area,
         game_state=game_state,
