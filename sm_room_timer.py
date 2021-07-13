@@ -3,217 +3,17 @@
 import datetime
 import time
 import argparse
-import statistics
 import csv
 import os.path
-from functools import total_ordering
-from typing import NamedTuple
 
 from retroarch.network_command_socket import NetworkCommandSocket
 from memory_region import MemoryRegion
 from rooms import Room, Rooms, NullRoom
 from areas import Areas
 from game_states import GameStates
-
-@total_ordering
-class FrameCount(object):
-  def __init__(self, count):
-    self.count = count
-
-  def to_seconds(self):
-    return self.count / 60.0
-
-  @classmethod
-  def from_seconds(cls, secs):
-    return cls(round(secs * 60, 0))
-
-  def __eq__(self, other):
-    return self.count == other.count
-
-  def __lt__(self, other):
-    return self.count < other.count
-
-  def __repr__(self):
-    return '%d\'%02d' % (self.count / 60, self.count % 60)
-
-class TransitionId(object):
-  room: Room
-  entry_room: Room
-  exit_room: Room
-  items: str
-  beams: str
-
-  def __init__(self, room, entry_room, exit_room, items, beams):
-    self.room = room
-    self.entry_room = entry_room
-    self.exit_room = exit_room
-    self.items = items
-    self.beams = beams
-
-  def __hash__(self):
-    return hash((self.room, self.entry_room, self.exit_room, self.items, self.beams))
-
-  def __eq__(self, other):
-    return (self.room, self.entry_room, self.exit_room, self.items, self.beams) == \
-           (other.room, other.entry_room, other.exit_room, other.items, other.beams)
-
-  def __repr__(self):
-    return '%s (entering from %s, exiting to %s)' % (self.room, self.entry_room, self.exit_room)
-
-class TransitionTime(NamedTuple):
-  gametime: FrameCount
-  realtime: FrameCount
-  lag: FrameCount
-  door: FrameCount
-
-class Transition(NamedTuple):
-  id: TransitionId
-  time: TransitionTime
-
-  def __repr__(self):
-      return "Transition(%s,%s,%s,%s,%s)" % (
-        self.id, self.time.gametime,
-        self.time.realtime, self.time.lag,
-        self.time.door)
-
-  @classmethod
-  def csv_headers(self):
-    return [ 'room_id', 'entry_id', 'exit_id', 'room', 'entry', 'exit', 'items', 'beams', 'gametime', 'realtime', 'lagtime', 'doortime' ]
-
-  def as_csv_row(self):
-      return (
-        '%04x' % self.id.room.room_id,
-        '%04x' % self.id.entry_room.room_id,
-        '%04x' % self.id.exit_room.room_id,
-        self.id.room,
-        self.id.entry_room,
-        self.id.exit_room,
-        self.id.items,
-        self.id.beams,
-        round(self.time.gametime.to_seconds(), 3),
-        round(self.time.realtime.to_seconds(), 3),
-        round(self.time.lag.to_seconds(), 3),
-        round(self.time.door.to_seconds(), 3))
-
-  @classmethod
-  def from_csv_row(self, rooms, row):
-    transition_id = TransitionId(
-        room=rooms.from_id(int(row['room_id'], 16)),
-        entry_room=rooms.from_id(int(row['entry_id'], 16)),
-        exit_room=rooms.from_id(int(row['exit_id'], 16)),
-        items=row['items'],
-        beams=row['beams'])
-    transition_time = TransitionTime(
-        FrameCount.from_seconds(float(row['gametime'])),
-        FrameCount.from_seconds(float(row['realtime'])),
-        FrameCount.from_seconds(float(row['lagtime'])),
-        FrameCount.from_seconds(float(row['doortime'])))
-    return Transition(transition_id, transition_time)
-
-class FrameCountList(object):
-  def __init__(self):
-    self.list = [ ]
-
-  def append(self, frame_count):
-    self.list.append(frame_count.count)
-
-  def mean(self):
-    return FrameCount(statistics.mean(self.list))
-
-  def median(self):
-    return FrameCount(statistics.median(self.list))
-
-  def best(self):
-    return FrameCount(min(self.list))
-
-  def __repr__(self):
-    return 'avg %s, median %s, best %s' % (self.mean(), self.median(), self.best())
-
-class Attempts(object):
-  def __init__(self, transitions=None):
-    transitions = transitions or [ ]
-
-    self.attempts = [ ]
-    self.gametimes = FrameCountList()
-    self.realtimes = FrameCountList()
-    self.lagtimes = FrameCountList()
-    self.doortimes = FrameCountList()
-
-    for transition in transitions:
-      self.append(transition)
-
-  def append(self, transition):
-    self.attempts.append(transition)
-    self.gametimes.append(transition.time.gametime)
-    self.realtimes.append(transition.time.realtime)
-    self.lagtimes.append(transition.time.lag)
-    self.doortimes.append(transition.time.door)
-
-  def __iter__(self):
-    return iter(self.attempts)
-
-  def __len__(self):
-    return len(self.attempts)
-
-  def __repr__(self):
-    return 'Attempts(%s)' % self.attempts
-
-class History(object):
-  def __init__(self, history=None):
-    self.history = history or { }
-
-  def record(self, transition):
-    attempts = self.history.get(transition.id, None)
-    if attempts is None:
-      attempts = Attempts()
-      self.history[transition.id] = attempts
-
-    attempts.append(transition)
-
-    return attempts
-
-  def __len__(self):
-    return len(self.history)
-
-  def __iter__(self):
-    return iter(self.history)
-
-  def __repr__(self):
-    return 'History(%s)' % repr(self.history)
-
-  def keys(self):
-    return self.history.keys()
-
-  def values(self):
-    return self.history.values()
-
-  def items(self):
-    return self.history.items()
-
-  def __getitem__(self, key):
-    return self.history[key]
-
-def history_report(history):
-  for tid in sorted(history.keys(), key=lambda tid: (tid.room.room_id, tid.exit_room.room_id)):
-    print("%s: %s (%s/%s to %s/%s)" % (tid, len(history[tid]),
-      tid.room.room_id, id(tid.room), tid.exit_room.room_id,
-      id(tid.exit_room)))
-  print()
-
-def read_history_file(filename, rooms):
-  history = History()
-  with open(filename) as csvfile:
-    reader = csv.DictReader(csvfile)
-    n = 0
-    for row in reader:
-      n += 1
-      try:
-        transition = Transition.from_csv_row(rooms, row)
-      except Exception as e:
-        raise RuntimeError("Error reading history file, line %d" % n) from e
-      history.record(transition)
-  print("Read history for {} rooms.".format(len(history)))
-  return history
+from frame_count import FrameCount
+from transition import TransitionId, TransitionTime, Transition
+from history import History, read_history_file
 
 class Store(object):
   def __init__(self, rooms, filename=None):
@@ -238,7 +38,7 @@ class Store(object):
     p25_est = FrameCount.from_seconds((p0.to_seconds() + p50.to_seconds()) / 2.0)
     p75_est = FrameCount.from_seconds(p50.to_seconds() + (p50.to_seconds() - p25_est.to_seconds()))
 
-    color = 7
+    color = 8
     if ttime <= p0:
       color = 214
     elif ttime <= p25_est:
@@ -287,9 +87,7 @@ class Timeline(object):
     return next(lambda t: t[0] < igt, reversed(self.transitions))[1]
 
   def reset(self, igt):
-    if len(self.transitions) > 0:
-      idx = next(i for i, t in enumerate(self.transitions) if t[0] > igt)
-      self.transitions = self.transitions[0:idx]
+    self.transitions = [ t for t in self.transitions if t[0] < igt ]
 
   def __repr__(self):
     return 'Timeline(%s)' % repr(self.transitions)
