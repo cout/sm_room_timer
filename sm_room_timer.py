@@ -69,35 +69,12 @@ class Store(object):
   def close(self):
     self.file.close()
 
-class Timeline(object):
-  def __init__(self):
-    self.transitions = [ ]
-
-  def transitioned(self, igt, transition):
-    self.transitions.append((igt, transition.id))
-
-  def last_transition(self):
-    if len(self.transitions) > 0:
-      return self.transitions[-1][1]
-    else:
-      return None
-
-  def last_transition_before(self, igt):
-    return next(lambda t: t[0] < igt, reversed(self.transitions))[1]
-
-  def reset(self, igt):
-    self.transitions = [ t for t in self.transitions if t[0] < igt ]
-
-  def __repr__(self):
-    return 'Timeline(%s)' % repr(self.transitions)
-
 class RoomTimer(object):
-  def __init__(self, rooms, doors, store, timeline):
+  def __init__(self, rooms, doors, store):
     self.sock = NetworkCommandSocket()
     self.rooms = rooms
     self.doors = doors
     self.store = store
-    self.timeline = timeline
     self.current_room = NullRoom
     self.last_room = NullRoom
     self.most_recent_door = NullDoor
@@ -135,7 +112,6 @@ class RoomTimer(object):
       # don't want to count the next transition, because it has already
       # been counted.
       print("Reset detected to %s" % state.igt)
-      self.timeline.reset(state.igt)
       if state.game_state == 'doorTransition':
         self.ignore_next_transition = True
 
@@ -148,10 +124,6 @@ class RoomTimer(object):
     self.prev_igt = state.igt
 
   def handle_transition(self, state):
-    if len(self.timeline.transitions) > 0:
-      entry_room = self.timeline.transitions[-1][1].room
-    else:
-      entry_room = NullRoom
     transition_id = TransitionId(
         self.last_room, self.last_most_recent_door,
         self.most_recent_door, state.items, state.beams)
@@ -160,7 +132,6 @@ class RoomTimer(object):
         state.last_lag_counter, state.last_door_lag_frames)
     transition = Transition(transition_id, transition_time)
     self.store.transitioned(transition)
-    self.timeline.transitioned(state.igt, transition)
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
@@ -172,8 +143,7 @@ def main():
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
   store = Store(rooms, doors, args.filename)
-  timeline = Timeline()
-  timer = RoomTimer(rooms, doors, store, timeline)
+  timer = RoomTimer(rooms, doors, store)
 
   while True:
     timer.poll()
