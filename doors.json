@@ -76,6 +76,7 @@
   "90D2": { "from": "A322", "to": "A734", "description": "Caterpillar to Red Tower Save Room" },
   "926A": { "from": "A734", "to": "A322", "description": "Red Tower Save Room to Caterpillar" },
   "9096": { "from": "A322", "to": "A3AE", "description": "Caterpillar to Alpha Power Bomb Room" },
+  "90DE": { "from": "A37C", "to": "A322", "description": "Beta Power Bomb Room to Caterpillar" },
   "90EA": { "from": "A3AE", "to": "A322", "description": "Alpha Power Bomb Room to Caterpillar" },
   "90A2": { "from": "A322", "to": "A37C", "description": "Caterpillar to Beta Power Bomb Room" },
   "90AE": { "from": "A322", "to": "A2F7", "description": "Caterpillar to Hellway" },
