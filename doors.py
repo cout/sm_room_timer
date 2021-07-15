@@ -33,7 +33,7 @@ class Doors(object):
       raise TypeError("door id should be an int (got %s)" % type(door_id))
     door = self.by_id.get(door_id)
     if door is None:
-      door = Door(door_id, NullRoom, NullRoom, hex(door_id))
+      door = Door(door_id, NullRoom, NullRoom, "Unknown door %s" % hex(door_id))
       self.add_door(door)
     return door
 
