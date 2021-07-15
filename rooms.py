@@ -29,7 +29,6 @@ class Rooms(object):
     if room is None:
       room = Room(room_id, hex(room_id))
       self.add_room(room)
-    self.check_invariants()
     return room
 
   def from_name(self, name):
@@ -40,7 +39,6 @@ class Rooms(object):
       room = self.by_name.get(name, None)
       if room is None:
         raise RuntimeError("Could not find room with name `%s'" % name)
-    self.check_invariants()
     return room
 
   def add_room(self, room):

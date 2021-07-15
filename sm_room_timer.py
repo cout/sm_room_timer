@@ -8,6 +8,7 @@ import os.path
 
 from retroarch.network_command_socket import NetworkCommandSocket
 from rooms import Rooms, NullRoom
+from doors import Doors
 from frame_count import FrameCount
 from transition import TransitionId, TransitionTime, Transition
 from history import History, read_history_file
@@ -165,9 +166,11 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
+  parser.add_argument('--doors', dest='doors_filename', default='doors.json')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
+  doors = Doors.read(args.doors_filename, rooms)
   store = Store(rooms, args.filename)
   timeline = Timeline()
   timer = RoomTimer(rooms, store, timeline)
