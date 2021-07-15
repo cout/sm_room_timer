@@ -2,19 +2,20 @@ from typing import NamedTuple
 
 from frame_count import FrameCount
 from rooms import Room, NullRoom
+from doors import Door, NullDoor
 
 class TransitionId(object):
   room: Room
-  entry_room: Room
-  exit_room: Room
+  entry_door: Door
+  exit_door: Door
   items: str
   beams: str
 
   def __init__(self, room, entry_door, exit_door, items, beams):
-    if room is not entry_door.exit_room and room is not NullRoom:
+    if room is not entry_door.exit_room and entry_door.exit_room is not NullRoom and room is not NullRoom:
       raise RuntimeError("Expected %s == %s" % (room, entry_door.exit_room))
 
-    if room is not exit_door.entry_room and room is not NullRoom:
+    if room is not exit_door.entry_room and exit_door.entry_room is not NullRoom and room is not NullRoom:
       raise RuntimeError("Expected %s == %s" % (room, exit_door.entry_room))
 
     self.room = room
