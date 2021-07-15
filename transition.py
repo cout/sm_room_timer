@@ -87,10 +87,26 @@ class Transition(NamedTuple):
 
   @classmethod
   def from_csv_row(self, rooms, doors, row):
+    room = rooms.from_id(int(row['room_id'], 16))
+
+    entry_door_id = int(row.get('entry_door', '0'), 16)
+    if entry_door_id == 0:
+      entry_room = rooms.from_id(int(row['entry_id'], 16))
+      entry_door = doors.from_terminals(entry_room, room)
+    else:
+      entry_door = doors.from_id(entry_door_id)
+
+    exit_door_id = int(row.get('exit_door', '0'), 16)
+    if exit_door_id == 0:
+      exit_room = rooms.from_id(int(row['exit_id'], 16))
+      exit_door = doors.from_terminals(room, exit_room)
+    else:
+      exit_door = doors.from_id(exit_door_id)
+
     transition_id = TransitionId(
-        room=rooms.from_id(int(row['room_id'], 16)),
-        entry_door=doors.from_id(int(row.get('entry_door', '0'), 16)),
-        exit_door=doors.from_id(int(row.get('exit_door', '0'), 16)),
+        room=room,
+        entry_door=entry_door,
+        exit_door=exit_door,
         items=row['items'],
         beams=row['beams'])
     transition_time = TransitionTime(

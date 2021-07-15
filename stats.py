@@ -3,6 +3,7 @@ from tabulate import tabulate
 
 from frame_count import FrameCount
 from rooms import Room, Rooms
+from doors import Doors
 from history import History, read_history_file
 
 def print_table(table):

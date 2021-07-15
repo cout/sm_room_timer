@@ -23,6 +23,7 @@ class Doors(object):
       raw_doors.items() ]
 
     self.by_id = { door.door_id : door for door in self.doors }
+    self.by_terminals = { (door.entry_room, door.exit_room) : door for door in self.doors }
 
     self.add_door(NullDoor)
 
@@ -36,6 +37,9 @@ class Doors(object):
       door = Door(door_id, NullRoom, NullRoom, "Unknown door %s" % hex(door_id))
       self.add_door(door)
     return door
+
+  def from_terminals(self, entry, exit):
+    return self.by_terminals.get((entry, exit), NullDoor)
 
   def add_door(self, door):
     self.by_id[door.door_id] = door
