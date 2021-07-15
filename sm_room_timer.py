@@ -98,6 +98,8 @@ class RoomTimer(object):
     self.timeline = timeline
     self.current_room = None
     self.last_room = None
+    self.most_recent_door = None
+    self.last_most_recent_door = None
     self.prev_game_state = None
     self.prev_igt = FrameCount(0)
     self.ignore_next_transition = False
@@ -114,12 +116,14 @@ class RoomTimer(object):
     # that would require changes to the practice ROM.
     if state.game_state == 'normalGameplay' and self.current_room is not state.room:
       if self.current_room is None:
-        print("Starting in room %s at %s" % (state.room, state.igt))
+        print("Starting in room %s at %s, door=%x" % (state.room, state.igt, state.door_id))
         print()
       else:
-        print("Transition to %s (%x) at %s" % (state.room, state.room.room_id, state.igt))
+        print("Transition to %s (%x) at %s using door %x" % (state.room, state.room.room_id, state.igt, state.door_id))
       self.last_room = self.current_room
       self.current_room = state.room
+      self.last_most_recent_door = self.most_recent_door
+      self.most_recent_door = state.door_id
 
     # Check in-game-time to see if we reset state.  This also catches
     # when a preset is loaded, because loading a preset resets IGT to
@@ -148,6 +152,7 @@ class RoomTimer(object):
       entry_room = NullRoom
     transition_id = TransitionId(
         self.last_room, entry_room, self.current_room,
+        self.last_most_recent_door, self.most_recent_door,
         state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,

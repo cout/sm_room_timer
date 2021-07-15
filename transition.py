@@ -10,10 +10,12 @@ class TransitionId(object):
   items: str
   beams: str
 
-  def __init__(self, room, entry_room, exit_room, items, beams):
+  def __init__(self, room, entry_room, exit_room, entry_door, exit_door, items, beams):
     self.room = room
     self.entry_room = entry_room
     self.exit_room = exit_room
+    self.entry_door = entry_door
+    self.exit_door = exit_door
     self.items = items
     self.beams = beams
 
@@ -25,7 +27,9 @@ class TransitionId(object):
            (other.room, other.entry_room, other.exit_room, other.items, other.beams)
 
   def __repr__(self):
-    return '%s (entering from %s, exiting to %s)' % (self.room, self.entry_room, self.exit_room)
+    return '%s (entering from %s via %x, exiting to %s via %x)' % (
+        self.room, self.entry_room, self.entry_door, self.exit_room,
+        self.exit_door)
 
 class TransitionTime(NamedTuple):
   gametime: FrameCount
@@ -45,7 +49,11 @@ class Transition(NamedTuple):
 
   @classmethod
   def csv_headers(self):
-    return [ 'room_id', 'entry_id', 'exit_id', 'room', 'entry', 'exit', 'items', 'beams', 'gametime', 'realtime', 'lagtime', 'doortime' ]
+    return [
+      'room_id', 'entry_id', 'exit_id', 'room', 'entry', 'exit',
+      'entry_door', 'exit_door', 'items', 'beams', 'gametime', 'realtime',
+      'lagtime', 'doortime'
+    ]
 
   def as_csv_row(self):
       return (
@@ -55,6 +63,8 @@ class Transition(NamedTuple):
         self.id.room,
         self.id.entry_room,
         self.id.exit_room,
+        '%04x' % self.id.entry_door,
+        '%04x' % self.id.exit_door,
         self.id.items,
         self.id.beams,
         round(self.time.gametime.to_seconds(), 3),
@@ -68,6 +78,8 @@ class Transition(NamedTuple):
         room=rooms.from_id(int(row['room_id'], 16)),
         entry_room=rooms.from_id(int(row['entry_id'], 16)),
         exit_room=rooms.from_id(int(row['exit_id'], 16)),
+        entry_door=int(row.get('entry_door', '0'), 16),
+        exit_door=int(row.get('entry_door', '0'), 16),
         items=row['items'],
         beams=row['beams'])
     transition_time = TransitionTime(
