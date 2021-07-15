@@ -9,6 +9,11 @@ class Door(object):
     self.exit_room = exit_room
     self.description = description
 
+  def __repr__(self):
+    return '%s (%x)' % (self.description, self.door_id)
+
+NullDoor = Door(0, NullRoom, NullRoom, 'None')
+
 class Doors(object):
   def __init__(self, raw_doors, rooms):
     self.doors = [ Door(door_id=int(door_id, 16),
@@ -19,6 +24,8 @@ class Doors(object):
 
     self.by_id = { door.door_id : door for door in self.doors }
 
+    self.add_door(NullDoor)
+
     self.check_invariants()
 
   def from_id(self, door_id):
@@ -28,6 +35,7 @@ class Doors(object):
     if door is None:
       door = Door(door_id, NullRoom, NullRoom, hex(door_id))
       self.add_door(door)
+    return door
 
   def add_door(self, door):
     self.by_id[door.door_id] = door

@@ -8,16 +8,16 @@ import os.path
 
 from retroarch.network_command_socket import NetworkCommandSocket
 from rooms import Rooms, NullRoom
-from doors import Doors
+from doors import Doors, NullDoor
 from frame_count import FrameCount
 from transition import TransitionId, TransitionTime, Transition
 from history import History, read_history_file
 from state import State
 
 class Store(object):
-  def __init__(self, rooms, filename=None):
+  def __init__(self, rooms, doors, filename=None):
     if filename is not None and os.path.exists(filename):
-      self.history = read_history_file(filename, rooms)
+      self.history = read_history_file(filename, rooms, doors)
     else:
       self.history = History()
 
@@ -92,21 +92,22 @@ class Timeline(object):
     return 'Timeline(%s)' % repr(self.transitions)
 
 class RoomTimer(object):
-  def __init__(self, rooms, store, timeline):
+  def __init__(self, rooms, doors, store, timeline):
     self.sock = NetworkCommandSocket()
     self.rooms = rooms
+    self.doors = doors
     self.store = store
     self.timeline = timeline
-    self.current_room = None
-    self.last_room = None
-    self.most_recent_door = None
-    self.last_most_recent_door = None
+    self.current_room = NullRoom
+    self.last_room = NullRoom
+    self.most_recent_door = NullDoor
+    self.last_most_recent_door = NullDoor
     self.prev_game_state = None
     self.prev_igt = FrameCount(0)
     self.ignore_next_transition = False
 
   def poll(self):
-    state = State.read_from(self.sock, rooms)
+    state = State.read_from(self.sock, self.rooms, self.doors)
 
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
@@ -116,15 +117,15 @@ class RoomTimer(object):
     # preset, then we won't know wha the previous room was.  I think
     # that would require changes to the practice ROM.
     if state.game_state == 'normalGameplay' and self.current_room is not state.room:
-      if self.current_room is None:
-        print("Starting in room %s at %s, door=%x" % (state.room, state.igt, state.door_id))
+      if self.current_room is NullRoom:
+        print("Starting in room %s at %s, door=%s" % (state.room, state.igt, state.door))
         print()
       else:
-        print("Transition to %s (%x) at %s using door %x" % (state.room, state.room.room_id, state.igt, state.door_id))
+        print("Transition to %s (%x) at %s using door %s" % (state.room, state.room.room_id, state.igt, state.door))
       self.last_room = self.current_room
       self.current_room = state.room
       self.last_most_recent_door = self.most_recent_door
-      self.most_recent_door = state.door_id
+      self.most_recent_door = state.door
 
     # Check in-game-time to see if we reset state.  This also catches
     # when a preset is loaded, because loading a preset resets IGT to
@@ -162,7 +163,7 @@ class RoomTimer(object):
     self.store.transitioned(transition)
     self.timeline.transitioned(state.igt, transition)
 
-if __name__ == '__main__':
+def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
@@ -171,10 +172,13 @@ if __name__ == '__main__':
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
-  store = Store(rooms, args.filename)
+  store = Store(rooms, doors, args.filename)
   timeline = Timeline()
-  timer = RoomTimer(rooms, store, timeline)
+  timer = RoomTimer(rooms, doors, store, timeline)
 
   while True:
     timer.poll()
     time.sleep(1.0/60)
+
+if __name__ == '__main__':
+  main()

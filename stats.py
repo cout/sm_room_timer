@@ -18,10 +18,12 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
+  parser.add_argument('--doors', dest='doors_filename', default='doors.json')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
-  history = read_history_file(args.filename, rooms)
+  doors = Doors.read(args.doors_filename, rooms)
+  history = read_history_file(args.filename, rooms, doors)
 
   table = [ ]
   total_best = FrameCount(0)

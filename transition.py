@@ -1,7 +1,7 @@
 from typing import NamedTuple
 
 from frame_count import FrameCount
-from rooms import Room
+from rooms import Room, NullRoom
 
 class TransitionId(object):
   room: Room
@@ -11,6 +11,18 @@ class TransitionId(object):
   beams: str
 
   def __init__(self, room, entry_room, exit_room, entry_door, exit_door, items, beams):
+    if entry_room is not entry_door.entry_room and entry_room is not NullRoom:
+      raise RuntimeError("Expected %s == %s" % (entry_room, entry_door.entry_room))
+
+    if exit_room is not exit_door.exit_room and exit_room is not NullRoom:
+      raise RuntimeError("Expected %s == %s" % (exit_room, exit_door.exit_room))
+
+    if room is not entry_door.exit_room and room is not NullRoom:
+      raise RuntimeError("Expected %s == %s" % (room, entry_door.exit_room))
+
+    if room is not exit_door.entry_room and room is not NullRoom:
+      raise RuntimeError("Expected %s == %s" % (room, exit_door.entry_room))
+
     self.room = room
     self.entry_room = entry_room
     self.exit_room = exit_room
@@ -28,8 +40,8 @@ class TransitionId(object):
 
   def __repr__(self):
     return '%s (entering from %s via %x, exiting to %s via %x)' % (
-        self.room, self.entry_room, self.entry_door, self.exit_room,
-        self.exit_door)
+        self.room, self.entry_room, self.entry_door.door_id, self.exit_room,
+        self.exit_door.door_id)
 
 class TransitionTime(NamedTuple):
   gametime: FrameCount
@@ -63,8 +75,8 @@ class Transition(NamedTuple):
         self.id.room,
         self.id.entry_room,
         self.id.exit_room,
-        '%04x' % self.id.entry_door,
-        '%04x' % self.id.exit_door,
+        '%04x' % self.id.entry_door.door_id,
+        '%04x' % self.id.exit_door.door_id,
         self.id.items,
         self.id.beams,
         round(self.time.gametime.to_seconds(), 3),
@@ -73,13 +85,13 @@ class Transition(NamedTuple):
         round(self.time.door.to_seconds(), 3))
 
   @classmethod
-  def from_csv_row(self, rooms, row):
+  def from_csv_row(self, rooms, doors, row):
     transition_id = TransitionId(
         room=rooms.from_id(int(row['room_id'], 16)),
         entry_room=rooms.from_id(int(row['entry_id'], 16)),
         exit_room=rooms.from_id(int(row['exit_id'], 16)),
-        entry_door=int(row.get('entry_door', '0'), 16),
-        exit_door=int(row.get('entry_door', '0'), 16),
+        entry_door=doors.from_id(int(row.get('entry_door', '0'), 16)),
+        exit_door=doors.from_id(int(row.get('exit_door', '0'), 16)),
         items=row['items'],
         beams=row['beams'])
     transition_time = TransitionTime(
