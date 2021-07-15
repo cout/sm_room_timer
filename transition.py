@@ -10,13 +10,7 @@ class TransitionId(object):
   items: str
   beams: str
 
-  def __init__(self, room, entry_room, exit_room, entry_door, exit_door, items, beams):
-    if entry_room is not entry_door.entry_room and entry_room is not NullRoom:
-      raise RuntimeError("Expected %s == %s" % (entry_room, entry_door.entry_room))
-
-    if exit_room is not exit_door.exit_room and exit_room is not NullRoom:
-      raise RuntimeError("Expected %s == %s" % (exit_room, exit_door.exit_room))
-
+  def __init__(self, room, entry_door, exit_door, items, beams):
     if room is not entry_door.exit_room and room is not NullRoom:
       raise RuntimeError("Expected %s == %s" % (room, entry_door.exit_room))
 
@@ -24,12 +18,18 @@ class TransitionId(object):
       raise RuntimeError("Expected %s == %s" % (room, exit_door.entry_room))
 
     self.room = room
-    self.entry_room = entry_room
-    self.exit_room = exit_room
     self.entry_door = entry_door
     self.exit_door = exit_door
     self.items = items
     self.beams = beams
+
+  @property
+  def entry_room(self):
+    return self.entry_door.entry_room
+
+  @property
+  def exit_room(self):
+    return self.exit_door.exit_room
 
   def __hash__(self):
     return hash((self.room, self.entry_room, self.exit_room, self.items, self.beams))
@@ -88,8 +88,6 @@ class Transition(NamedTuple):
   def from_csv_row(self, rooms, doors, row):
     transition_id = TransitionId(
         room=rooms.from_id(int(row['room_id'], 16)),
-        entry_room=rooms.from_id(int(row['entry_id'], 16)),
-        exit_room=rooms.from_id(int(row['exit_id'], 16)),
         entry_door=doors.from_id(int(row.get('entry_door', '0'), 16)),
         exit_door=doors.from_id(int(row.get('exit_door', '0'), 16)),
         items=row['items'],

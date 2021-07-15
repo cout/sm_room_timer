@@ -2,7 +2,7 @@ import csv
 import statistics
 
 from frame_count import FrameCount
-from transition import TransitionId, TransitionTime, Transition
+from transition import Transition
 
 class FrameCountList(object):
   def __init__(self):

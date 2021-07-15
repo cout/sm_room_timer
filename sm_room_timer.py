@@ -153,9 +153,8 @@ class RoomTimer(object):
     else:
       entry_room = NullRoom
     transition_id = TransitionId(
-        self.last_room, entry_room, self.current_room,
-        self.last_most_recent_door, self.most_recent_door,
-        state.items, state.beams)
+        self.last_room, self.last_most_recent_door,
+        self.most_recent_door, state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_lag_counter, state.last_door_lag_frames)
