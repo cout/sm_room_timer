@@ -6,8 +6,27 @@ from doors import Doors, NullDoor
 from history import History, read_history_file
 from transition import Transition
 
+from typing import NamedTuple
 import argparse
 import csv
+
+class TransitionStats(NamedTuple):
+  room: str
+  n: int
+  best: FrameCount
+  p50: FrameCount
+  p75: FrameCount
+  p90: FrameCount
+  save: FrameCount
+
+def stats(attempts):
+  n = len(attempts.attempts)
+  best = attempts.realtimes.best() + attempts.doortimes.best()
+  p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
+  p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
+  p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
+  save = p50 - best
+  return TransitionStats(room=id.room, n=n, best=best, p50=p50, p75=p75, p90=p90, save=save)
 
 def print_table(table):
   width = { }
@@ -72,18 +91,13 @@ if __name__ == '__main__':
     # TODO: We should keep stats for real+door, rather than keeping
     # those separately
     attempts = history[id]
-    n = len(attempts.attempts)
-    best = attempts.realtimes.best() + attempts.doortimes.best()
-    p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
-    p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
-    p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
-    save = p50 - best
-    total_best += best
-    total_p50 += p50
-    total_p75 += p75
-    total_p90 += p90
-    total_save += save
-    table.append([ id.room, n, best, p50, p75, p90, save ]);
+    s = stats(attempts)
+    total_best += s.best
+    total_p50 += s.p50
+    total_p75 += s.p75
+    total_p90 += s.p90
+    total_save += s.save
+    table.append([ s.room, s.n, s.best, s.p50, s.p75, s.p90, s.save ]);
 
   table.append([ 'Total', '', total_best, total_p50, total_p75, total_p90, total_save ]);
   print_table(table)
