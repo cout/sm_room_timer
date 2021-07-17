@@ -56,7 +56,9 @@ if __name__ == '__main__':
 
   table = [ ]
   total_best = FrameCount(0)
-  total_median = FrameCount(0)
+  total_p50 = FrameCount(0)
+  total_p75 = FrameCount(0)
+  total_p90 = FrameCount(0)
   total_save = FrameCount(0)
 
   ids = build_route(args.filename) if args.build_route else history.keys()
@@ -72,12 +74,16 @@ if __name__ == '__main__':
     attempts = history[id]
     n = len(attempts.attempts)
     best = attempts.realtimes.best() + attempts.doortimes.best()
-    median = attempts.realtimes.median() + attempts.doortimes.median()
-    save = median - best
+    p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
+    p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
+    p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
+    save = p50 - best
     total_best += best
-    total_median += median
+    total_p50 += p50
+    total_p75 += p75
+    total_p90 += p90
     total_save += save
-    table.append([ id.room, n, best, median, save ]);
+    table.append([ id.room, n, best, p50, p75, p90, save ]);
 
-  table.append([ 'Total', '', total_best, total_median, total_save ]);
+  table.append([ 'Total', '', total_best, total_p50, total_p75, total_p90, total_save ]);
   print_table(table)

@@ -4,6 +4,8 @@ import statistics
 from frame_count import FrameCount
 from transition import Transition
 
+from scipy import stats
+
 class FrameCountList(object):
   def __init__(self):
     self.list = [ ]
@@ -19,6 +21,15 @@ class FrameCountList(object):
 
   def best(self):
     return FrameCount(min(self.values()))
+
+  def percentile(self, p):
+    return FrameCount(stats.scoreatpercentile(self.values(), p))
+
+  def as_percentiles(self):
+    l = self.values()
+    d = { val: len(l) - idx - 1 for idx, val in enumerate(reversed(sorted(l))) }
+    p = { x: 100.0 * d[x] / (len(l) - 1) for x in sorted(l) }
+    return p
 
   def values(self):
     return [ x for x in self.list if x is not None ]
