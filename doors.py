@@ -39,7 +39,11 @@ class Doors(object):
     return door
 
   def from_terminals(self, entry, exit):
-    return self.by_terminals.get((entry, exit), NullDoor)
+    door = self.by_terminals.get((entry, exit), NullDoor)
+    if door is NullDoor and entry is not NullRoom and exit is not NullRoom:
+      print("Could not find door for %x (%s) to %x (%s)" %
+          (entry.room_id, entry.name, exit.room_id, exit.name))
+    return door
 
   def add_door(self, door):
     self.by_id[door.door_id] = door
