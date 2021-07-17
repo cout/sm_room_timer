@@ -48,6 +48,8 @@ if __name__ == '__main__':
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
   parser.add_argument('--route', dest='build_route', action='store_true')
+  parser.add_argument('--start', dest='start_room', default=None)
+  parser.add_argument('--end', dest='end_room', default=None)
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -59,12 +61,14 @@ if __name__ == '__main__':
   total_median = FrameCount(0)
   total_save = FrameCount(0)
 
-  if args.build_route:
-    ids = build_route(args.filename)
-  else:
-    ids = history.keys()
+  ids = build_route(args.filename) if args.build_route else history.keys()
+  printing = False if args.start_room else True
 
   for id in ids:
+    if args.start_room == id.room.name: printing = True
+    if args.end_room == id.room.name: break
+    if not printing: continue
+
     # TODO: We should keep stats for real+door, rather than keeping
     # those separately
     attempts = history[id]
@@ -75,7 +79,7 @@ if __name__ == '__main__':
     total_best += best
     total_median += median
     total_save += save
-    table.append([ id, n, best, median, save ]);
+    table.append([ id.room, n, best, median, save ]);
 
   table.append([ 'Total', '', total_best, total_median, total_save ]);
 
