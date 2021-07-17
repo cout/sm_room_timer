@@ -73,7 +73,7 @@ class State(object):
     last_realtime_room = FrameCount(region6.short(0x1FB46))
     last_door_lag_frames = FrameCount(region6.short(0x1FB10))
     transition_counter = FrameCount(region6.short(0x1FB0E))
-    last_lag_counter = FrameCount(region6.short(0x1FB98))
+    last_room_lag = FrameCount(region6.short(0x1FB48))
 
     return State(
         door=door,
@@ -87,7 +87,7 @@ class State(object):
         last_realtime_room=last_realtime_room,
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
-        last_lag_counter=last_lag_counter,
+        last_room_lag=last_room_lag,
         items=items_string(collected_items_bitmask),
         beams=beams_string(collected_items_bitmask, collected_beams_bitmask))
 

@@ -62,7 +62,7 @@ class Store(object):
     print('%s #%s:' % (transition.id, len(attempts)))
     print('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
     print('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
-    print('Lag:  %s' % self.colorize(transition.time.lag, attempts.lagtimes))
+    print('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
     print('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
     print('')
 
@@ -129,7 +129,7 @@ class RoomTimer(object):
         self.most_recent_door, state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
-        state.last_lag_counter, state.last_door_lag_frames)
+        state.last_room_lag, state.last_door_lag_frames)
     transition = Transition(transition_id, transition_time)
     self.store.transitioned(transition)
 

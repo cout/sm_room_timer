@@ -9,16 +9,19 @@ class FrameCountList(object):
     self.list = [ ]
 
   def append(self, frame_count):
-    self.list.append(frame_count.count)
+    self.list.append(frame_count.count if frame_count is not None else None)
 
   def mean(self):
-    return FrameCount(statistics.mean(self.list))
+    return FrameCount(statistics.mean(self.values()))
 
   def median(self):
-    return FrameCount(statistics.median(self.list))
+    return FrameCount(statistics.median(self.values()))
 
   def best(self):
-    return FrameCount(min(self.list))
+    return FrameCount(min(self.values()))
+
+  def values(self):
+    return [ x for x in self.list if x is not None ]
 
   def __repr__(self):
     return 'avg %s, median %s, best %s' % (self.mean(), self.median(), self.best())
@@ -30,7 +33,7 @@ class Attempts(object):
     self.attempts = [ ]
     self.gametimes = FrameCountList()
     self.realtimes = FrameCountList()
-    self.lagtimes = FrameCountList()
+    self.roomlagtimes = FrameCountList()
     self.doortimes = FrameCountList()
 
     for transition in transitions:
@@ -40,7 +43,7 @@ class Attempts(object):
     self.attempts.append(transition)
     self.gametimes.append(transition.time.gametime)
     self.realtimes.append(transition.time.realtime)
-    self.lagtimes.append(transition.time.lag)
+    self.roomlagtimes.append(transition.time.roomlag)
     self.doortimes.append(transition.time.door)
 
   def __iter__(self):
