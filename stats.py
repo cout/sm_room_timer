@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from tabulate import tabulate
-
 from frame_count import FrameCount
 from rooms import Room, Rooms, NullRoom
 from doors import Doors, NullDoor
@@ -12,13 +10,13 @@ import argparse
 import csv
 
 def print_table(table):
-  data = + list(zip(names, weights, costs, unit_costs))
+  width = { }
+  for row in table:
+    for idx, cell in enumerate(row):
+      width[idx] = max(len(str(cell)), width.get(idx, 0))
 
-  for i, d in enumerate(data):
-      line = '|'.join(str(x).ljust(12) for x in d)
-      print(line)
-      if i == 0:
-          print('-' * len(line))
+  for row in table:
+    print('  '.join([ str(cell).ljust(width[idx]) for idx, cell in enumerate(row) ]))
 
 def build_route(filename):
   route = [ ]
@@ -82,5 +80,4 @@ if __name__ == '__main__':
     table.append([ id.room, n, best, median, save ]);
 
   table.append([ 'Total', '', total_best, total_median, total_save ]);
-
-  print(tabulate(table))
+  print_table(table)
