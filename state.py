@@ -36,6 +36,10 @@ class State(object):
     for name in attrs:
       setattr(self, name, attrs[name])
 
+  def __repr__(self):
+    return "State(%s)" % ', '.join([ '%s=%s' % (k,repr(v)) for k,v in
+      self.__dict__.items() ])
+
   @staticmethod
   def read_from(sock, rooms, doors):
     region1 = MemoryRegion.read_from(sock, 0x0770, 0x3f)
@@ -93,4 +97,3 @@ class State(object):
         beams=beams_string(collected_items_bitmask, collected_beams_bitmask),
         ram_load_preset=ram_load_preset,
         )
-
