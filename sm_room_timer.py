@@ -82,6 +82,10 @@ class StateChange(object):
     self.door_changed = prev_state.door != state.door
     self.game_state_changed = prev_state.game_state != state.game_state
 
+  def __repr__(self):
+    return "State(%s)" % ', '.join([ '%s=%s' % (k,repr(v)) for k,v in
+      self.__dict__.items() ])
+
 class RoomTimer(object):
   def __init__(self, rooms, doors, store, debug=False):
     self.rooms = rooms
@@ -182,6 +186,7 @@ class RoomTimer(object):
     if state_changed:
       self.log_debug("Previous state:", self.prev_state)
       self.log_debug("State:", change.state)
+      self.log_debug("Changes:", change)
       self.log_debug()
 
   def handle_transition(self, state):
