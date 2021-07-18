@@ -130,8 +130,6 @@ if __name__ == '__main__':
   saves = [ s.save.count for s in all_stats ]
   p75_save = FrameCount(stats.scoreatpercentile(saves, 75))
   p90_save = FrameCount(stats.scoreatpercentile(saves, 90))
-  print(p75_save)
-  print(p90_save)
 
   table = Table()
   for s in all_stats:
