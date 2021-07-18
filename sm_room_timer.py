@@ -87,11 +87,12 @@ class StateChange(object):
       self.__dict__.items() ])
 
 class RoomTimer(object):
-  def __init__(self, rooms, doors, store, debug=False):
+  def __init__(self, rooms, doors, store, debug=False, verbose=False):
     self.rooms = rooms
     self.doors = doors
     self.store = store
     self.debug = debug
+    self.verbose = verbose
 
     self.sock = NetworkCommandSocket()
     self.current_room = NullRoom
@@ -108,6 +109,10 @@ class RoomTimer(object):
 
   def log_debug(self, *args):
     if self.debug:
+      print(*args)
+
+  def log_verbose(self, *args):
+    if self.verbose:
       print(*args)
 
   def poll(self):
@@ -159,20 +164,20 @@ class RoomTimer(object):
 
     if change.is_room_change:
       if change.is_start:
-        print("Starting in room %s at %s, door=%s" % (
+        self.log_verbose("Starting in room %s at %s, door=%s" % (
           change.state.room, change.state.igt, change.state.door))
       elif change.transition_finished:
-        print("Transition to %s (%x) at %s using door %s" %(
+        self.log_verbose("Transition to %s (%x) at %s using door %s" %(
             change.state.room, change.state.room.room_id,
             change.state.igt, change.state.door))
       else:
-        print("Room changed to %s (%x) at %s without using a door" % (
+        self.log_verbose("Room changed to %s (%x) at %s without using a door" % (
           change.state.room, change.state.room.room_id,
           change.state.igt))
       state_changed = True
 
     if change.is_reset:
-      print("Reset detected to %s" % change.state.igt)
+      self.log_verbose("Reset detected to %s" % change.state.igt)
       state_changed = True
 
     if change.door_changed:
@@ -205,12 +210,13 @@ def main():
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
   parser.add_argument('--debug', dest='debug', action='store_true')
+  parser.add_argument('--verbose', dest='verbose', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
   store = Store(rooms, doors, args.filename)
-  timer = RoomTimer(rooms, doors, store, debug=args.debug)
+  timer = RoomTimer(rooms, doors, store, debug=args.debug, verbose=(args.verbose or args.debug))
 
   while True:
     timer.poll()
