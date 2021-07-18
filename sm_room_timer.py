@@ -83,6 +83,7 @@ class RoomTimer(object):
     self.last_most_recent_door = NullDoor
     self.ignore_next_transition = False
     self.prev_state = State(
+        door=NullDoor,
         game_state=None,
         igt=FrameCount(0),
         ram_load_preset=None)
@@ -145,12 +146,24 @@ class RoomTimer(object):
       # next IGT reset is detected
       print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
 
-    if self.prev_state.game_state != state.game_state:
-      self.log_debug("Game state changed to %s" % state.game_state)
-      self.log_debug("State:", state)
-      self.log_debug()
+    self.log_state_changes(self.prev_state, state)
 
     self.prev_state = state
+
+  def log_state_changes(self, prev_state, state):
+    state_changed = False
+
+    if prev_state.door != state.door:
+      self.log_debug("Door changed to %s" % state.door)
+      state_changed = True
+
+    if prev_state.game_state != state.game_state:
+      self.log_debug("Game state changed to %s" % state.game_state)
+      state_changed = True
+
+    if state_changed:
+      self.log_debug("State:", state)
+      self.log_debug()
 
   def handle_transition(self, state):
     transition_id = TransitionId(
