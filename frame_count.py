@@ -28,4 +28,4 @@ class FrameCount(object):
     if self.count / 60 < 60:
       return '%d\'%02d' % (self.count / 60, self.count % 60)
     else:
-      return '%d:%d\'%02d' % (self.count / 60 / 60, (self.count / 60) % 60, self.count % 60)
+      return '%d:%02d\'%02d' % (self.count / 60 / 60, (self.count / 60) % 60, self.count % 60)
