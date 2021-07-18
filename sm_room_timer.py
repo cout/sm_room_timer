@@ -31,26 +31,6 @@ class Store(object):
       self.file = None
       self.writer = None
 
-  def colorize(self, ttime, atimes):
-    p0 = atimes.best()
-    p25 = atimes.percentile(25)
-    p50 = atimes.median()
-    p75 = atimes.percentile(75)
-
-    color = 8
-    if ttime <= p0:
-      color = 214
-    elif ttime <= p25:
-      color = 40
-    elif ttime <= p50:
-      color = 148
-    elif ttime <= p75:
-      color = 204
-    else:
-      color = 196
-
-    return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, atimes)
-
   def transitioned(self, transition):
     attempts = self.history.record(transition)
     # history_report(self.history)
@@ -59,16 +39,10 @@ class Store(object):
       self.writer.writerow(transition.as_csv_row())
       self.file.flush()
 
-    print('%s #%s:' % (transition.id, len(attempts)))
-    print('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
-    print('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
-    print('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
-    print('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
-    print('')
+    return attempts
 
   def close(self):
     self.file.close()
-
 
 class StateChange(object):
   def __init__(self, prev_state, state, current_room):
@@ -202,7 +176,37 @@ class RoomTimer(object):
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, state.last_door_lag_frames)
     transition = Transition(transition_id, transition_time)
-    self.store.transitioned(transition)
+    attempts = self.store.transitioned(transition)
+    self.log_transition(transition, attempts)
+
+  def log_transition(self, transition, attempts):
+    print('%s #%s:' % (transition.id, len(attempts)))
+    print('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
+    print('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
+    print('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
+    print('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
+    print('')
+
+  def colorize(self, ttime, atimes):
+    p0 = atimes.best()
+    p25 = atimes.percentile(25)
+    p50 = atimes.median()
+    p75 = atimes.percentile(75)
+
+    color = 8
+    if ttime <= p0:
+      color = 214
+    elif ttime <= p25:
+      color = 40
+    elif ttime <= p50:
+      color = 148
+    elif ttime <= p75:
+      color = 204
+    else:
+      color = 196
+
+    return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, atimes)
+
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
