@@ -94,6 +94,9 @@ class RoomTimer(object):
       # next IGT reset is detected
       print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
 
+    if self.prev_state.game_state != state.game_state:
+      print("Game state changed to %s" % state.game_state)
+
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
     # doorTransition, and we'll record the transition below.
