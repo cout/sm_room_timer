@@ -180,7 +180,18 @@ class RoomTimer(object):
     self.log_transition(transition, attempts)
 
   def log_transition(self, transition, attempts):
-    print('%s #%s:' % (transition.id, len(attempts)))
+    if self.verbose:
+      # When verbose logging is enabled, we  want to minimize the number
+      # of lines displayed
+      # TODO: Colorize this the same as below
+      print('%s #%s:' % (transition.id, len(attempts)))
+    else:
+      # Without verbose logging, we want to minimize the width of the
+      # lines we are printing
+      print('Room: \033[1m%s\033[m' % transition.id.room)
+      print('Entered from: %s' % transition.id.entry_room)
+      print('Exited to: %s' % transition.id.exit_room)
+
     print('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
     print('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
     print('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
