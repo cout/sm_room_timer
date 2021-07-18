@@ -88,15 +88,6 @@ class RoomTimer(object):
   def poll(self):
     state = State.read_from(self.sock, self.rooms, self.doors)
 
-    if self.prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0:
-      # TODO: This does not always detect loading of a preset, and when
-      # it does detect it, we should ignore all transitions until the
-      # next IGT reset is detected
-      print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
-
-    if self.prev_state.game_state != state.game_state:
-      print("Game state changed to %s" % state.game_state)
-
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
     # doorTransition, and we'll record the transition below.
@@ -126,10 +117,25 @@ class RoomTimer(object):
       if state.game_state == 'DoorTransition':
         self.ignore_next_transition = True
 
+    # When the game state changes to NormalGameplay, we can be sure we
+    # are no longer in the door transition.  Record the transition.
+    # Note that we use the current state for the room times, because we
+    # might not have captured the exact frame where the room times
+    # changed, but once the game state has changed, we can be sure the
+    # state has the room times.
     if self.prev_state.game_state == 'DoorTransition' and state.game_state == 'NormalGameplay':
       if not self.ignore_next_transition:
         self.handle_transition(state)
       self.ignore_next_transition = False
+
+    if self.prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0:
+      # TODO: This does not always detect loading of a preset, and when
+      # it does detect it, we should ignore all transitions until the
+      # next IGT reset is detected
+      print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
+
+    if self.prev_state.game_state != state.game_state:
+      print("Game state changed to %s" % state.game_state)
 
     self.prev_state = state
 
