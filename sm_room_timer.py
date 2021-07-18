@@ -104,7 +104,7 @@ class RoomTimer(object):
     # TODO: if we just started the room timer, or if we just loaded a
     # preset, then we won't know wha the previous room was.  I think
     # that would require changes to the practice ROM.
-    if state.game_state == 'normalGameplay' and self.current_room is not state.room:
+    if state.game_state == 'NormalGameplay' and self.current_room is not state.room:
       if self.current_room is NullRoom:
         print("Starting in room %s at %s, door=%s" % (state.room, state.igt, state.door))
         print()
@@ -123,10 +123,10 @@ class RoomTimer(object):
       # don't want to count the next transition, because it has already
       # been counted.
       print("Reset detected to %s" % state.igt)
-      if state.game_state == 'doorTransition':
+      if state.game_state == 'DoorTransition':
         self.ignore_next_transition = True
 
-    if self.prev_state.game_state == 'doorTransition' and state.game_state == 'normalGameplay':
+    if self.prev_state.game_state == 'DoorTransition' and state.game_state == 'NormalGameplay':
       if not self.ignore_next_transition:
         self.handle_transition(state)
       self.ignore_next_transition = False
