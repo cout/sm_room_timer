@@ -73,16 +73,10 @@ if __name__ == '__main__':
   doors = Doors.read(args.doors_filename, rooms)
   history = read_history_file(args.filename, rooms, doors)
 
-  table = [ ]
-  total_best = FrameCount(0)
-  total_p50 = FrameCount(0)
-  total_p75 = FrameCount(0)
-  total_p90 = FrameCount(0)
-  total_save = FrameCount(0)
-
   ids = build_route(args.filename) if args.build_route else history.keys()
   printing = False if args.start_room else True
 
+  all_stats = [ ]
   for id in ids:
     if args.start_room == id.room.name: printing = True
     if args.end_room == id.room.name: break
@@ -91,13 +85,17 @@ if __name__ == '__main__':
     # TODO: We should keep stats for real+door, rather than keeping
     # those separately
     attempts = history[id]
-    s = stats(attempts)
-    total_best += s.best
-    total_p50 += s.p50
-    total_p75 += s.p75
-    total_p90 += s.p90
-    total_save += s.save
-    table.append([ s.room, s.n, s.best, s.p50, s.p75, s.p90, s.save ]);
+    all_stats.append(stats(attempts))
 
+  table = [ ]
+  for s in all_stats:
+    table.append([ s.room, s.n, s.best, s.p50, s.p75, s.p90, s.save ])
+
+  total_best = FrameCount(sum([ s.best.count for s in all_stats ]))
+  total_p50 = FrameCount(sum([ s.p50.count for s in all_stats ]))
+  total_p75 = FrameCount(sum([ s.p75.count for s in all_stats ]))
+  total_p90 = FrameCount(sum([ s.p90.count for s in all_stats ]))
+  total_save = FrameCount(sum([ s.save.count for s in all_stats ]))
   table.append([ 'Total', '', total_best, total_p50, total_p75, total_p90, total_save ]);
+
   print_table(table)
