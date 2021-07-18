@@ -82,9 +82,16 @@ class RoomTimer(object):
     self.prev_game_state = None
     self.prev_igt = FrameCount(0)
     self.ignore_next_transition = False
+    self.prev_ram_load_preset = None
 
   def poll(self):
     state = State.read_from(self.sock, self.rooms, self.doors)
+
+    if self.prev_ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0:
+      # TODO: This does not always detect loading of a preset, and when
+      # it does detect it, we should ignore all transitions until the
+      # next IGT reset is detected
+      print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
 
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
@@ -122,6 +129,7 @@ class RoomTimer(object):
 
     self.prev_game_state = state.game_state
     self.prev_igt = state.igt
+    self.prev_ram_load_preset = state.ram_load_preset
 
   def handle_transition(self, state):
     transition_id = TransitionId(

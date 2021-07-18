@@ -43,7 +43,7 @@ class State(object):
     # region3 = MemoryRegion.read_from(sock, 0xD800, 0x8f)
     # region4 = MemoryRegion.read_from(sock, 0x0F80, 0x4f)
     # region5 = MemoryRegion.read_from(sock, 0x05B0, 0x0f)
-    region6 = MemoryRegion.read_from(sock, 0x1FB00, 0x100)
+    region6 = MemoryRegion.read_from(sock, 0x1FB00, 0x120)
 
     door_id = region1.short(0x78D)
     room_id = region1.short(0x79B)
@@ -74,6 +74,7 @@ class State(object):
     last_door_lag_frames = FrameCount(region6.short(0x1FB10))
     transition_counter = FrameCount(region6.short(0x1FB0E))
     last_room_lag = FrameCount(region6.short(0x1FB48))
+    ram_load_preset = region6.short(0x1FC00)
 
     return State(
         door=door,
@@ -89,5 +90,7 @@ class State(object):
         transition_counter=transition_counter,
         last_room_lag=last_room_lag,
         items=items_string(collected_items_bitmask),
-        beams=beams_string(collected_items_bitmask, collected_beams_bitmask))
+        beams=beams_string(collected_items_bitmask, collected_beams_bitmask),
+        ram_load_preset=ram_load_preset,
+        )
 
