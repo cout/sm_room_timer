@@ -70,6 +70,11 @@ class State(object):
     fps = 60.0 # TODO
     igt = FrameCount(216000 * igt_hours + 3600 * igt_minutes + 60 * igt_seconds + igt_frames)
 
+    seg_rt_frames = region6.short(0x1FBA0)
+    seg_rt_seconds = region6.short(0x1FBA2)
+    seg_rt_minutes = region6.short(0x1FBA4)
+    seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
+
     # Practice hack
     gametime_room = FrameCount(region6.short(0x1FB00))
     last_gametime_room = FrameCount(region6.short(0x1FB02))
@@ -86,6 +91,7 @@ class State(object):
         area=area,
         game_state=game_state,
         igt=igt,
+        seg_rt=seg_rt,
         gametime_room=gametime_room,
         last_gametime_room=last_gametime_room,
         realtime_room=realtime_room,
