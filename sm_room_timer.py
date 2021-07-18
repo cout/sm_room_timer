@@ -33,18 +33,18 @@ class Store(object):
 
   def colorize(self, ttime, atimes):
     p0 = atimes.best()
+    p25 = atimes.percentile(25)
     p50 = atimes.median()
-    p25_est = FrameCount.from_seconds((p0.to_seconds() + p50.to_seconds()) / 2.0)
-    p75_est = FrameCount.from_seconds(p50.to_seconds() + (p50.to_seconds() - p25_est.to_seconds()))
+    p75 = atimes.percentile(75)
 
     color = 8
     if ttime <= p0:
       color = 214
-    elif ttime <= p25_est:
+    elif ttime <= p25:
       color = 40
     elif ttime <= p50:
       color = 148
-    elif ttime <= p75_est:
+    elif ttime <= p75:
       color = 204
     else:
       color = 196
