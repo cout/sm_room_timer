@@ -6,6 +6,7 @@ from doors import Doors, NullDoor
 from history import History, read_history_file
 from transition import Transition
 
+from scipy import stats
 from typing import NamedTuple
 import argparse
 import csv
@@ -19,7 +20,7 @@ class TransitionStats(NamedTuple):
   p90: FrameCount
   save: FrameCount
 
-def stats(attempts):
+def transition_stats(attempts):
   n = len(attempts.attempts)
   best = attempts.realtimes.best() + attempts.doortimes.best()
   p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
@@ -28,14 +29,53 @@ def stats(attempts):
   save = p50 - best
   return TransitionStats(room=id.room, n=n, best=best, p50=p50, p75=p75, p90=p90, save=save)
 
-def print_table(table):
-  width = { }
-  for row in table:
-    for idx, cell in enumerate(row):
-      width[idx] = max(len(str(cell)), width.get(idx, 0))
+class Cell(object):
+  def __init__(self, text, color=None):
+    self.text = text
+    self.color = color
 
-  for row in table:
-    print('  '.join([ str(cell).ljust(width[idx]) for idx, cell in enumerate(row) ]))
+  def __len__(self):
+    return len(self.text)
+
+  def __repr__(self):
+    return repr(self.text)
+
+  def __str__(self):
+    return str(self.text)
+
+  def __iter__(self):
+    return iter(self.text)
+
+  def width(self):
+    return len(str(self.text))
+
+  def render(self):
+    return "\033[%sm%s\033[m" % ('' if self.color is None else self.color, self.text)
+
+class Table(object):
+  def __init__(self):
+    self.rows = [ ]
+
+  def append(self, row):
+    self.rows.append(row)
+
+  def __len__(self):
+    return len(self.rows)
+
+  def __iter__(self):
+    return iter(self.rows)
+
+  def render(self):
+    width = { }
+    for row in self.rows:
+      for idx, cell in enumerate(row):
+        width[idx] = max(cell.width(), width.get(idx, 0))
+
+    lines = [ ]
+    for row in self.rows:
+      lines.append('  '.join([ cell.render() + ' '*(width[idx]-cell.width()) for idx, cell in enumerate(row) ]))
+
+    return "\n".join(lines)
 
 def build_route(filename):
   route = [ ]
@@ -85,17 +125,40 @@ if __name__ == '__main__':
     # TODO: We should keep stats for real+door, rather than keeping
     # those separately
     attempts = history[id]
-    all_stats.append(stats(attempts))
+    all_stats.append(transition_stats(attempts))
 
-  table = [ ]
+  saves = [ s.save.count for s in all_stats ]
+  p75_save = FrameCount(stats.scoreatpercentile(saves, 75))
+  p90_save = FrameCount(stats.scoreatpercentile(saves, 90))
+  print(p75_save)
+  print(p90_save)
+
+  table = Table()
   for s in all_stats:
-    table.append([ s.room, s.n, s.best, s.p50, s.p75, s.p90, s.save ])
+    if s.save >= p90_save:
+      color = '1;34'
+    elif s.save >= p75_save:
+      color = '1;33'
+    else:
+      color = None
+
+    table.append([
+      Cell(s.room, color),
+      Cell(s.n, color),
+      Cell(s.best, color),
+      Cell(s.p50, color),
+      Cell(s.p75, color),
+      Cell(s.p90, color),
+      Cell(s.save, color),
+    ])
 
   total_best = FrameCount(sum([ s.best.count for s in all_stats ]))
   total_p50 = FrameCount(sum([ s.p50.count for s in all_stats ]))
   total_p75 = FrameCount(sum([ s.p75.count for s in all_stats ]))
   total_p90 = FrameCount(sum([ s.p90.count for s in all_stats ]))
   total_save = FrameCount(sum([ s.save.count for s in all_stats ]))
-  table.append([ 'Total', '', total_best, total_p50, total_p75, total_p90, total_save ]);
+  table.append([ Cell('Total'), Cell(''), Cell(total_best),
+    Cell(total_p50), Cell(total_p75), Cell(total_p90), Cell(total_save)
+    ]);
 
-  print_table(table)
+  print(table.render())
