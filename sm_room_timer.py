@@ -79,15 +79,16 @@ class RoomTimer(object):
     self.last_room = NullRoom
     self.most_recent_door = NullDoor
     self.last_most_recent_door = NullDoor
-    self.prev_game_state = None
-    self.prev_igt = FrameCount(0)
     self.ignore_next_transition = False
-    self.prev_ram_load_preset = None
+    self.prev_state = State(
+        game_state=None,
+        igt=FrameCount(0),
+        ram_load_preset=None)
 
   def poll(self):
     state = State.read_from(self.sock, self.rooms, self.doors)
 
-    if self.prev_ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0:
+    if self.prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0:
       # TODO: This does not always detect loading of a preset, and when
       # it does detect it, we should ignore all transitions until the
       # next IGT reset is detected
@@ -114,7 +115,7 @@ class RoomTimer(object):
     # Check in-game-time to see if we reset state.  This also catches
     # when a preset is loaded, because loading a preset resets IGT to
     # zero.
-    if state.igt < self.prev_igt:
+    if state.igt < self.prev_state.igt:
       # If we reset state to the middle of a door transition, then we
       # don't want to count the next transition, because it has already
       # been counted.
@@ -122,14 +123,12 @@ class RoomTimer(object):
       if state.game_state == 'doorTransition':
         self.ignore_next_transition = True
 
-    if self.prev_game_state == 'doorTransition' and state.game_state == 'normalGameplay':
+    if self.prev_state.game_state == 'doorTransition' and state.game_state == 'normalGameplay':
       if not self.ignore_next_transition:
         self.handle_transition(state)
       self.ignore_next_transition = False
 
-    self.prev_game_state = state.game_state
-    self.prev_igt = state.igt
-    self.prev_ram_load_preset = state.ram_load_preset
+    self.prev_state = state
 
   def handle_transition(self, state):
     transition_id = TransitionId(
