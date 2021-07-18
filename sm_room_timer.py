@@ -99,8 +99,10 @@ class RoomTimer(object):
       if self.current_room is NullRoom:
         print("Starting in room %s at %s, door=%s" % (state.room, state.igt, state.door))
         print()
-      else:
+      elif self.prev_state.game_state == 'DoorTransition':
         print("Transition to %s (%x) at %s using door %s" % (state.room, state.room.room_id, state.igt, state.door))
+      else:
+        print("Room changed to %s (%x) at %s without using a door" % (state.room, state.room.room_id, state.igt))
       self.last_room = self.current_room
       self.current_room = state.room
       self.last_most_recent_door = self.most_recent_door
