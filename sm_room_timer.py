@@ -69,6 +69,19 @@ class Store(object):
   def close(self):
     self.file.close()
 
+
+class StateChange(object):
+  def __init__(self, prev_state, state, current_room):
+    self.prev_state = prev_state
+    self.state = state
+    self.is_room_change = state.game_state == 'NormalGameplay' and current_room is not state.room
+    self.is_start = self.is_room_change and current_room is NullRoom
+    self.transition_finished = state.game_state == 'NormalGameplay' and prev_state.game_state == 'DoorTransition'
+    self.is_reset = state.igt < prev_state.igt
+    self.is_loading_preset = prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0
+    self.door_changed = prev_state.door != state.door
+    self.game_state_changed = prev_state.game_state != state.game_state
+
 class RoomTimer(object):
   def __init__(self, rooms, doors, store, debug=False):
     self.rooms = rooms
@@ -84,6 +97,7 @@ class RoomTimer(object):
     self.ignore_next_transition = False
     self.prev_state = State(
         door=NullDoor,
+        room=NullRoom,
         game_state=None,
         igt=FrameCount(0),
         ram_load_preset=None)
@@ -94,6 +108,9 @@ class RoomTimer(object):
 
   def poll(self):
     state = State.read_from(self.sock, self.rooms, self.doors)
+    change = StateChange(self.prev_state, state, self.current_room)
+
+    self.log_state_changes(change)
 
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
@@ -102,32 +119,17 @@ class RoomTimer(object):
     # TODO: if we just started the room timer, or if we just loaded a
     # preset, then we won't know wha the previous room was.  I think
     # that would require changes to the practice ROM.
-    if state.game_state == 'NormalGameplay' and self.current_room is not state.room:
-      if self.current_room is NullRoom:
-        print("Starting in room %s at %s, door=%s" % (state.room, state.igt, state.door))
-        print()
-      elif self.prev_state.game_state == 'DoorTransition':
-        print("Transition to %s (%x) at %s using door %s" % (state.room, state.room.room_id, state.igt, state.door))
-      else:
-        print("Room changed to %s (%x) at %s without using a door" % (state.room, state.room.room_id, state.igt))
+    if change.is_room_change:
       self.last_room = self.current_room
       self.current_room = state.room
       self.last_most_recent_door = self.most_recent_door
       self.most_recent_door = state.door
 
-    # Check in-game-time to see if we reset state.  This also catches
-    # when a preset is loaded, because loading a preset resets IGT to
-    # zero.
-    if state.igt < self.prev_state.igt:
-      # If we reset state to the middle of a door transition, then we
-      # don't want to count the next transition, because it has already
-      # been counted.
-      print("Reset detected to %s" % state.igt)
-      self.log_debug("Previous state:", self.prev_state)
-      self.log_debug("State:", state)
-      self.log_debug()
-      if state.game_state == 'DoorTransition':
-        self.ignore_next_transition = True
+    # If we reset state to the middle of a door transition, then we
+    # don't want to count the next transition, because it has already
+    # been counted.
+    if change.is_reset and state.game_state == 'DoorTransition':
+      self.ignore_next_transition = True
 
     # When the game state changes to NormalGameplay, we can be sure we
     # are no longer in the door transition.  Record the transition.
@@ -135,34 +137,51 @@ class RoomTimer(object):
     # might not have captured the exact frame where the room times
     # changed, but once the game state has changed, we can be sure the
     # state has the room times.
-    if self.prev_state.game_state == 'DoorTransition' and state.game_state == 'NormalGameplay':
+    if change.transition_finished:
       if not self.ignore_next_transition:
         self.handle_transition(state)
       self.ignore_next_transition = False
 
-    if self.prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0:
+    if change.is_loading_preset:
       # TODO: This does not always detect loading of a preset, and when
       # it does detect it, we should ignore all transitions until the
       # next IGT reset is detected
       print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
 
-    self.log_state_changes(self.prev_state, state)
-
     self.prev_state = state
 
-  def log_state_changes(self, prev_state, state):
+  def log_state_changes(self, change):
     state_changed = False
 
-    if prev_state.door != state.door:
-      self.log_debug("Door changed to %s" % state.door)
+    if change.is_room_change:
+      if change.is_start:
+        print("Starting in room %s at %s, door=%s" % (
+          change.state.room, change.state.igt, change.state.door))
+      elif change.transition_finished:
+        print("Transition to %s (%x) at %s using door %s" %(
+            change.state.room, change.state.room.room_id,
+            change.state.igt, change.state.door))
+      else:
+        print("Room changed to %s (%x) at %s without using a door" % (
+          change.state.room, change.state.room.room_id,
+          change.state.igt))
       state_changed = True
 
-    if prev_state.game_state != state.game_state:
-      self.log_debug("Game state changed to %s" % state.game_state)
+    if change.is_reset:
+      print("Reset detected to %s" % change.state.igt)
+      state_changed = True
+
+    if change.door_changed:
+      self.log_debug("Door changed to %s" % change.state.door)
+      state_changed = True
+
+    if change.game_state_changed:
+      self.log_debug("Game state changed to %s" % change.state.game_state)
       state_changed = True
 
     if state_changed:
-      self.log_debug("State:", state)
+      self.log_debug("Previous state:", self.prev_state)
+      self.log_debug("State:", change.state)
       self.log_debug()
 
   def handle_transition(self, state):
