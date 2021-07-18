@@ -70,11 +70,13 @@ class Store(object):
     self.file.close()
 
 class RoomTimer(object):
-  def __init__(self, rooms, doors, store):
-    self.sock = NetworkCommandSocket()
+  def __init__(self, rooms, doors, store, debug=False):
     self.rooms = rooms
     self.doors = doors
     self.store = store
+    self.debug = debug
+
+    self.sock = NetworkCommandSocket()
     self.current_room = NullRoom
     self.last_room = NullRoom
     self.most_recent_door = NullDoor
@@ -84,6 +86,10 @@ class RoomTimer(object):
         game_state=None,
         igt=FrameCount(0),
         ram_load_preset=None)
+
+  def log_debug(self, *args):
+    if self.debug:
+      print(*args)
 
   def poll(self):
     state = State.read_from(self.sock, self.rooms, self.doors)
@@ -137,7 +143,7 @@ class RoomTimer(object):
       print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
 
     if self.prev_state.game_state != state.game_state:
-      print("Game state changed to %s" % state.game_state)
+      self.log_debug("Game state changed to %s" % state.game_state)
 
     self.prev_state = state
 
@@ -156,12 +162,13 @@ def main():
   parser.add_argument('-f', '--file', dest='filename', default=None)
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
+  parser.add_argument('--debug', dest='debug', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
   store = Store(rooms, doors, args.filename)
-  timer = RoomTimer(rooms, doors, store)
+  timer = RoomTimer(rooms, doors, store, debug=args.debug)
 
   while True:
     timer.poll()
