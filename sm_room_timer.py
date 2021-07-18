@@ -122,6 +122,9 @@ class RoomTimer(object):
       # don't want to count the next transition, because it has already
       # been counted.
       print("Reset detected to %s" % state.igt)
+      self.log_debug("Previous state:", self.prev_state)
+      self.log_debug("State:", state)
+      self.log_debug()
       if state.game_state == 'DoorTransition':
         self.ignore_next_transition = True
 
@@ -144,6 +147,8 @@ class RoomTimer(object):
 
     if self.prev_state.game_state != state.game_state:
       self.log_debug("Game state changed to %s" % state.game_state)
+      self.log_debug("State:", state)
+      self.log_debug()
 
     self.prev_state = state
 
