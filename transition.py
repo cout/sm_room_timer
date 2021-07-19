@@ -16,7 +16,8 @@ class TransitionId(object):
       raise RuntimeError("Expected %s == %s" % (room, entry_door.exit_room))
 
     if room is not exit_door.entry_room and exit_door.entry_room is not NullRoom and room is not NullRoom:
-      raise RuntimeError("Expected %s == %s" % (room, exit_door.entry_room))
+      # raise RuntimeError("Expected %s == %s" % (room, exit_door.entry_room))
+      raise RuntimeError("Entry room for exit door %s should be %s, not %s" % (exit_door, exit_door.entry_room, room))
 
     self.room = room
     self.entry_door = entry_door

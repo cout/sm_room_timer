@@ -12,7 +12,7 @@ from doors import Doors, NullDoor
 from frame_count import FrameCount
 from transition import TransitionId, TransitionTime, Transition
 from history import History, read_history_file
-from state import State
+from state import State, NullState
 
 class Store(object):
   def __init__(self, rooms, doors, filename=None):
@@ -51,6 +51,7 @@ class StateChange(object):
     self.is_room_change = state.game_state == 'NormalGameplay' and current_room is not state.room
     self.is_start = self.is_room_change and current_room is NullRoom
     self.transition_finished = state.game_state == 'NormalGameplay' and prev_state.game_state == 'DoorTransition'
+    self.reached_ship = (state.event_flags & 0x40) > 0 and prev_state.ship_ai != state.ship_ai and state.ship_ai == 0xaa4f
     self.is_reset = state.igt < prev_state.igt
     self.is_loading_preset = prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0
     self.door_changed = prev_state.door != state.door
@@ -74,12 +75,7 @@ class RoomTimer(object):
     self.most_recent_door = NullDoor
     self.last_most_recent_door = NullDoor
     self.ignore_next_transition = False
-    self.prev_state = State(
-        door=NullDoor,
-        room=NullRoom,
-        game_state=None,
-        igt=FrameCount(0),
-        ram_load_preset=None)
+    self.prev_state = NullState
 
   def log_debug(self, *args):
     if self.debug:
@@ -102,7 +98,7 @@ class RoomTimer(object):
     # TODO: if we just started the room timer, or if we just loaded a
     # preset, then we won't know wha the previous room was.  I think
     # that would require changes to the practice ROM.
-    if change.is_room_change:
+    if change.is_room_change or change.reached_ship:
       self.last_room = self.current_room
       self.current_room = state.room
       self.last_most_recent_door = self.most_recent_door
@@ -125,6 +121,14 @@ class RoomTimer(object):
         self.handle_transition(state)
       self.ignore_next_transition = False
 
+    # When Samus reaches the ship and the cutscent starts, it is a
+    # special case, since there is no real exit door.  The room times
+    # are updated after the game state changes to EndCutscene, but by
+    # tha time the counters have advanced too far, and the door timer is
+    # completely wrong (there is no door).
+    if change.reached_ship:
+      self.handle_reached_ship(state)
+
     if change.is_loading_preset:
       # TODO: This does not always detect loading of a preset, and when
       # it does detect it, we should ignore all transitions until the
@@ -141,9 +145,11 @@ class RoomTimer(object):
         self.log_verbose("Starting in room %s at %s, door=%s" % (
           change.state.room, change.state.igt, change.state.door))
       elif change.transition_finished:
-        self.log_verbose("Transition to %s (%x) at %s using door %s" %(
+        self.log_verbose("Transition to %s (%x) at %s using door %s" % (
             change.state.room, change.state.room.room_id,
             change.state.igt, change.state.door))
+      elif change.reached_ship:
+        self.log_verbose("Reached ship at %s" % (change.state.igt))
       else:
         self.log_verbose("Room changed to %s (%x) at %s without using a door" % (
           change.state.room, change.state.room.room_id,
@@ -155,11 +161,11 @@ class RoomTimer(object):
       state_changed = True
 
     if change.door_changed:
-      self.log_debug("Door changed to %s" % change.state.door)
+      self.log_debug("Door changed to %s at %s" % (change.state.door, change.state.igt))
       state_changed = True
 
     if change.game_state_changed:
-      self.log_debug("Game state changed to %s" % change.state.game_state)
+      self.log_debug("Game state changed to %s at %s" % (change.state.game_state, change.state.igt))
       state_changed = True
 
     if state_changed:
@@ -175,6 +181,17 @@ class RoomTimer(object):
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, state.last_door_lag_frames)
+    transition = Transition(transition_id, transition_time)
+    attempts = self.store.transitioned(transition)
+    self.log_transition(transition, attempts)
+
+  def handle_reached_ship(self, state):
+    transition_id = TransitionId(
+        state.room, state.door,
+        NullDoor, state.items, state.beams)
+    transition_time = TransitionTime(
+        state.gametime_room, state.realtime_room,
+        state.lag_counter, FrameCount(0))
     transition = Transition(transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     self.log_transition(transition, attempts)

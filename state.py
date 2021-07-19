@@ -1,6 +1,8 @@
 from frame_count import FrameCount
 from memory_region import MemoryRegion
 from areas import Areas
+from rooms import NullRoom
+from doors import NullDoor
 from game_states import GameStates
 
 def items_string(imask):
@@ -44,8 +46,8 @@ class State(object):
   def read_from(sock, rooms, doors):
     region1 = MemoryRegion.read_from(sock, 0x0770, 0x3f)
     region2 = MemoryRegion.read_from(sock, 0x0990, 0xef)
-    # region3 = MemoryRegion.read_from(sock, 0xD800, 0x8f)
-    # region4 = MemoryRegion.read_from(sock, 0x0F80, 0x4f)
+    region3 = MemoryRegion.read_from(sock, 0xD800, 0x8f)
+    region4 = MemoryRegion.read_from(sock, 0x0F80, 0x4f)
     # region5 = MemoryRegion.read_from(sock, 0x05B0, 0x0f)
     region6 = MemoryRegion.read_from(sock, 0x1FB00, 0x120)
 
@@ -70,10 +72,8 @@ class State(object):
     fps = 60.0 # TODO
     igt = FrameCount(216000 * igt_hours + 3600 * igt_minutes + 60 * igt_seconds + igt_frames)
 
-    seg_rt_frames = region6.short(0x1FBA0)
-    seg_rt_seconds = region6.short(0x1FBA2)
-    seg_rt_minutes = region6.short(0x1FBA4)
-    seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
+    event_flags = region3.short(0xD821)
+    ship_ai = region4.short(0xFB2)
 
     # Practice hack
     gametime_room = FrameCount(region6.short(0x1FB00))
@@ -83,13 +83,21 @@ class State(object):
     last_door_lag_frames = FrameCount(region6.short(0x1FB10))
     transition_counter = FrameCount(region6.short(0x1FB0E))
     last_room_lag = FrameCount(region6.short(0x1FB48))
+    lag_counter = FrameCount(region6.short(0x1FB96))
     ram_load_preset = region6.short(0x1FC00)
+    seg_rt_frames = region6.short(0x1FBA0)
+    seg_rt_seconds = region6.short(0x1FBA2)
+    seg_rt_minutes = region6.short(0x1FBA4)
+    seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
+
 
     return State(
         door=door,
         room=room,
         area=area,
         game_state=game_state,
+        event_flags=event_flags,
+        ship_ai=ship_ai,
         igt=igt,
         seg_rt=seg_rt,
         gametime_room=gametime_room,
@@ -99,7 +107,30 @@ class State(object):
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
         last_room_lag=last_room_lag,
+        lag_counter=lag_counter,
+        ram_load_preset=ram_load_preset,
         items=items_string(collected_items_bitmask),
         beams=beams_string(collected_items_bitmask, collected_beams_bitmask),
-        ram_load_preset=ram_load_preset,
         )
+
+NullState = State(
+    door=NullDoor,
+    room=NullRoom,
+    area='',
+    game_state=None,
+    event_flags=0,
+    ship_ai=0,
+    igt=FrameCount(0),
+    seg_rt=FrameCount(0),
+    gametime_room=None,
+    last_gametime_room=None,
+    realtime_room=None,
+    last_realtime_room=None,
+    last_door_lag_frames=None,
+    transition_counter=None,
+    last_room_lag=None,
+    lag_counter=None,
+    ram_load_preset=None,
+    items=None,
+    beams=None,
+    )

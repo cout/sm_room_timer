@@ -77,6 +77,15 @@ class Table(object):
 
     return "\n".join(lines)
 
+def is_final_transition(tid):
+  return tid.exit_door is NullDoor and tid.room.name == 'Landing Site'
+
+def should_ignore_transition(tid):
+  if is_final_transition(tid):
+    return False
+
+  return False
+
 def build_route(filename):
   route = [ ]
   seen_transitions = { }
@@ -87,7 +96,7 @@ def build_route(filename):
     for row in reader:
       n += 1
       tid = Transition.from_csv_row(rooms, doors, row).id
-      if (tid.entry_room is NullRoom or tid.exit_room is NullRoom) and tid.room is not LANDING_SITE and tid.room is not PARLOR:
+      if should_ignore_transition(tid):
         print("IGNORING (line %d): %s" % (n, tid))
         continue
       seen = seen_transitions.get(tid)
@@ -97,6 +106,8 @@ def build_route(filename):
           route.append(tid)
         else:
           print("UNEXPECTED (line %d): %s" % (n, tid))
+      if is_final_transition(tid):
+        break
   return route
 
 if __name__ == '__main__':
@@ -126,6 +137,13 @@ if __name__ == '__main__':
     # those separately
     attempts = history[id]
     all_stats.append(transition_stats(attempts))
+
+    if is_final_transition(id):
+      print(attempts)
+      print(len(attempts.attempts))
+      print(attempts.realtimes.best())
+      print(attempts.doortimes.best())
+      print(transition_stats(attempts))
 
   saves = [ s.save.count for s in all_stats ]
   p75_save = FrameCount(stats.scoreatpercentile(saves, 75))
