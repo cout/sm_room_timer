@@ -137,7 +137,11 @@ class RoomTimer(object):
       # TODO: This does not always detect loading of a preset, and when
       # it does detect it, we should ignore all transitions until the
       # next IGT reset is detected
-      print("Loading preset %04x; the next transition may be wrong" % state.ram_load_preset)
+      print("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
+
+    if change.is_reset and state.game_state == 'NormalGameplay' and state.igt < FrameCount(60):
+      print("Ignoring next transition due to timer reset")
+      self.ignore_next_transition = True
 
     self.prev_state = state
 
@@ -179,6 +183,16 @@ class RoomTimer(object):
       self.log_debug()
 
   def handle_transition(self, state):
+    if self.last_room is not self.last_most_recent_door.exit_room:
+      print("Ignoring transition (entry door leads to %s, not %s)" %
+          (self.last_most_recent_door.exit_room, self.last_room))
+      return
+
+    if self.last_room is not self.most_recent_door.entry_room:
+      print("Ignoring transition (exit door is located in room %s, not %s)" %
+          (self.most_recent_door.entry_room, self.last_room))
+      return
+
     transition_id = TransitionId(
         self.last_room, self.last_most_recent_door,
         self.most_recent_door, state.items, state.beams)
