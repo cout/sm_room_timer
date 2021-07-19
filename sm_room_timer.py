@@ -51,6 +51,7 @@ class StateChange(object):
     self.is_room_change = state.game_state == 'NormalGameplay' and current_room is not state.room
     self.is_start = self.is_room_change and current_room is NullRoom
     self.transition_finished = state.game_state == 'NormalGameplay' and prev_state.game_state == 'DoorTransition'
+    self.escaped_ceres = state.game_state == 'StartOfCeresCutscene' and prev_state.game_state == 'NormalGameplay' and state.room.name == 'Ceres Elevator'
     self.reached_ship = (state.event_flags & 0x40) > 0 and prev_state.ship_ai != state.ship_ai and state.ship_ai == 0xaa4f
     self.is_reset = state.igt < prev_state.igt
     self.is_loading_preset = prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0
@@ -121,6 +122,9 @@ class RoomTimer(object):
         self.handle_transition(state)
       self.ignore_next_transition = False
 
+    if change.escaped_ceres:
+      self.handle_escaped_ceres(state)
+
     # When Samus reaches the ship and the cutscent starts, it is a
     # special case, since there is no real exit door.  The room times
     # are updated after the game state changes to EndCutscene, but by
@@ -185,7 +189,23 @@ class RoomTimer(object):
     attempts = self.store.transitioned(transition)
     self.log_transition(transition, attempts)
 
+  def handle_escaped_ceres(self, state):
+    # TODO: use lag counter or use realtime - TC?
+    # TODO: is it OK to use the cutscene duration as the door transition
+    # time?
+    cutscene_duration = FrameCount(2951)
+    transition_id = TransitionId(
+        state.room, state.door, self.doors.from_id(0x88FE),
+        state.items, state.beams)
+    transition_time = TransitionTime(
+        state.gametime_room, state.realtime_room,
+        state.lag_counter, cutscene_duration)
+    transition = Transition(transition_id, transition_time)
+    attempts = self.store.transitioned(transition)
+    self.log_transition(transition, attempts)
+
   def handle_reached_ship(self, state):
+    # TODO: use lag counter or use realtime - TC?
     transition_id = TransitionId(
         state.room, state.door,
         NullDoor, state.items, state.beams)
