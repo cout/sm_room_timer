@@ -20,7 +20,7 @@ class TransitionStats(NamedTuple):
   p90: FrameCount
   save: FrameCount
 
-def transition_stats(attempts):
+def transition_stats(id, attempts):
   n = len(attempts.attempts)
   best = attempts.realtimes.best() + attempts.doortimes.best()
   p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
@@ -28,6 +28,15 @@ def transition_stats(attempts):
   p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
   save = p50 - best
   return TransitionStats(room=id.room, n=n, best=best, p50=p50, p75=p75, p90=p90, save=save)
+
+def ceres_cutscene_stats(id, attempts):
+  n = len(attempts.attempts)
+  best = FrameCount(2951)
+  p50 = FrameCount(2951)
+  p75 = FrameCount(2951)
+  p90 = FrameCount(2951)
+  save = p50 - best
+  return TransitionStats(room=Room(None, 'Ceres Cutscene'), n=n, best=best, p50=p50, p75=p75, p90=p90, save=save)
 
 class Cell(object):
   def __init__(self, text, color=None):
@@ -76,6 +85,9 @@ class Table(object):
       lines.append('  '.join([ cell.render() + ' '*(width[idx]-cell.width()) for idx, cell in enumerate(row) ]))
 
     return "\n".join(lines)
+
+def is_ceres_escape(tid):
+  return tid.room.name == 'Ceres Elevator' and tid.exit_door.exit_room.name == 'Landing Site'
 
 def is_final_transition(tid):
   return tid.exit_door is NullDoor and tid.room.name == 'Landing Site'
@@ -136,14 +148,11 @@ if __name__ == '__main__':
     # TODO: We should keep stats for real+door, rather than keeping
     # those separately
     attempts = history[id]
-    all_stats.append(transition_stats(attempts))
 
-    if is_final_transition(id):
-      print(attempts)
-      print(len(attempts.attempts))
-      print(attempts.realtimes.best())
-      print(attempts.doortimes.best())
-      print(transition_stats(attempts))
+    all_stats.append(transition_stats(id, attempts))
+
+    if is_ceres_escape(id):
+      all_stats.append(ceres_cutscene_stats(id, attempts))
 
   saves = [ s.save.count for s in all_stats ]
   p75_save = FrameCount(stats.scoreatpercentile(saves, 75))

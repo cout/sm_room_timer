@@ -191,15 +191,12 @@ class RoomTimer(object):
 
   def handle_escaped_ceres(self, state):
     # TODO: use lag counter or use realtime - TC?
-    # TODO: is it OK to use the cutscene duration as the door transition
-    # time?
-    cutscene_duration = FrameCount(2951)
     transition_id = TransitionId(
         state.room, state.door, self.doors.from_id(0x88FE),
         state.items, state.beams)
     transition_time = TransitionTime(
         state.gametime_room, state.realtime_room,
-        state.lag_counter, cutscene_duration)
+        state.lag_counter, FrameCount(0))
     transition = Transition(transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     self.log_transition(transition, attempts)
