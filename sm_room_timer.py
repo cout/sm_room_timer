@@ -73,6 +73,7 @@ class RoomTimer(object):
     self.sock = NetworkCommandSocket()
     self.current_room = NullRoom
     self.last_room = NullRoom
+    self.preset_room = NullRoom
     self.most_recent_door = NullDoor
     self.last_most_recent_door = NullDoor
     self.ignore_next_transition = False
@@ -141,6 +142,13 @@ class RoomTimer(object):
 
     if change.is_reset and state.game_state == 'NormalGameplay' and state.igt < FrameCount(60):
       print("Ignoring next transition due to timer reset")
+      self.preset_room = self.last_room
+      self.ignore_next_transition = True
+
+    elif change.is_reset and state.room == self.preset_room and state.igt < FrameCount(3600):
+      # Sometimes it takes a few seconds to setup a save state after
+      # loading a preset
+      print("Ignoring next transition due to reset to room where preset was loaded")
       self.ignore_next_transition = True
 
     self.prev_state = state
