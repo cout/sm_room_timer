@@ -4,7 +4,7 @@ Super Metroid Room Timer
 This is a quick and dirty way to record room times while playing the
 [Super Metroid practice hack](https://smpractice.speedga.me/).
 
-![Image of room timer in action](screenshots/sm_room_timer.png?raw=true)
+<img src="screenshots/sm_room_timer.png?raw=true" alt="Image of room timer in action" width="360">
 
 Usage
 -----
