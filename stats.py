@@ -159,6 +159,17 @@ if __name__ == '__main__':
   p90_save = FrameCount(stats.scoreatpercentile(saves, 90))
 
   table = Table()
+  underline = '4'
+  table.append([
+    Cell('Room', underline),
+    Cell('N', underline),
+    Cell('Best', underline),
+    Cell('P50', underline),
+    Cell('P75', underline),
+    Cell('P90', underline),
+    Cell('P50-Best', underline),
+  ])
+
   for s in all_stats:
     if s.save >= p90_save:
       color = '1;34'
