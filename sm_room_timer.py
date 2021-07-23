@@ -241,7 +241,7 @@ class RoomTimer(object):
     else:
       # Without verbose logging, we want to minimize the width of the
       # lines we are printing
-      print('Room: \033[1m%s\033[m' % transition.id.room)
+      print('Room: \033[1m%s\033[m (#%d)' % (transition.id.room, len(attempts)))
       print('Entered from: %s' % transition.id.entry_room)
       print('Exited to: %s' % transition.id.exit_room)
 
