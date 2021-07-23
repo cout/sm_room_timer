@@ -49,11 +49,12 @@ class StateChange(object):
     self.prev_state = prev_state
     self.state = state
     self.is_room_change = state.game_state == 'NormalGameplay' and current_room is not state.room
-    self.is_start = self.is_room_change and current_room is NullRoom
+    self.is_program_start = self.is_room_change and current_room is NullRoom
     self.transition_finished = state.game_state == 'NormalGameplay' and prev_state.game_state == 'DoorTransition'
     self.escaped_ceres = state.game_state == 'StartOfCeresCutscene' and prev_state.game_state == 'NormalGameplay' and state.room.name == 'Ceres Elevator'
     self.reached_ship = (state.event_flags & 0x40) > 0 and prev_state.ship_ai != state.ship_ai and state.ship_ai == 0xaa4f
     self.is_reset = state.igt < prev_state.igt
+    self.is_preset = state.last_realtime_room == FrameCount(0) and state.room.name != 'Ceres Elevator'
     self.is_loading_preset = prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0
     self.door_changed = prev_state.door != state.door
     self.game_state_changed = prev_state.game_state != state.game_state
@@ -73,7 +74,6 @@ class RoomTimer(object):
     self.sock = NetworkCommandSocket()
     self.current_room = NullRoom
     self.last_room = NullRoom
-    self.preset_room = NullRoom
     self.most_recent_door = NullDoor
     self.last_most_recent_door = NullDoor
     self.ignore_next_transition = False
@@ -140,15 +140,12 @@ class RoomTimer(object):
       # next IGT reset is detected
       print("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
 
-    if change.is_reset and state.game_state == 'NormalGameplay' and state.igt < FrameCount(60):
-      print("Ignoring next transition due to timer reset")
-      self.preset_room = self.last_room
+    if change.is_program_start and change.is_preset:
+      print("Ignoring next transition due to starting in a room where a preset was loaded")
       self.ignore_next_transition = True
 
-    elif change.is_reset and state.room == self.preset_room and state.igt < FrameCount(3600):
-      # Sometimes it takes a few seconds to setup a save state after
-      # loading a preset
-      print("Ignoring next transition due to reset to room where preset was loaded")
+    elif change.is_reset and change.is_preset:
+      print("Ignoring next transition due to loading a preset")
       self.ignore_next_transition = True
 
     self.prev_state = state
@@ -157,7 +154,7 @@ class RoomTimer(object):
     state_changed = False
 
     if change.is_room_change:
-      if change.is_start:
+      if change.is_program_start:
         self.log_verbose("Starting in room %s at %s, door=%s" % (
           change.state.room, change.state.igt, change.state.door))
       elif change.transition_finished:
