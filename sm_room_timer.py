@@ -54,10 +54,11 @@ class StateChange(object):
     self.escaped_ceres = state.game_state == 'StartOfCeresCutscene' and prev_state.game_state == 'NormalGameplay' and state.room.name == 'Ceres Elevator'
     self.reached_ship = (state.event_flags & 0x40) > 0 and prev_state.ship_ai != state.ship_ai and state.ship_ai == 0xaa4f
     self.is_reset = state.igt < prev_state.igt
-    self.is_preset = state.last_realtime_room == FrameCount(0) and state.room.name != 'Ceres Elevator'
+    self.is_preset = state.game_state == 'NormalGameplay' and state.last_realtime_room == FrameCount(0) and state.room.name != 'Ceres Elevator'
     self.is_loading_preset = prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0
     self.door_changed = prev_state.door != state.door
     self.game_state_changed = prev_state.game_state != state.game_state
+    self.is_playing = state.game_state_id >= 0x08 and state.game_state_id <= 0x18
 
   def __repr__(self):
     return "State(%s)" % ', '.join([ '%s=%s' % (k,repr(v)) for k,v in
@@ -140,11 +141,11 @@ class RoomTimer(object):
       # next IGT reset is detected
       print("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
 
-    if change.is_program_start and change.is_preset:
+    if change.is_playing and change.is_program_start and change.is_preset:
       print("Ignoring next transition due to starting in a room where a preset was loaded")
       self.ignore_next_transition = True
 
-    elif change.is_reset and change.is_preset:
+    elif change.is_playing and change.is_reset and change.is_preset:
       print("Ignoring next transition due to loading a preset")
       self.ignore_next_transition = True
 
@@ -178,7 +179,7 @@ class RoomTimer(object):
       state_changed = True
 
     if change.game_state_changed:
-      self.log_debug("Game state changed to %s at %s" % (change.state.game_state, change.state.igt))
+      self.log_debug("%s Game state changed to %s at %s" % (time.time(), change.state.game_state, change.state.igt))
       state_changed = True
 
     if state_changed:
