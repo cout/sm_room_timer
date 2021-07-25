@@ -78,16 +78,16 @@ class State(object):
     # Practice hack
     gametime_room = FrameCount(region6.short(0x1FB00))
     last_gametime_room = FrameCount(region6.short(0x1FB02))
-    realtime_room = FrameCount(region6.short(0x1FB44))
-    last_realtime_room = FrameCount(region6.short(0x1FB46))
-    last_door_lag_frames = FrameCount(region6.short(0x1FB10))
+    realtime_room = FrameCount(region6.short(0x1FB06))
+    last_realtime_room = FrameCount(region6.short(0x1FB08))
+    last_door_lag_frames = FrameCount(region6.short(0x1FB0C))
     transition_counter = FrameCount(region6.short(0x1FB0E))
-    last_room_lag = FrameCount(region6.short(0x1FB48))
-    lag_counter = FrameCount(region6.short(0x1FB96))
+    last_room_lag = FrameCount(region6.short(0x1FB0A))
+    lag_counter = FrameCount(region6.short(0x1FB96)) # TODO: This has been removed?
     ram_load_preset = region6.short(0x1FC00)
-    seg_rt_frames = region6.short(0x1FBA0)
-    seg_rt_seconds = region6.short(0x1FBA2)
-    seg_rt_minutes = region6.short(0x1FBA4)
+    seg_rt_frames = region6.short(0x1FB14)
+    seg_rt_seconds = region6.short(0x1FB16)
+    seg_rt_minutes = region6.short(0x1FB18)
     seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
 
 
@@ -95,6 +95,7 @@ class State(object):
         door=door,
         room=room,
         area=area,
+        game_state_id=game_state_id,
         game_state=game_state,
         event_flags=event_flags,
         ship_ai=ship_ai,
