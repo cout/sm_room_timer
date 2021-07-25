@@ -7,6 +7,7 @@ import csv
 import os.path
 
 from retroarch.network_command_socket import NetworkCommandSocket
+from qusb2snes.websocket_client import WebsocketClient
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from frame_count import FrameCount
@@ -65,14 +66,14 @@ class StateChange(object):
       self.__dict__.items() ])
 
 class RoomTimer(object):
-  def __init__(self, rooms, doors, store, debug=False, verbose=False):
+  def __init__(self, rooms, doors, store, sock, debug=False, verbose=False):
     self.rooms = rooms
     self.doors = doors
     self.store = store
+    self.sock = sock
     self.debug = debug
     self.verbose = verbose
 
-    self.sock = NetworkCommandSocket()
     self.current_room = NullRoom
     self.last_room = NullRoom
     self.most_recent_door = NullDoor
@@ -280,12 +281,19 @@ def main():
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
   parser.add_argument('--debug', dest='debug', action='store_true')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
+  parser.add_argument('--usb2snes', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
   store = Store(rooms, doors, args.filename)
-  timer = RoomTimer(rooms, doors, store, debug=args.debug, verbose=(args.verbose or args.debug))
+
+  if args.usb2snes:
+    sock = WebsocketClient('sm_room_timer')
+  else:
+    sock = NetworkCommandSocket()
+
+  timer = RoomTimer(rooms, doors, store, sock, debug=args.debug, verbose=(args.verbose or args.debug))
 
   while True:
     timer.poll()
