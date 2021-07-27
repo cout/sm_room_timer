@@ -222,13 +222,12 @@ class RoomTimer(object):
     self.log_transition(transition, attempts)
 
   def handle_reached_ship(self, state):
-    # TODO: use lag counter or use realtime - TC?
     transition_id = TransitionId(
         state.room, state.door,
         NullDoor, state.items, state.beams)
     transition_time = TransitionTime(
-        state.gametime_room, state.realtime_room,
-        state.lag_counter, FrameCount(0))
+        state.last_gametime_room, state.last_realtime_room,
+        state.last_room_lag, FrameCount(0))
     transition = Transition(transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     self.log_transition(transition, attempts)
