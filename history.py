@@ -1,5 +1,6 @@
 import csv
 import statistics
+import sys
 
 from frame_count import FrameCount
 from transition import Transition
@@ -8,10 +9,15 @@ from scipy import stats
 
 class FrameCountList(object):
   def __init__(self):
-    self.list = [ ]
+    self._list = [ ]
+    self._best = FrameCount.max
+    self._prev_best = FrameCount.max
 
   def append(self, frame_count):
-    self.list.append(frame_count.count if frame_count is not None else None)
+    if frame_count < self._best:
+      self._prev_best = self._best
+      self._best = frame_count
+    self._list.append(frame_count.count if frame_count is not None else None)
 
   def mean(self):
     return FrameCount(statistics.mean(self.values()))
@@ -20,7 +26,10 @@ class FrameCountList(object):
     return FrameCount(statistics.median(self.values()))
 
   def best(self):
-    return FrameCount(min(self.values()))
+    return self._best
+
+  def prev_best(self):
+    return self._prev_best
 
   def percentile(self, p):
     return FrameCount(stats.scoreatpercentile(self.values(), p))
@@ -32,7 +41,7 @@ class FrameCountList(object):
     return p
 
   def values(self):
-    return [ x for x in self.list if x is not None ]
+    return [ x for x in self._list if x is not None ]
 
   def __repr__(self):
     return 'avg %s, median %s, best %s' % (self.mean(), self.median(), self.best())

@@ -252,13 +252,15 @@ class RoomTimer(object):
     print('')
 
   def colorize(self, ttime, atimes):
-    p0 = atimes.best()
+    mean = atimes.mean()
+    best = atimes.best()
+    prev_best = atimes.prev_best()
     p25 = atimes.percentile(25)
     p50 = atimes.median()
     p75 = atimes.percentile(75)
 
     color = 8
-    if ttime <= p0:
+    if ttime <= best:
       color = 214
     elif ttime <= p25:
       color = 40
@@ -269,8 +271,12 @@ class RoomTimer(object):
     else:
       color = 196
 
-    return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, atimes)
+    if ttime == best and prev_best != FrameCount.max:
+      stats = 'avg %s, median %s, previous best %s' % (mean, p50, prev_best)
+    else:
+      stats = 'avg %s, median %s, best %s' % (mean, p50, best)
 
+    return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, stats)
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')

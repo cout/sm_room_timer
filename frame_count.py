@@ -1,3 +1,5 @@
+import sys
+
 from functools import total_ordering
 
 @total_ordering
@@ -29,3 +31,5 @@ class FrameCount(object):
       return '%d\'%02d' % (self.count / 60, self.count % 60)
     else:
       return '%d:%02d\'%02d' % (self.count / 60 / 60, (self.count / 60) % 60, self.count % 60)
+
+FrameCount.max = FrameCount(sys.maxsize)
