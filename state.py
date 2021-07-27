@@ -83,7 +83,6 @@ class State(object):
     last_room_lag = FrameCount(region6.short(0x1FB0A))
     last_door_lag_frames = FrameCount(region6.short(0x1FB0C))
     transition_counter = FrameCount(region6.short(0x1FB0E))
-    lag_counter = FrameCount(region6.short(0x1FB96)) # TODO: This has been removed?
     ram_load_preset = region6.short(0x1FC00)
     seg_rt_frames = region6.short(0x1FB14)
     seg_rt_seconds = region6.short(0x1FB16)
@@ -108,7 +107,6 @@ class State(object):
         last_room_lag=last_room_lag,
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
-        lag_counter=lag_counter,
         ram_load_preset=ram_load_preset,
         items=items_string(collected_items_bitmask),
         beams=beams_string(collected_items_bitmask, collected_beams_bitmask),
@@ -130,7 +128,6 @@ NullState = State(
     last_door_lag_frames=None,
     transition_counter=None,
     last_room_lag=None,
-    lag_counter=None,
     ram_load_preset=None,
     items=None,
     beams=None,
