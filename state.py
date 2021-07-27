@@ -77,12 +77,12 @@ class State(object):
 
     # Practice hack
     gametime_room = FrameCount(region6.short(0x1FB00))
-    last_gametime_room = FrameCount(region6.short(0x1FB02))
+    last_gametime_room = FrameCount(region6.short(0x1FB04))
     realtime_room = FrameCount(region6.short(0x1FB06))
     last_realtime_room = FrameCount(region6.short(0x1FB08))
+    last_room_lag = FrameCount(region6.short(0x1FB0A))
     last_door_lag_frames = FrameCount(region6.short(0x1FB0C))
     transition_counter = FrameCount(region6.short(0x1FB0E))
-    last_room_lag = FrameCount(region6.short(0x1FB0A))
     lag_counter = FrameCount(region6.short(0x1FB96)) # TODO: This has been removed?
     ram_load_preset = region6.short(0x1FC00)
     seg_rt_frames = region6.short(0x1FB14)
@@ -105,9 +105,9 @@ class State(object):
         last_gametime_room=last_gametime_room,
         realtime_room=realtime_room,
         last_realtime_room=last_realtime_room,
+        last_room_lag=last_room_lag,
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
-        last_room_lag=last_room_lag,
         lag_counter=lag_counter,
         ram_load_preset=ram_load_preset,
         items=items_string(collected_items_bitmask),
