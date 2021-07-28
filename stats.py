@@ -19,6 +19,8 @@ class TransitionStats(NamedTuple):
   p75: FrameCount
   p90: FrameCount
   save: FrameCount
+  items: str
+  beams: str
 
 def transition_stats(id, attempts):
   n = len(attempts.attempts)
@@ -27,7 +29,10 @@ def transition_stats(id, attempts):
   p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
   p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
   save = p50 - best
-  return TransitionStats(room=id.room, n=n, best=best, p50=p50, p75=p75, p90=p90, save=save)
+  items = id.items
+  beams = id.beams
+  return TransitionStats(room=id.room, n=n, best=best, p50=p50, p75=p75,
+      p90=p90, save=save, items=items, beams=beams)
 
 def ceres_cutscene_stats(id, attempts):
   n = len(attempts.attempts)
@@ -36,7 +41,11 @@ def ceres_cutscene_stats(id, attempts):
   p75 = FrameCount(2951)
   p90 = FrameCount(2951)
   save = p50 - best
-  return TransitionStats(room=Room(None, 'Ceres Cutscene'), n=n, best=best, p50=p50, p75=p75, p90=p90, save=save)
+  items = id.items
+  beams = id.beams
+  return TransitionStats(room=Room(None, 'Ceres Cutscene'), n=n,
+      best=best, p50=p50, p75=p75, p90=p90, save=save, items=items,
+      beams=beams)
 
 class Cell(object):
   def __init__(self, text, color=None):
@@ -130,6 +139,8 @@ if __name__ == '__main__':
   parser.add_argument('--route', dest='build_route', action='store_true')
   parser.add_argument('--start', dest='start_room', default=None)
   parser.add_argument('--end', dest='end_room', default=None)
+  parser.add_argument('--items', dest='items', action='store_true')
+  parser.add_argument('--beams', dest='beams', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -160,7 +171,7 @@ if __name__ == '__main__':
 
   table = Table()
   underline = '4'
-  table.append([
+  header = [
     Cell('Room', underline),
     Cell('N', underline),
     Cell('Best', underline),
@@ -168,7 +179,12 @@ if __name__ == '__main__':
     Cell('P75', underline),
     Cell('P90', underline),
     Cell('P50-Best', underline),
-  ])
+  ]
+
+  if args.items: header.append(Cell('Items', underline))
+  if args.beams: header.append(Cell('Beams', underline))
+
+  table.append(header)
 
   for s in all_stats:
     if s.save >= p90_save:
@@ -178,7 +194,7 @@ if __name__ == '__main__':
     else:
       color = None
 
-    table.append([
+    row = [
       Cell(s.room, color),
       Cell(s.n, color),
       Cell(s.best, color),
@@ -186,7 +202,12 @@ if __name__ == '__main__':
       Cell(s.p75, color),
       Cell(s.p90, color),
       Cell(s.save, color),
-    ])
+    ]
+
+    if args.items: row.append(Cell(s.items, color))
+    if args.beams: row.append(Cell(s.beams, color))
+
+    table.append(row)
 
   total_best = FrameCount(sum([ s.best.count for s in all_stats ]))
   total_p50 = FrameCount(sum([ s.p50.count for s in all_stats ]))
