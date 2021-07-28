@@ -121,7 +121,7 @@ def read_history_file(filename, rooms, doors):
   history = History()
   with open(filename) as csvfile:
     reader = csv.DictReader(csvfile)
-    n = 0
+    n = 1 # start at 1 for the header
     for row in reader:
       n += 1
       try:
