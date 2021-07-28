@@ -14,7 +14,7 @@ class FrameCountList(object):
     self._prev_best = FrameCount.max
 
   def append(self, frame_count):
-    if frame_count < self._best:
+    if frame_count <= self._best:
       self._prev_best = self._best
       self._best = frame_count
     self._list.append(frame_count.count if frame_count is not None else None)
