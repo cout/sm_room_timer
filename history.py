@@ -127,7 +127,7 @@ def read_history_file(filename, rooms, doors):
       try:
         transition = Transition.from_csv_row(rooms, doors, row)
       except Exception as e:
-        raise RuntimeError("Error reading history file, line %d" % n) from e
+        raise RuntimeError("Error reading history file, line %d\nrow: %s" % (n, row)) from e
       history.record(transition)
   print("Read history for {} rooms.".format(len(history)))
   return history
