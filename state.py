@@ -89,7 +89,6 @@ class State(object):
     seg_rt_minutes = region6.short(0x1FB18)
     seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
 
-
     return State(
         door=door,
         room=room,
@@ -108,8 +107,10 @@ class State(object):
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
         ram_load_preset=ram_load_preset,
-        items=items_string(collected_items_bitmask),
-        beams=beams_string(collected_items_bitmask, collected_beams_bitmask),
+        items_bitmask='%x' % collected_items_bitmask,
+        beams_bitmask='%x' % collected_beams_bitmask,
+        items=items_string(imask=collected_items_bitmask),
+        beams=beams_string(imask=collected_items_bitmask, bmask=collected_beams_bitmask),
         )
 
 NullState = State(
