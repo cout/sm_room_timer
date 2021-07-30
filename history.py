@@ -14,7 +14,7 @@ class FrameCountList(object):
     self._prev_best = FrameCount.max
 
   def append(self, frame_count):
-    if frame_count <= self._best:
+    if frame_count is not None and frame_count <= self._best:
       self._prev_best = self._best
       self._best = frame_count
     self._list.append(frame_count.count if frame_count is not None else None)
@@ -125,10 +125,12 @@ def read_history_file(filename, rooms, doors):
     for row in reader:
       n += 1
       try:
+        action = 'reading history file'
         transition = Transition.from_csv_row(rooms, doors, row)
+        action = 'recording transition'
+        history.record(transition)
       except Exception as e:
-        raise RuntimeError("Error reading history file, line %d\nrow: %s" % (n, row)) from e
-      history.record(transition)
+        raise RuntimeError("Error %s, line %d\nrow: %s" % (action, n, row)) from e
   print("Read history for {} rooms.".format(len(history)))
   return history
 
