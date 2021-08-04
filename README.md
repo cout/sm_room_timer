@@ -21,3 +21,11 @@ Whenever you enter a new room, the script will capture the room time,
 door time, and lag time, and optionally record those times in a CSV
 file.  It will then print the best times and median times for that room
 transition.
+
+Limitations
+-----------
+
+Since the room timer is scraping memory, it is not perfectly in sync
+with the game, and may occasionally scrape an incorrect time.  If this
+happens, the incorrect row can be removed using a text editor or
+spreadsheet.
