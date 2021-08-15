@@ -1,5 +1,5 @@
 from frame_count import FrameCount
-from memory import MemoryRegion
+from memory import MemoryRegion, SparseMemory
 from areas import Areas
 from rooms import NullRoom
 from doors import NullDoor
@@ -44,49 +44,49 @@ class State(object):
 
   @staticmethod
   def read_from(sock, rooms, doors):
-    region1 = MemoryRegion.read_from(sock, 0x0770, 0x3f)
-    region2 = MemoryRegion.read_from(sock, 0x0990, 0xef)
-    region3 = MemoryRegion.read_from(sock, 0xD800, 0x8f)
-    region4 = MemoryRegion.read_from(sock, 0x0F80, 0x4f)
-    # region5 = MemoryRegion.read_from(sock, 0x05B0, 0x0f)
-    region6 = MemoryRegion.read_from(sock, 0x1FB00, 0x120)
+    mem = SparseMemory(
+        MemoryRegion.read_from(sock, 0x0770, 0x3f),
+        MemoryRegion.read_from(sock, 0x0990, 0xef),
+        MemoryRegion.read_from(sock, 0xD800, 0x8f),
+        MemoryRegion.read_from(sock, 0x0F80, 0x4f),
+        MemoryRegion.read_from(sock, 0x1FB00, 0x120))
 
-    door_id = region1.short(0x78D)
-    room_id = region1.short(0x79B)
+    door_id = mem.short(0x78D)
+    room_id = mem.short(0x79B)
     door = doors.from_id(door_id)
     room = rooms.from_id(room_id)
 
-    region_id = region1.short(0x79F) 
+    region_id = mem.short(0x79F) 
     area = Areas.get(region_id, hex(region_id))
 
-    game_state_id = region2.short(0x998)
+    game_state_id = mem.short(0x998)
     game_state = GameStates.get(game_state_id, hex(game_state_id))
 
-    collected_items_bitmask = region2.short(0x9A4)
-    collected_beams_bitmask = region2.short(0x9A8)
+    collected_items_bitmask = mem.short(0x9A4)
+    collected_beams_bitmask = mem.short(0x9A8)
 
-    igt_frames = region2.short(0x9DA)
-    igt_seconds = region2[0x9DC]
-    igt_minutes = region2[0x9DE]
-    igt_hours = region2[0x9E0]
+    igt_frames = mem.short(0x9DA)
+    igt_seconds = mem[0x9DC]
+    igt_minutes = mem[0x9DE]
+    igt_hours = mem[0x9E0]
     fps = 60.0 # TODO
     igt = FrameCount(216000 * igt_hours + 3600 * igt_minutes + 60 * igt_seconds + igt_frames)
 
-    event_flags = region3.short(0xD821)
-    ship_ai = region4.short(0xFB2)
+    event_flags = mem.short(0xD821)
+    ship_ai = mem.short(0xFB2)
 
     # Practice hack
-    gametime_room = FrameCount(region6.short(0x1FB00))
-    last_gametime_room = FrameCount(region6.short(0x1FB04))
-    realtime_room = FrameCount(region6.short(0x1FB06))
-    last_realtime_room = FrameCount(region6.short(0x1FB08))
-    last_room_lag = FrameCount(region6.short(0x1FB0A))
-    last_door_lag_frames = FrameCount(region6.short(0x1FB0C))
-    transition_counter = FrameCount(region6.short(0x1FB0E))
-    ram_load_preset = region6.short(0x1FC00)
-    seg_rt_frames = region6.short(0x1FB14)
-    seg_rt_seconds = region6.short(0x1FB16)
-    seg_rt_minutes = region6.short(0x1FB18)
+    gametime_room = FrameCount(mem.short(0x1FB00))
+    last_gametime_room = FrameCount(mem.short(0x1FB04))
+    realtime_room = FrameCount(mem.short(0x1FB06))
+    last_realtime_room = FrameCount(mem.short(0x1FB08))
+    last_room_lag = FrameCount(mem.short(0x1FB0A))
+    last_door_lag_frames = FrameCount(mem.short(0x1FB0C))
+    transition_counter = FrameCount(mem.short(0x1FB0E))
+    ram_load_preset = mem.short(0x1FC00)
+    seg_rt_frames = mem.short(0x1FB14)
+    seg_rt_seconds = mem.short(0x1FB16)
+    seg_rt_minutes = mem.short(0x1FB18)
     seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
 
     return State(
