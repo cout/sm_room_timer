@@ -1,5 +1,5 @@
 from frame_count import FrameCount
-from memory_region import MemoryRegion
+from memory import MemoryRegion
 from areas import Areas
 from rooms import NullRoom
 from doors import NullDoor
