@@ -2,7 +2,8 @@ Super Metroid Room Timer
 ========================
 
 This program tracks and provides feedback for individual room times
-while playing the [Super Metroid practice hack](https://smpractice.speedga.me/).
+while playing the [Super Metroid practice hack](https://smpractice.speedga.me/),
+version 2.3.1 or later.
 
 <img src="screenshots/sm_room_timer.png?raw=true" alt="Image of room timer in action" width="360">
 
