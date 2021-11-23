@@ -286,6 +286,7 @@ def main():
   parser.add_argument('--debug', dest='debug', action='store_true')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
   parser.add_argument('--usb2snes', action='store_true')
+  parser.add_argument('--host', default='127.0.0.1')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -293,9 +294,9 @@ def main():
   store = Store(rooms, doors, args.filename)
 
   if args.usb2snes:
-    sock = WebsocketClient('sm_room_timer')
+    sock = WebsocketClient('sm_room_timer', addr=args.host)
   else:
-    sock = NetworkCommandSocket()
+    sock = NetworkCommandSocket(addr=args.host)
 
   timer = RoomTimer(rooms, doors, store, sock, debug=args.debug, verbose=(args.verbose or args.debug))
 
