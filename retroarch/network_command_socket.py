@@ -4,11 +4,15 @@ class NetworkCommandSocket(object):
   def __init__(self, port=55355, addr='127.0.0.1'):
     try:
       self.connect(addr, port)
+      print("Connected on %s" % port)
       self.read_core_ram(0, 0)
+      print("OK")
     except:
       port = 55354
       self.connect(addr, port)
+      print("Connected on %s" % port)
       self.read_core_ram(0, 0)
+      print("OK")
 
   def connect(self, addr, port):
     self.port = port
