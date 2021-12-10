@@ -121,9 +121,12 @@ class RoomTimer(object):
     # changed, but once the game state has changed, we can be sure the
     # state has the room times.
     if change.transition_finished:
-      if not self.ignore_next_transition:
-        self.handle_transition(state)
-      self.ignore_next_transition = False
+      if state.last_door_lag_frames == FrameCount(0):
+        print("Transition not yet finished? (door time is 0.00)")
+      else:
+        if not self.ignore_next_transition:
+          self.handle_transition(state)
+        self.ignore_next_transition = False
 
     if change.escaped_ceres:
       self.handle_escaped_ceres(state)
