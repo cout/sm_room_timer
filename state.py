@@ -49,7 +49,7 @@ class State(object):
         MemoryRegion.read_from(sock, 0x0990, 0xef),
         MemoryRegion.read_from(sock, 0xD800, 0x8f),
         MemoryRegion.read_from(sock, 0x0F80, 0x4f),
-        MemoryRegion.read_from(sock, 0x1FB00, 0x120))
+        MemoryRegion.read_from(sock, 0x0FB00, 0x20))
 
     door_id = mem.short(0x78D)
     room_id = mem.short(0x79B)
@@ -76,17 +76,17 @@ class State(object):
     ship_ai = mem.short(0xFB2)
 
     # Practice hack
-    gametime_room = FrameCount(mem.short(0x1FB00))
-    last_gametime_room = FrameCount(mem.short(0x1FB04))
-    realtime_room = FrameCount(mem.short(0x1FB06))
-    last_realtime_room = FrameCount(mem.short(0x1FB08))
-    last_room_lag = FrameCount(mem.short(0x1FB0A))
-    last_door_lag_frames = FrameCount(mem.short(0x1FB0C))
-    transition_counter = FrameCount(mem.short(0x1FB0E))
-    ram_load_preset = mem.short(0x1FC00)
-    seg_rt_frames = mem.short(0x1FB14)
-    seg_rt_seconds = mem.short(0x1FB16)
-    seg_rt_minutes = mem.short(0x1FB18)
+    gametime_room = FrameCount(mem.short(0x0FB02))
+    last_gametime_room = FrameCount(mem.short(0x0FB04))
+    realtime_room = FrameCount(mem.short(0x0FB06))
+    last_realtime_room = FrameCount(mem.short(0x0FB08))
+    last_room_lag = FrameCount(mem.short(0x0FB0A))
+    last_door_lag_frames = FrameCount(mem.short(0x0FB0C))
+    transition_counter = FrameCount(mem.short(0x0FB0E))
+    ram_load_preset = mem.short(0x0FB00)
+    seg_rt_frames = mem.short(0x0FB14)
+    seg_rt_seconds = mem.short(0x0FB16)
+    seg_rt_minutes = mem.short(0x0FB18)
     seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
 
     return State(
