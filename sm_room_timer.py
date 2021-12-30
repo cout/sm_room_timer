@@ -46,6 +46,8 @@ class Store(object):
   def transitioned(self, transition):
     if not self.route.complete:
       self.route.record(transition.id)
+      if self.route.complete:
+        print('GG! Route is complete!')
     elif transition.id not in self.route:
       print('Ignoring transition (not in route)')
       return None
