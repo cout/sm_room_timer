@@ -7,21 +7,16 @@ from doors import Doors, NullDoor
 import argparse
 import csv
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='SM Room Timer')
-  parser.add_argument('-i', '--input', dest='inputs', action='append')
-  parser.add_argument('-o', '--output', dest='output', default=None)
-  parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
-  parser.add_argument('--doors', dest='doors_filename', default='doors.json')
-  args = parser.parse_args()
+def need_rebuild(filename):
+  with open(filename) as infile:
+    reader = csv.DictReader(infile)
+    return reader.fieldnames != Transition.csv_headers()
 
-  rooms = Rooms.read(args.rooms_filename)
-  doors = Doors.read(args.doors_filename, rooms)
-
+def rebuild_history(rooms, doors, input_filenames, output_filename):
   # Some older files don't have door ids, so we need to infer the door
   # ids from the room ids
   by_room_and_exit = { }
-  for input in args.inputs:
+  for input in input_filenames:
     with open(input) as infile:
       reader = csv.DictReader(infile)
       for row in reader:
@@ -35,11 +30,11 @@ if __name__ == '__main__':
           by_room_and_exit[key] = { }
           by_room_and_exit[key][transition.id] = True
 
-  with open(args.output, 'w') as outfile:
+  with open(output_filename, 'w') as outfile:
     print(','.join(Transition.csv_headers()), file=outfile)
     writer = csv.writer(outfile)
 
-    for input in args.inputs:
+    for input in input_filenames:
       with open(input) as infile:
         reader = csv.DictReader(infile)
         n = 1 # we already read the header
@@ -62,3 +57,16 @@ if __name__ == '__main__':
               #     (transition.id.room, transition.id.exit_room, n))
               pass
           writer.writerow(transition.as_csv_row())
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(description='SM Room Timer')
+  parser.add_argument('-i', '--input', dest='inputs', action='append')
+  parser.add_argument('-o', '--output', dest='output', default=None)
+  parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
+  parser.add_argument('--doors', dest='doors_filename', default='doors.json')
+  args = parser.parse_args()
+
+  rooms = Rooms.read(args.rooms_filename)
+  doors = Doors.read(args.doors_filename, rooms)
+
+  rebuild_history(rooms, doors, args.inputs, args.output)

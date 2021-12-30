@@ -5,6 +5,8 @@ import time
 import argparse
 import csv
 import os.path
+import sys
+import tempfile
 
 from retroarch.network_command_socket import NetworkCommandSocket
 from qusb2snes.websocket_client import WebsocketClient
@@ -15,6 +17,7 @@ from transition import TransitionId, TransitionTime, Transition
 from history import History, read_history_file
 from route import Route, DummyRoute
 from state import State, NullState
+from rebuild_history import need_rebuild, rebuild_history
 
 class Store(object):
   def __init__(self, rooms, doors, route, filename=None):
@@ -217,35 +220,38 @@ class RoomTimer(object):
           (self.most_recent_door.entry_room, self.last_room))
       return
 
+    ts = datetime.datetime.now()
     transition_id = TransitionId(
         self.last_room, self.last_most_recent_door,
         self.most_recent_door, state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, state.last_door_lag_frames)
-    transition = Transition(transition_id, transition_time)
+    transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts: self.log_transition(transition, attempts)
 
   def handle_escaped_ceres(self, state):
+    ts = datetime.datetime.now()
     transition_id = TransitionId(
         state.room, state.door, self.doors.from_id(0x88FE),
         state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, FrameCount(0))
-    transition = Transition(transition_id, transition_time)
+    transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts: self.log_transition(transition, attempts)
 
   def handle_reached_ship(self, state):
+    ts = datetime.datetime.now()
     transition_id = TransitionId(
         state.room, state.door,
         NullDoor, state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, FrameCount(0))
-    transition = Transition(transition_id, transition_time)
+    transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts: self.log_transition(transition, attempts)
 
@@ -295,6 +301,26 @@ class RoomTimer(object):
 
     return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, stats)
 
+def backup_and_rebuild(rooms, doors, filename):
+  with tempfile.NamedTemporaryFile(prefix='.%s' % filename, delete=False) as tmp:
+    unlink = True
+
+    try:
+      rebuild_history(
+          rooms=rooms, doors=doors, input_filenames=[filename],
+          output_filename=tmp.name)
+      backup_filename = '%s.bk' % filename
+      idx = 0
+      while os.path.exists(backup_filename):
+        idx += 1
+        backup_filename = '%s.bk%s' % (filename, idx)
+      os.rename(filename, backup_filename)
+      os.rename(tmp.name, filename)
+      unlink = False
+
+    finally:
+      if unlink: os.unlink(tmp.name)
+
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -304,11 +330,20 @@ def main():
   parser.add_argument('--verbose', dest='verbose', action='store_true')
   parser.add_argument('--usb2snes', action='store_true')
   parser.add_argument('--route', action='store_true')
+  parser.add_argument('--rebuild', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
   route = Route() if args.route else DummyRoute()
+
+  if args.filename and need_rebuild(args.filename):
+    if not args.rebuild:
+      print("File needs to be rebuilt before it can be used; run rebuild_history.py or pass --rebuild to this script.")
+      sys.exit(1)
+
+    backup_and_rebuild(rooms, doors, args.filename)
+
   store = Store(rooms, doors, route, args.filename)
 
   if args.usb2snes:
