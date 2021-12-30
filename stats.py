@@ -107,28 +107,23 @@ def should_ignore_transition(tid):
 
   return False
 
-def build_route(filename):
+def build_route(history):
   route = [ ]
   seen_transitions = { }
   next_room = None
-  with open(args.filename) as infile:
-    reader = csv.DictReader(infile)
-    n = 1
-    for row in reader:
-      n += 1
-      tid = Transition.from_csv_row(rooms, doors, row).id
-      if should_ignore_transition(tid):
-        print("IGNORING (line %d): %s" % (n, tid))
-        continue
-      seen = seen_transitions.get(tid)
-      if not seen:
-        seen_transitions[tid] = True
-        if next_room is None or t.room is next_room:
-          route.append(tid)
-        else:
-          print("UNEXPECTED (line %d): %s" % (n, tid))
-      if is_final_transition(tid):
-        break
+  for tid in history:
+    if should_ignore_transition(tid):
+      print("IGNORING TRANSITION: %s" % repr(tid))
+      continue
+    seen = seen_transitions.get(tid)
+    if not seen:
+      seen_transitions[tid] = True
+      if next_room is None or t.room is next_room:
+        route.append(tid)
+      else:
+        print("UNEXPECTED TRANSITION: %s" % repr(tid))
+    if is_final_transition(tid):
+      break
   return route
 
 if __name__ == '__main__':
@@ -147,7 +142,7 @@ if __name__ == '__main__':
   doors = Doors.read(args.doors_filename, rooms)
   history = read_history_file(args.filename, rooms, doors)
 
-  ids = build_route(args.filename) if args.build_route else history.keys()
+  ids = build_route(history) if args.build_route else history.keys()
   printing = False if args.start_room else True
 
   all_stats = [ ]
