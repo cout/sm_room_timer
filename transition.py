@@ -4,6 +4,8 @@ from frame_count import FrameCount
 from rooms import Room, NullRoom
 from doors import Door, NullDoor
 
+import datetime
+
 class TransitionId(object):
   room: Room
   entry_door: Door
@@ -52,6 +54,7 @@ class TransitionTime(NamedTuple):
   door: FrameCount
 
 class Transition(NamedTuple):
+  ts: datetime.datetime
   id: TransitionId
   time: TransitionTime
 
@@ -64,13 +67,14 @@ class Transition(NamedTuple):
   @classmethod
   def csv_headers(self):
     return [
-      'room_id', 'entry_id', 'exit_id', 'room', 'entry', 'exit',
-      'entry_door', 'exit_door', 'items', 'beams', 'gametime', 'realtime',
-      'roomlagtime', 'doortime'
+      'timestamp', 'room_id', 'entry_id', 'exit_id', 'room', 'entry',
+      'exit', 'entry_door', 'exit_door', 'items', 'beams', 'gametime',
+      'realtime', 'roomlagtime', 'doortime'
     ]
 
   def as_csv_row(self):
       return (
+        self.ts.isoformat(),
         '%04x' % self.id.room.room_id,
         '%04x' % self.id.entry_room.room_id,
         '%04x' % self.id.exit_room.room_id,
@@ -104,6 +108,12 @@ class Transition(NamedTuple):
     else:
       exit_door = doors.from_id(exit_door_id)
 
+    ts = row.get('timestamp', None)
+    if ts is not None:
+      ts = datetime.datetime.fromisoformat(ts)
+    else:
+      ts = datetime.datetime.fromtimestamp(0)
+
     transition_id = TransitionId(
         room=room,
         entry_door=entry_door,
@@ -115,4 +125,4 @@ class Transition(NamedTuple):
         FrameCount.from_seconds(float(row['realtime'])),
         FrameCount.from_seconds(float(row['roomlagtime'])) if 'roomlagtime' in row else None,
         FrameCount.from_seconds(float(row['doortime'])))
-    return Transition(transition_id, transition_time)
+    return Transition(ts, transition_id, transition_time)

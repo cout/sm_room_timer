@@ -314,6 +314,8 @@ def backup_and_rebuild(rooms, doors, filename):
       while os.path.exists(backup_filename):
         idx += 1
         backup_filename = '%s.bk%s' % (filename, idx)
+
+      print("Rebuilt history; original file is saved in %s" % backup_filename)
       os.rename(filename, backup_filename)
       os.rename(tmp.name, filename)
       unlink = False
