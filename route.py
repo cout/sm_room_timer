@@ -14,21 +14,21 @@ def should_ignore_transition(tid):
 
 class Route(object):
   def __init__(self, ids=None):
-    self.ids = ids or [ ]
-    self.seen_transitions = { }
-    self.next_room = None
+    self._ids = ids or [ ]
+    self._seen_transitions = { }
+    self._next_room = None
     self.complete = False
 
-  def append(self, tid):
+  def record(self, tid):
     if should_ignore_transition(tid):
       print("IGNORING TRANSITION: %s" % repr(tid))
       return
 
-    seen = self.seen_transitions.get(tid)
+    seen = self._seen_transitions.get(tid)
     if not seen:
-      self.seen_transitions[tid] = True
-      if self.next_room is None or t.room is self.next_room:
-        self.ids.append(tid)
+      self._seen_transitions[tid] = True
+      if self._next_room is None or t.room is self._next_room:
+        self._ids.append(tid)
       else:
         print("UNEXPECTED TRANSITION: %s" % repr(tid))
 
@@ -36,19 +36,29 @@ class Route(object):
       self.complete = True
 
   def __len__(self):
-    return len(self.ids)
+    return len(self._ids)
 
   def __iter__(self):
-    return iter(self.ids)
+    return iter(self._ids)
+
+  def __contains__(self, tid):
+    return tid in self._ids
 
   def __repr__(self):
-    return 'Route(%s)' % repr(self.ids)
+    return 'Route(%s)' % repr(self._ids)
+
+class DummyRoute(object):
+  def __init__(self):
+    self.complete = False
+
+  def record(self, tid):
+    pass
 
 def build_route(history):
   route = Route()
 
   for tid in history:
-    route.append(tid)
+    route.record(tid)
     if route.complete: break
 
   return route

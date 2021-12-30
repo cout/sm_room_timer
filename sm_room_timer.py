@@ -13,14 +13,22 @@ from doors import Doors, NullDoor
 from frame_count import FrameCount
 from transition import TransitionId, TransitionTime, Transition
 from history import History, read_history_file
+from route import Route, DummyRoute
 from state import State, NullState
 
 class Store(object):
-  def __init__(self, rooms, doors, filename=None):
+  def __init__(self, rooms, doors, route, filename=None):
     if filename is not None and os.path.exists(filename):
       self.history = read_history_file(filename, rooms, doors)
     else:
       self.history = History()
+
+    self.route = route
+    for tid in self.history:
+      self.route.record(tid)
+      if route.complete: break
+
+    print('Route is %s' % ('complete' if route.complete else 'incomplete'))
 
     if filename is not None:
       self.file = open(filename, 'a')
@@ -33,6 +41,12 @@ class Store(object):
       self.writer = None
 
   def transitioned(self, transition):
+    if not self.route.complete:
+      self.route.record(transition.id)
+    elif transition.id not in self.route:
+      print('Ignoring transition (not in route)')
+      return None
+
     attempts = self.history.record(transition)
     # history_report(self.history)
 
@@ -211,7 +225,7 @@ class RoomTimer(object):
         state.last_room_lag, state.last_door_lag_frames)
     transition = Transition(transition_id, transition_time)
     attempts = self.store.transitioned(transition)
-    self.log_transition(transition, attempts)
+    if attempts: self.log_transition(transition, attempts)
 
   def handle_escaped_ceres(self, state):
     transition_id = TransitionId(
@@ -222,7 +236,7 @@ class RoomTimer(object):
         state.last_room_lag, FrameCount(0))
     transition = Transition(transition_id, transition_time)
     attempts = self.store.transitioned(transition)
-    self.log_transition(transition, attempts)
+    if attempts: self.log_transition(transition, attempts)
 
   def handle_reached_ship(self, state):
     transition_id = TransitionId(
@@ -233,7 +247,7 @@ class RoomTimer(object):
         state.last_room_lag, FrameCount(0))
     transition = Transition(transition_id, transition_time)
     attempts = self.store.transitioned(transition)
-    self.log_transition(transition, attempts)
+    if attempts: self.log_transition(transition, attempts)
 
   def log_transition(self, transition, attempts):
     if self.verbose:
@@ -289,11 +303,13 @@ def main():
   parser.add_argument('--debug', dest='debug', action='store_true')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
   parser.add_argument('--usb2snes', action='store_true')
+  parser.add_argument('--route', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
-  store = Store(rooms, doors, args.filename)
+  route = Route() if args.route else DummyRoute()
+  store = Store(rooms, doors, route, args.filename)
 
   if args.usb2snes:
     sock = WebsocketClient('sm_room_timer')
