@@ -45,6 +45,28 @@ deviate from the route until it is complete; duplicate transitions
 completed, if you are using the `--route` option, the program will print
 "GG" to the console to let you know the route has been completed.
 
+Summary statistics
+------------------
+
+To show summary statistics:
+
+```
+./stats.py -f <filename.csv> [--route] [--start] [--end]
+```
+
+This will show best time, 50/75/90 percentile time, and the difference
+between median (P50) and best (P0) time.  The time used is the real time
+(game time + lag time) plus the door time for the exit door.  The total
+time for all rooms will be shown at the bottom.
+
+When the `--route` option is used, only transitions in the route are
+used; transitions that are stored in the file but are not in the route
+are excluded.
+
+If you only want to show a subset of transitions in the route (e.g. from
+Botwoon to Draygon), use `--start` and `--end` to specify the start and
+end room names.
+
 Limitations
 -----------
 
