@@ -4,10 +4,14 @@ from transition import Transition
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 
+import os.path
 import argparse
 import csv
 
 def need_rebuild(filename):
+  if not os.path.exists(filename):
+    return False
+
   with open(filename) as infile:
     reader = csv.DictReader(infile)
     return reader.fieldnames != Transition.csv_headers()
