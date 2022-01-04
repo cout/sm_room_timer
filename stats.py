@@ -10,7 +10,6 @@ from transition import Transition
 from scipy import stats
 from typing import NamedTuple
 import argparse
-import csv
 
 class TransitionStats(NamedTuple):
   room: str
