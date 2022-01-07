@@ -110,6 +110,9 @@ class History(object):
   def __getitem__(self, key):
     return self.history[key]
 
+  def get(self, key, default=None):
+    return self.history.get(key, default)
+
 def history_report(history):
   for tid in sorted(history.keys(), key=lambda tid: (tid.room.room_id, tid.exit_room.room_id)):
     print("%s: %s (%s/%s to %s/%s)" % (tid, len(history[tid]),

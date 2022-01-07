@@ -78,3 +78,9 @@ spreadsheet.
 There are mitigations in place to prevent recording an incorrect room
 time (for example, the timer will not record a time for a room that was
 entered by loading a preset).
+
+Bugs
+----
+
+Occasionally when resetting to the previous room, that room's room times
+are assigned to the room that is being reset from.

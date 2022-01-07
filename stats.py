@@ -15,6 +15,7 @@ class TransitionStats(NamedTuple):
   room: str
   n: int
   best: FrameCount
+  p25: FrameCount
   p50: FrameCount
   p75: FrameCount
   p90: FrameCount
@@ -22,30 +23,32 @@ class TransitionStats(NamedTuple):
   items: str
   beams: str
 
-def transition_stats(id, attempts):
+def transition_stats(id, attempts, iqr):
   n = len(attempts.attempts)
   best = attempts.realtimes.best() + attempts.doortimes.best()
+  p25 = attempts.realtimes.percentile(25) + attempts.doortimes.percentile(25)
   p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
   p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
   p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
-  save = p50 - best
+  save = p50 - p25 if iqr else p50 - best
   items = id.items
   beams = id.beams
-  return TransitionStats(room=id.room, n=n, best=best, p50=p50, p75=p75,
-      p90=p90, save=save, items=items, beams=beams)
+  return TransitionStats(room=id.room, n=n, best=best, p25=p25, p50=p50,
+      p75=p75, p90=p90, save=save, items=items, beams=beams)
 
-def ceres_cutscene_stats(id, attempts):
+def ceres_cutscene_stats(id, attempts, iqr):
   n = len(attempts.attempts)
   best = FrameCount(2951)
+  p25 = FrameCount(2951)
   p50 = FrameCount(2951)
   p75 = FrameCount(2951)
   p90 = FrameCount(2951)
-  save = p50 - best
+  save = p50 - p25 if iqr else p50 - best
   items = id.items
   beams = id.beams
   return TransitionStats(room=Room(None, 'Ceres Cutscene'), n=n,
-      best=best, p50=p50, p75=p75, p90=p90, save=save, items=items,
-      beams=beams)
+      best=best, p25=p25, p50=p50, p75=p75, p90=p90, save=save,
+      items=items, beams=beams)
 
 class Cell(object):
   def __init__(self, text, color=None):
@@ -105,6 +108,7 @@ if __name__ == '__main__':
   parser.add_argument('--end', dest='end_room', default=None)
   parser.add_argument('--items', dest='items', action='store_true')
   parser.add_argument('--beams', dest='beams', action='store_true')
+  parser.add_argument('--iqr', dest='iqr', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -124,10 +128,10 @@ if __name__ == '__main__':
     # those separately
     attempts = history[id]
 
-    all_stats.append(transition_stats(id, attempts))
+    all_stats.append(transition_stats(id, attempts, args.iqr))
 
     if is_ceres_escape(id):
-      all_stats.append(ceres_cutscene_stats(id, attempts))
+      all_stats.append(ceres_cutscene_stats(id, attempts, args.iqr))
 
   saves = [ s.save.count for s in all_stats ]
   p75_save = FrameCount(stats.scoreatpercentile(saves, 75))
@@ -139,10 +143,11 @@ if __name__ == '__main__':
     Cell('Room', underline),
     Cell('N', underline),
     Cell('Best', underline),
+    *([ Cell('P25', underline) ] if args.iqr else [ ]),
     Cell('P50', underline),
     Cell('P75', underline),
     Cell('P90', underline),
-    Cell('P50-Best', underline),
+    Cell('P50-P25' if args.iqr else 'P50-Best', underline),
   ]
 
   if args.items: header.append(Cell('Items', underline))
@@ -162,6 +167,7 @@ if __name__ == '__main__':
       Cell(s.room, color),
       Cell(s.n, color),
       Cell(s.best, color),
+      *([ Cell(s.p25, color) ] if args.iqr else [ ]),
       Cell(s.p50, color),
       Cell(s.p75, color),
       Cell(s.p90, color),
@@ -174,12 +180,20 @@ if __name__ == '__main__':
     table.append(row)
 
   total_best = FrameCount(sum([ s.best.count for s in all_stats ]))
+  total_p25 = FrameCount(sum([ s.p25.count for s in all_stats ]))
   total_p50 = FrameCount(sum([ s.p50.count for s in all_stats ]))
   total_p75 = FrameCount(sum([ s.p75.count for s in all_stats ]))
   total_p90 = FrameCount(sum([ s.p90.count for s in all_stats ]))
   total_save = FrameCount(sum([ s.save.count for s in all_stats ]))
-  table.append([ Cell('Total'), Cell(''), Cell(total_best),
-    Cell(total_p50), Cell(total_p75), Cell(total_p90), Cell(total_save)
-    ]);
+  table.append([
+    Cell('Total'),
+    Cell(''),
+    Cell(total_best),
+    *([ Cell(total_p25) ] if args.iqr else [ ]),
+    Cell(total_p50),
+    Cell(total_p75),
+    Cell(total_p90),
+    Cell(total_save)
+  ]);
 
   print(table.render())

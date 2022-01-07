@@ -120,6 +120,8 @@ class Transition(NamedTuple):
         exit_door=exit_door,
         items=row['items'],
         beams=row['beams'])
+    if 'lagtime' in row and not 'roomlagtime' in row:
+      row['roomlagtime'] = row['lagtime']
     transition_time = TransitionTime(
         FrameCount.from_seconds(float(row['gametime'])),
         FrameCount.from_seconds(float(row['realtime'])),
