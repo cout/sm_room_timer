@@ -30,7 +30,7 @@ def transition_stats(id, attempts, iqr):
   p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
   p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
   p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
-  save = p50 - p25 if iqr else p50 - best
+  save = p75 - p25 if iqr else p50 - best
   items = id.items
   beams = id.beams
   return TransitionStats(room=id.room, n=n, best=best, p25=p25, p50=p50,
@@ -43,7 +43,7 @@ def ceres_cutscene_stats(id, attempts, iqr):
   p50 = FrameCount(2951)
   p75 = FrameCount(2951)
   p90 = FrameCount(2951)
-  save = p50 - p25 if iqr else p50 - best
+  save = p75 - p25 if iqr else p50 - best
   items = id.items
   beams = id.beams
   return TransitionStats(room=Room(None, 'Ceres Cutscene'), n=n,
@@ -147,7 +147,7 @@ if __name__ == '__main__':
     Cell('P50', underline),
     Cell('P75', underline),
     Cell('P90', underline),
-    Cell('P50-P25' if args.iqr else 'P50-Best', underline),
+    Cell('P75-P25' if args.iqr else 'P50-Best', underline),
   ]
 
   if args.items: header.append(Cell('Items', underline))
