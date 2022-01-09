@@ -27,8 +27,9 @@ class Route(object):
     seen = self._seen_transitions.get(tid)
     if not seen:
       self._seen_transitions[tid] = True
-      if self._next_room is None or t.room is self._next_room:
+      if self._next_room is None or tid.room is self._next_room:
         self._ids.append(tid)
+        self._next_room = tid.exit_door.exit_room
       else:
         print("UNEXPECTED TRANSITION: %s" % repr(tid))
 
