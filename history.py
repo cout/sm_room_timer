@@ -31,6 +31,9 @@ class FrameCountList(object):
   def prev_best(self):
     return self._prev_best
 
+  def most_recent(self):
+    return FrameCount(self.values()[-1])
+
   def percentile(self, p):
     return FrameCount(stats.scoreatpercentile(self.values(), p))
 

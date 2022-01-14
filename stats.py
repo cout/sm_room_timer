@@ -20,21 +20,28 @@ class TransitionStats(NamedTuple):
   p75: FrameCount
   p90: FrameCount
   save: FrameCount
+  most_recent: FrameCount
+  save_most_recent: FrameCount
   items: str
   beams: str
 
 def transition_stats(id, attempts, iqr):
   n = len(attempts.attempts)
   best = attempts.realtimes.best() + attempts.doortimes.best()
+  # TODO: This is not right -- we want to sum and then get the
+  # percentile!
   p25 = attempts.realtimes.percentile(25) + attempts.doortimes.percentile(25)
   p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
   p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
   p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
   save = p75 - p25 if iqr else p50 - best
+  most_recent = attempts.realtimes.most_recent() + attempts.doortimes.most_recent()
+  save_most_recent = max(most_recent - p50, FrameCount(0))
   items = id.items
   beams = id.beams
   return TransitionStats(room=id.room, n=n, best=best, p25=p25, p50=p50,
-      p75=p75, p90=p90, save=save, items=items, beams=beams)
+      p75=p75, p90=p90, save=save, most_recent=most_recent,
+      save_most_recent=save_most_recent, items=items, beams=beams)
 
 def ceres_cutscene_stats(id, attempts, iqr):
   n = len(attempts.attempts)
@@ -44,11 +51,14 @@ def ceres_cutscene_stats(id, attempts, iqr):
   p75 = FrameCount(2951)
   p90 = FrameCount(2951)
   save = p75 - p25 if iqr else p50 - best
+  most_recent = FrameCount(2951)
+  save_most_recent = max(most_recent - p50, FrameCount(0))
   items = id.items
   beams = id.beams
   return TransitionStats(room=Room(None, 'Ceres Cutscene'), n=n,
       best=best, p25=p25, p50=p50, p75=p75, p90=p90, save=save,
-      items=items, beams=beams)
+      items=items, most_recent=most_recent,
+      save_most_recent=save_most_recent, beams=beams)
 
 class Cell(object):
   def __init__(self, text, color=None):
@@ -109,6 +119,7 @@ if __name__ == '__main__':
   parser.add_argument('--items', dest='items', action='store_true')
   parser.add_argument('--beams', dest='beams', action='store_true')
   parser.add_argument('--iqr', dest='iqr', action='store_true')
+  parser.add_argument('--most-recent', dest='most_recent', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -148,6 +159,8 @@ if __name__ == '__main__':
     Cell('P75', underline),
     Cell('P90', underline),
     Cell('P75-P25' if args.iqr else 'P50-Best', underline),
+    *([ Cell('Most Recent', underline) ] if args.most_recent else [ ]),
+    *([ Cell('Most Recent-P50', underline) ] if args.most_recent else [ ]),
   ]
 
   if args.items: header.append(Cell('Items', underline))
@@ -172,6 +185,8 @@ if __name__ == '__main__':
       Cell(s.p75, color),
       Cell(s.p90, color),
       Cell(s.save, color),
+      *([ Cell(s.most_recent, color) ] if args.most_recent else [ ]),
+      *([ Cell(s.save_most_recent, color) ] if args.most_recent else [ ]),
     ]
 
     if args.items: row.append(Cell(s.items, color))
@@ -185,6 +200,8 @@ if __name__ == '__main__':
   total_p75 = FrameCount(sum([ s.p75.count for s in all_stats ]))
   total_p90 = FrameCount(sum([ s.p90.count for s in all_stats ]))
   total_save = FrameCount(sum([ s.save.count for s in all_stats ]))
+  total_most_recent = FrameCount(sum([ s.most_recent.count for s in all_stats ]))
+  total_save_most_recent = FrameCount(sum([ s.save_most_recent.count for s in all_stats ]))
   table.append([
     Cell('Total'),
     Cell(''),
@@ -193,7 +210,9 @@ if __name__ == '__main__':
     Cell(total_p50),
     Cell(total_p75),
     Cell(total_p90),
-    Cell(total_save)
+    Cell(total_save),
+    *([ Cell(total_most_recent) ] if args.most_recent else [ ]),
+    *([ Cell(total_save_most_recent) ] if args.most_recent else [ ]),
   ]);
 
   print(table.render())
