@@ -57,8 +57,28 @@ def ceres_cutscene_stats(id, attempts, iqr):
   beams = id.beams
   return TransitionStats(room=Room(None, 'Ceres Cutscene'), n=n,
       best=best, p25=p25, p50=p50, p75=p75, p90=p90, save=save,
-      items=items, most_recent=most_recent,
-      save_most_recent=save_most_recent, beams=beams)
+      most_recent=most_recent, save_most_recent=save_most_recent,
+      items=items, beams=beams)
+
+def door_stats(num_rooms, iqr):
+  n = num_rooms
+
+  # TODO: this number is probably wrong, but it's the number that got me
+  # closest to the actual time shown on the screen in my most recent
+  # run.
+  t = n * 150
+  best = FrameCount(t)
+  p25 = FrameCount(t)
+  p50 = FrameCount(t)
+  p75 = FrameCount(t)
+  p90 = FrameCount(t)
+  save = p75 - p25 if iqr else p50 - best
+  most_recent = FrameCount(t)
+  save_most_recent = max(most_recent - p50, FrameCount(0))
+  return TransitionStats(room=Room(None, 'Uncounted door time'), n='',
+      best=best, p25=p25, p50=p50, p75=p75, p90=p90, save=save,
+      most_recent=most_recent, save_most_recent=save_most_recent,
+      items='', beams='')
 
 class Cell(object):
   def __init__(self, text, color=None):
@@ -143,6 +163,8 @@ if __name__ == '__main__':
 
     if is_ceres_escape(id):
       all_stats.append(ceres_cutscene_stats(id, attempts, args.iqr))
+
+  all_stats.append(door_stats(len(ids), args.iqr))
 
   saves = [ s.save.count for s in all_stats ]
   p75_save = FrameCount(stats.scoreatpercentile(saves, 75))
