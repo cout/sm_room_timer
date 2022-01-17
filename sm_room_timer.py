@@ -122,6 +122,11 @@ class RoomTimer(object):
     # preset, then we won't know wha the previous room was.  I think
     # that would require changes to the practice ROM.
     if change.is_room_change or change.reached_ship:
+      if state.door.is_unknown:
+        print("Unknown door %04x from %s (%04x) to %s (%04x)" % (
+          state.door.door_id, self.current_room,
+          self.current_room.room_id, state.room,
+          state.room.room_id))
       self.last_room = self.current_room
       self.current_room = state.room
       self.last_most_recent_door = self.most_recent_door
