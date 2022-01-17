@@ -428,6 +428,7 @@
   "A4F8": { "from": "D21C", "to": "D08A", "description": "Crab Hole to Crab Tunnel" },
   "A510": { "from": "D21C", "to": "CF80", "description": "Crab Hole to East Tunnel" },
   "A51C": { "from": "D21C", "to": "D3B6", "description": "Crab Hole to Maridia Map Room" },
+  "A504": { "from": "D21C", "to": "D252", "description": "Crab Hole to West Sand Hall Tunnel" },
   "A528": { "from": "D252", "to": "D21C", "description": "West Sand Hall Tunnel to Crab Hole" },
   "A534": { "from": "D252", "to": "D461", "description": "West Sand Hall Tunnel to West Sand Hall" },
   "A540": { "from": "D27E", "to": "D387", "description": "Plasma Tutorial Room to Kassiuz Room" },
