@@ -236,7 +236,9 @@ class RoomTimer(object):
       self.log_debug()
 
   def handle_reset(self, state, change):
-    # TODO TODO: Don't count resets to a preset
+    # TODO: Can we differentiate between a reset due to failing the room
+    # and a reset due to wanting to try the previous room again?
+
     if not self.ignore_next_transition:
       reset_id = TransitionId(self.last_room, self.last_most_recent_door,
           NullDoor, state.items, state.beams)
