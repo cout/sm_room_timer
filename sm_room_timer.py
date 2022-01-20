@@ -155,18 +155,7 @@ class RoomTimer(object):
       self.most_recent_door = state.door
 
     if change.is_reset:
-      # TODO: Considering whether to use last_most_recent_door here or
-      # most_recent_door but before above chack for is_room_change
-      # TODO TODO: Don't count resets to a preset
-      reset_id = TransitionId(self.last_room, self.last_most_recent_door,
-          NullDoor, state.items, state.beams)
-      self.store.room_reset(reset_id)
-
-    # If we reset state to the middle of a door transition, then we
-    # don't want to count the next transition, because it has already
-    # been counted.
-    if change.is_reset and state.game_state == 'DoorTransition':
-      self.ignore_next_transition = True
+      self.handle_reset(state, change)
 
     # When the game state changes to NormalGameplay, we can be sure we
     # are no longer in the door transition.  Record the transition.
@@ -174,10 +163,8 @@ class RoomTimer(object):
     # might not have captured the exact frame where the room times
     # changed, but once the game state has changed, we can be sure the
     # state has the room times.
-    if change.transition_finished:
-      if change.is_reset:
-        print("Reset detected during door transition")
-      elif state.last_door_lag_frames == FrameCount(0):
+    elif change.transition_finished:
+      if state.last_door_lag_frames == FrameCount(0):
         print("Transition not yet finished? (door time is 0.00)")
       else:
         if not self.ignore_next_transition:
@@ -247,6 +234,21 @@ class RoomTimer(object):
       self.log_debug("State:", change.state)
       self.log_debug("Changes:", change)
       self.log_debug()
+
+  def handle_reset(self, state, change):
+    # TODO TODO: Don't count resets to a preset
+    reset_id = TransitionId(self.last_room, self.last_most_recent_door,
+        NullDoor, state.items, state.beams)
+    self.store.room_reset(reset_id)
+
+    # If we reset state to the middle of a door transition, then we
+    # don't want to count the next transition, because it has already
+    # been counted.
+    if state.game_state == 'DoorTransition':
+      self.ignore_next_transition = True
+
+    if change.transition_finished:
+      print("Reset detected during door transition")
 
   def handle_transition(self, state):
     if self.last_room is not self.last_most_recent_door.exit_room:
