@@ -25,9 +25,14 @@ class TransitionStats(NamedTuple):
   items: str
   beams: str
 
-def transition_stats(id, attempts, iqr):
+def transition_stats(id, attempts, iqr, exclude_doors):
   n = len(attempts.attempts)
-  times = [ sum(values) for values in zip(attempts.realtimes.values(), attempts.doortimes.values()) ]
+
+  if exclude_doors:
+    times = [ sum(values) for values in zip(attempts.realtimes.values()) ]
+  else:
+    times = [ sum(values) for values in zip(attempts.realtimes.values(), attempts.doortimes.values()) ]
+
   best = FrameCount(stats.scoreatpercentile(times, 0))
   p25 = FrameCount(stats.scoreatpercentile(times, 25))
   p50 = FrameCount(stats.scoreatpercentile(times, 50))
@@ -139,6 +144,7 @@ if __name__ == '__main__':
   parser.add_argument('--beams', dest='beams', action='store_true')
   parser.add_argument('--iqr', dest='iqr', action='store_true')
   parser.add_argument('--most-recent', dest='most_recent', action='store_true')
+  parser.add_argument('--exclude-doors', dest='exclude_doors', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -161,12 +167,14 @@ if __name__ == '__main__':
     # those separately
     attempts = history[id]
 
-    all_stats.append(transition_stats(id, attempts, args.iqr))
+    all_stats.append(transition_stats(id, attempts, iqr=args.iqr,
+      exclude_doors=args.exclude_doors))
 
     if is_ceres_escape(id):
       all_stats.append(ceres_cutscene_stats(id, attempts, args.iqr))
 
-  all_stats.append(door_stats(num_rooms, args.iqr))
+  if not args.exclude_doors:
+    all_stats.append(door_stats(num_rooms, args.iqr))
 
   saves = [ s.save.count for s in all_stats ]
   p75_save = FrameCount(stats.scoreatpercentile(saves, 75))
