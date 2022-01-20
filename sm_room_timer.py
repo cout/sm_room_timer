@@ -237,9 +237,10 @@ class RoomTimer(object):
 
   def handle_reset(self, state, change):
     # TODO TODO: Don't count resets to a preset
-    reset_id = TransitionId(self.last_room, self.last_most_recent_door,
-        NullDoor, state.items, state.beams)
-    self.store.room_reset(reset_id)
+    if not self.ignore_next_transition:
+      reset_id = TransitionId(self.last_room, self.last_most_recent_door,
+          NullDoor, state.items, state.beams)
+      self.store.room_reset(reset_id)
 
     # If we reset state to the middle of a door transition, then we
     # don't want to count the next transition, because it has already
