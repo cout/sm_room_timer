@@ -7,6 +7,7 @@ import csv
 import os.path
 import sys
 import tempfile
+import math
 
 from retroarch.network_command_socket import NetworkCommandSocket
 from qusb2snes.websocket_client import WebsocketClient
@@ -74,6 +75,13 @@ class Store(object):
       self.file.flush()
 
     return attempts
+
+  def room_reset(self, reset_id):
+    # TODO: Verify entry door is in the route before recording reset
+
+    self.history.record_reset(reset_id)
+
+    # TODO: Write reset to history file
 
   def close(self):
     self.file.close()
@@ -146,6 +154,13 @@ class RoomTimer(object):
       self.last_most_recent_door = self.most_recent_door
       self.most_recent_door = state.door
 
+    if change.is_reset:
+      # TODO: Considering whether to use last_most_recent_door here or
+      # most_recent_door but before above chack for is_room_change
+      # TODO TODO: Don't count resets to a preset
+      reset_id = TransitionId(self.last_room, self.last_most_recent_door,
+          NullDoor, state.items, state.beams)
+      self.store.room_reset(reset_id)
 
     # If we reset state to the middle of a door transition, then we
     # don't want to count the next transition, because it has already
@@ -289,7 +304,16 @@ class RoomTimer(object):
     else:
       # Without verbose logging, we want to minimize the width of the
       # lines we are printing
-      print('Room: \033[1m%s\033[m (#%d)' % (transition.id.room, len(attempts)))
+      reset_id = TransitionId(transition.id.room, transition.id.entry_door,
+          NullDoor, transition.id.items, transition.id.beams)
+      resets = self.store.history.reset_count(reset_id)
+      # TODO : If we are not writing resets to the file, then only count
+      # successes from this process, not ones that were read in
+      # previously
+      successful_attempts = len(attempts) - resets
+      success_rate = int(float(successful_attempts) / len(attempts) * 100)
+      print('Room: \033[1m%s\033[m (#%d, %d%% success)' %
+          (transition.id.room, len(attempts), success_rate))
       print('Entered from: %s' % transition.id.entry_room)
       print('Exited to: %s' % transition.id.exit_room)
 

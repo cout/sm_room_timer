@@ -79,8 +79,9 @@ class Attempts(object):
     return 'Attempts(%s)' % self.attempts
 
 class History(object):
-  def __init__(self, history=None):
+  def __init__(self, history=None, resets=None):
     self.history = history or { }
+    self.resets = resets or { }
 
   def record(self, transition):
     attempts = self.history.get(transition.id, None)
@@ -91,6 +92,17 @@ class History(object):
     attempts.append(transition)
 
     return attempts
+
+  def record_reset(self, transition_id):
+    resets = self.resets.get(transition_id, None)
+    if resets is None:
+      self.resets[transition_id] = 0
+
+    # TODO: Store an object instead of a raw counter to make it more
+    # like Attempts
+    self.resets[transition_id] += 1
+
+    return self.resets[transition_id]
 
   def __len__(self):
     return len(self.history)
@@ -109,6 +121,9 @@ class History(object):
 
   def items(self):
     return self.history.items()
+
+  def reset_count(self, transition_id):
+    return self.resets.get(transition_id, 0)
 
   def __getitem__(self, key):
     return self.history[key]
