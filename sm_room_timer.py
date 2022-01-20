@@ -310,11 +310,9 @@ class RoomTimer(object):
       reset_id = TransitionId(transition.id.room, transition.id.entry_door,
           NullDoor, transition.id.items, transition.id.beams)
       resets = self.store.history.reset_count(reset_id)
-      # TODO : If we are not writing resets to the file, then only count
-      # successes from this process, not ones that were read in
-      # previously
-      successful_attempts = len(attempts) - resets
-      success_rate = int(float(successful_attempts) / len(attempts) * 100)
+      completions = self.store.history.completed_count(transition.id)
+      denom = float(resets + completions)
+      success_rate = int(float(completions) / denom * 100) if denom != 0 else 0
       print('Room: \033[1m%s\033[m (#%d, %d%% success)' %
           (transition.id.room, len(attempts), success_rate))
       print('Entered from: %s' % transition.id.entry_room)

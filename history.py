@@ -79,11 +79,12 @@ class Attempts(object):
     return 'Attempts(%s)' % self.attempts
 
 class History(object):
-  def __init__(self, history=None, resets=None):
+  def __init__(self, history=None, reset_rooms=None, completed_rooms=None):
     self.history = history or { }
-    self.resets = resets or { }
+    self.reset_rooms = reset_rooms or { }
+    self.completed_rooms = completed_rooms or { }
 
-  def record(self, transition):
+  def record(self, transition, from_file=False):
     attempts = self.history.get(transition.id, None)
     if attempts is None:
       attempts = Attempts()
@@ -91,18 +92,17 @@ class History(object):
 
     attempts.append(transition)
 
+    if not from_file:
+      completed_rooms = self.completed_rooms.get(transition.id, 0) + 1
+      self.completed_rooms[transition.id] = completed_rooms
+
     return attempts
 
   def record_reset(self, transition_id):
-    resets = self.resets.get(transition_id, None)
-    if resets is None:
-      self.resets[transition_id] = 0
-
     # TODO: Store an object instead of a raw counter to make it more
-    # like Attempts
-    self.resets[transition_id] += 1
-
-    return self.resets[transition_id]
+    # like Attempts?
+    reset_rooms = self.reset_rooms.get(transition_id, 0)
+    self.reset_rooms[transition_id] = reset_rooms + 1
 
   def __len__(self):
     return len(self.history)
@@ -123,7 +123,10 @@ class History(object):
     return self.history.items()
 
   def reset_count(self, transition_id):
-    return self.resets.get(transition_id, 0)
+    return self.reset_rooms.get(transition_id, 0)
+
+  def completed_count(self, transition_id):
+    return self.completed_rooms.get(transition_id, 0)
 
   def __getitem__(self, key):
     return self.history[key]
@@ -149,7 +152,7 @@ def read_history_file(filename, rooms, doors):
         action = 'reading history file'
         transition = Transition.from_csv_row(rooms, doors, row)
         action = 'recording transition'
-        history.record(transition)
+        history.record(transition, from_file=True)
       except Exception as e:
         raise RuntimeError("Error %s, line %d\nrow: %s" % (action, n, row)) from e
   print("Read history for {} rooms.".format(len(history)))
