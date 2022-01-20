@@ -33,6 +33,9 @@ class Store(object):
 
     print('Route is %s' % ('complete' if route.complete else 'incomplete'))
 
+    self.extra_file = open('extra.csv', 'a')
+    self.extra_writer = csv.writer(self.extra_file)
+
     if filename is not None:
       self.file = open(filename, 'a')
       self.writer = csv.writer(self.file)
@@ -44,6 +47,17 @@ class Store(object):
       self.writer = None
 
   def transitioned(self, transition):
+    self.extra_writer.writerow((
+      '%04x' % transition.id.room.room_id,
+      '%04x' % transition.id.exit_room.room_id,
+      transition.id.room,
+      transition.id.exit_room,
+      transition.time.realtime_door,
+      transition.time.door,
+      transition.time.realtime_door - transition.time.door,
+      ))
+    self.extra_file.flush()
+
     if not self.route.complete:
       self.route.record(transition.id)
       if self.route.complete:
@@ -131,6 +145,7 @@ class RoomTimer(object):
       self.current_room = state.room
       self.last_most_recent_door = self.most_recent_door
       self.most_recent_door = state.door
+
 
     # If we reset state to the middle of a door transition, then we
     # don't want to count the next transition, because it has already
@@ -235,7 +250,8 @@ class RoomTimer(object):
         self.most_recent_door, state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
-        state.last_room_lag, state.last_door_lag_frames)
+        state.last_room_lag, state.last_door_lag_frames,
+        state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts: self.log_transition(transition, attempts)
@@ -247,7 +263,7 @@ class RoomTimer(object):
         state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
-        state.last_room_lag, FrameCount(0))
+        state.last_room_lag, FrameCount(0), state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts: self.log_transition(transition, attempts)
@@ -259,7 +275,7 @@ class RoomTimer(object):
         NullDoor, state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
-        state.last_room_lag, FrameCount(0))
+        state.last_room_lag, FrameCount(0), state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts: self.log_transition(transition, attempts)
@@ -281,6 +297,7 @@ class RoomTimer(object):
     print('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
     print('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
     print('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
+    print('RD:   %s (%s)' % (transition.time.realtime_door, transition.time.realtime_door - transition.time.door))
     print('')
 
   def colorize(self, ttime, atimes):

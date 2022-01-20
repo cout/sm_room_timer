@@ -27,13 +27,12 @@ class TransitionStats(NamedTuple):
 
 def transition_stats(id, attempts, iqr):
   n = len(attempts.attempts)
-  best = attempts.realtimes.best() + attempts.doortimes.best()
-  # TODO: This is not right -- we want to sum and then get the
-  # percentile!
-  p25 = attempts.realtimes.percentile(25) + attempts.doortimes.percentile(25)
-  p50 = attempts.realtimes.percentile(50) + attempts.doortimes.percentile(50)
-  p75 = attempts.realtimes.percentile(75) + attempts.doortimes.percentile(75)
-  p90 = attempts.realtimes.percentile(90) + attempts.doortimes.percentile(90)
+  times = [ sum(values) for values in zip(attempts.realtimes.values(), attempts.doortimes.values()) ]
+  best = FrameCount(stats.scoreatpercentile(times, 0))
+  p25 = FrameCount(stats.scoreatpercentile(times, 25))
+  p50 = FrameCount(stats.scoreatpercentile(times, 50))
+  p75 = FrameCount(stats.scoreatpercentile(times, 75))
+  p90 = FrameCount(stats.scoreatpercentile(times, 90))
   save = p75 - p25 if iqr else p50 - best
   most_recent = attempts.realtimes.most_recent() + attempts.doortimes.most_recent()
   save_most_recent = max(most_recent - p50, FrameCount(0))
@@ -66,7 +65,7 @@ def door_stats(num_rooms, iqr):
   # TODO: this number is probably wrong, but it's the number that got me
   # closest to the actual time shown on the screen in my most recent
   # run.
-  t = n * 150
+  t = n * 120
   best = FrameCount(t)
   p25 = FrameCount(t)
   p50 = FrameCount(t)
@@ -150,10 +149,13 @@ if __name__ == '__main__':
   printing = False if args.start_room else True
 
   all_stats = [ ]
+  num_rooms = 0
   for id in ids:
     if args.start_room == id.room.name: printing = True
     if args.end_room == id.room.name: break
     if not printing: continue
+
+    num_rooms += 1
 
     # TODO: We should keep stats for real+door, rather than keeping
     # those separately
@@ -164,7 +166,7 @@ if __name__ == '__main__':
     if is_ceres_escape(id):
       all_stats.append(ceres_cutscene_stats(id, attempts, args.iqr))
 
-  all_stats.append(door_stats(len(ids), args.iqr))
+  all_stats.append(door_stats(num_rooms, args.iqr))
 
   saves = [ s.save.count for s in all_stats ]
   p75_save = FrameCount(stats.scoreatpercentile(saves, 75))

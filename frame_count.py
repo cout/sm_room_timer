@@ -14,6 +14,11 @@ class FrameCount(object):
   def from_seconds(cls, secs):
     return cls(round(secs * 60, 0))
 
+  @classmethod
+  def parse(cls, s):
+    secs, frames = s.split("'")
+    return cls(int(secs)*60 + int(frames))
+
   def __eq__(self, other):
     return self.count == other.count
 

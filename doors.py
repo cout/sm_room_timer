@@ -16,7 +16,6 @@ class Door(object):
   def is_unknown(self):
     return self.entry_room is NullRoom or self.exit_room is NullRoom
 
-
 NullDoor = Door(0, NullRoom, NullRoom, 'None')
 
 class Doors(object):

@@ -83,6 +83,7 @@ class State(object):
     last_room_lag = FrameCount(mem.short(0x0FB0A))
     last_door_lag_frames = FrameCount(mem.short(0x0FB0C))
     transition_counter = FrameCount(mem.short(0x0FB0E))
+    last_realtime_door = FrameCount(mem.short(0x0FB12))
     ram_load_preset = mem.short(0x0FB00)
     seg_rt_frames = mem.short(0x0FB14)
     seg_rt_seconds = mem.short(0x0FB16)
@@ -103,6 +104,7 @@ class State(object):
         last_gametime_room=last_gametime_room,
         realtime_room=realtime_room,
         last_realtime_room=last_realtime_room,
+        last_realtime_door=last_realtime_door,
         last_room_lag=last_room_lag,
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
