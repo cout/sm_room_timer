@@ -29,10 +29,10 @@ def transition_stats(id, attempts, iqr, exclude_doors, doors_only):
   n = len(attempts.attempts)
 
   values = [ ]
-  if not doors_only: values += attempts.realtimes.values()
-  if not exclude_doors: values += attempts.doortimes.values()
+  if not doors_only: values.append(attempts.realtimes.values())
+  if not exclude_doors: values.append(attempts.doortimes.values())
 
-  times = [ sum(v) for v in zip(values) ]
+  times = [ sum(v) for v in zip(*values) ]
 
   best = FrameCount(stats.scoreatpercentile(times, 0))
   p25 = FrameCount(stats.scoreatpercentile(times, 25))
