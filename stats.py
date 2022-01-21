@@ -25,13 +25,14 @@ class TransitionStats(NamedTuple):
   items: str
   beams: str
 
-def transition_stats(id, attempts, iqr, exclude_doors):
+def transition_stats(id, attempts, iqr, exclude_doors, doors_only):
   n = len(attempts.attempts)
 
-  if exclude_doors:
-    times = [ sum(values) for values in zip(attempts.realtimes.values()) ]
-  else:
-    times = [ sum(values) for values in zip(attempts.realtimes.values(), attempts.doortimes.values()) ]
+  values = [ ]
+  if not doors_only: values += attempts.realtimes.values()
+  if not exclude_doors: values += attempts.doortimes.values()
+
+  times = [ sum(v) for v in zip(values) ]
 
   best = FrameCount(stats.scoreatpercentile(times, 0))
   p25 = FrameCount(stats.scoreatpercentile(times, 25))
@@ -140,11 +141,12 @@ if __name__ == '__main__':
   parser.add_argument('--route', dest='build_route', action='store_true')
   parser.add_argument('--start', dest='start_room', default=None)
   parser.add_argument('--end', dest='end_room', default=None)
-  parser.add_argument('--items', dest='items', action='store_true')
-  parser.add_argument('--beams', dest='beams', action='store_true')
-  parser.add_argument('--iqr', dest='iqr', action='store_true')
-  parser.add_argument('--most-recent', dest='most_recent', action='store_true')
-  parser.add_argument('--exclude-doors', dest='exclude_doors', action='store_true')
+  parser.add_argument('--items', action='store_true')
+  parser.add_argument('--beams', action='store_true')
+  parser.add_argument('--iqr', action='store_true')
+  parser.add_argument('--most-recent', action='store_true')
+  parser.add_argument('--exclude-doors', action='store_true')
+  parser.add_argument('--doors-only', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -168,7 +170,7 @@ if __name__ == '__main__':
     attempts = history[id]
 
     all_stats.append(transition_stats(id, attempts, iqr=args.iqr,
-      exclude_doors=args.exclude_doors))
+      exclude_doors=args.exclude_doors, doors_only=args.doors_only))
 
     if is_ceres_escape(id):
       all_stats.append(ceres_cutscene_stats(id, attempts, args.iqr))
