@@ -172,7 +172,7 @@ if __name__ == '__main__':
     all_stats.append(transition_stats(id, attempts, iqr=args.iqr,
       exclude_doors=args.exclude_doors, doors_only=args.doors_only))
 
-    if is_ceres_escape(id):
+    if is_ceres_escape(id) and not args.doors_only:
       all_stats.append(ceres_cutscene_stats(id, attempts, args.iqr))
 
   if not args.exclude_doors:
