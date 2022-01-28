@@ -240,9 +240,15 @@ class RoomTimer(object):
     # and a reset due to wanting to try the previous room again?
 
     if not self.ignore_next_transition:
-      reset_id = TransitionId(self.last_room, self.last_most_recent_door,
-          NullDoor, state.items, state.beams)
-      self.store.room_reset(reset_id)
+      try:
+        reset_id = TransitionId(self.last_room, self.last_most_recent_door,
+            NullDoor, state.items, state.beams)
+        self.store.room_reset(reset_id)
+      except Exception as exc:
+        print("Exception handing reset:")
+        print("  state=%s" % state)
+        print("  change=%s" % change)
+        print("  exc=%s" % exc)
 
     # If we reset state to the middle of a door transition, then we
     # don't want to count the next transition, because it has already
@@ -265,9 +271,15 @@ class RoomTimer(object):
       return
 
     ts = datetime.datetime.now()
-    transition_id = TransitionId(
-        self.last_room, self.last_most_recent_door,
-        self.most_recent_door, state.items, state.beams)
+    try:
+      transition_id = TransitionId(
+          self.last_room, self.last_most_recent_door,
+          self.most_recent_door, state.items, state.beams)
+    except Exception as exc:
+      print("Exception constructing transition id:")
+      print("  state=%s" % state)
+      print("  change=%s" % change)
+      print("  exc=%s" % exc)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, state.last_door_lag_frames,
