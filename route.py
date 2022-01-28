@@ -19,9 +19,10 @@ class Route(object):
     self._next_room = None
     self.complete = False
 
-  def record(self, tid):
+  def record(self, tid, verbose=True):
     if should_ignore_transition(tid):
-      print("IGNORING TRANSITION: %s" % repr(tid))
+      if verbose:
+        print("IGNORING TRANSITION: %s" % repr(tid))
       return
 
     seen = self._seen_transitions.get(tid)
@@ -31,7 +32,8 @@ class Route(object):
         self._ids.append(tid)
         self._next_room = tid.exit_door.exit_room
       else:
-        print("UNEXPECTED TRANSITION: %s" % repr(tid))
+        if verbose:
+          print("UNEXPECTED TRANSITION: %s" % repr(tid))
 
     if is_final_transition(tid):
       self.complete = True
