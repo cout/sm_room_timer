@@ -107,12 +107,12 @@ class StateChange(object):
       self.__dict__.items() ])
 
 class RoomTimer(object):
-  def __init__(self, rooms, doors, store, sock, debug=False, verbose=False):
+  def __init__(self, rooms, doors, store, sock, debug_log=None, verbose=False):
     self.rooms = rooms
     self.doors = doors
     self.store = store
     self.sock = sock
-    self.debug = debug
+    self.debug_log = debug_log
     self.verbose = verbose
 
     self.current_room = NullRoom
@@ -123,8 +123,8 @@ class RoomTimer(object):
     self.prev_state = NullState
 
   def log_debug(self, *args):
-    if self.debug:
-      print(*args)
+    if self.debug_log:
+      print(*args, file=self.debug_log)
 
   def log_verbose(self, *args):
     if self.verbose:
@@ -394,6 +394,7 @@ def main():
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
   parser.add_argument('--debug', dest='debug', action='store_true')
+  parser.add_argument('--debug-log', dest='debug_log_filename')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
   parser.add_argument('--usb2snes', action='store_true')
   parser.add_argument('--route', action='store_true')
@@ -418,7 +419,17 @@ def main():
   else:
     sock = NetworkCommandSocket()
 
-  timer = RoomTimer(rooms, doors, store, sock, debug=args.debug, verbose=(args.verbose or args.debug))
+  if args.debug_log_filename:
+    debug_log = open(args.debug_log_filename, 'a')
+    verbose = True
+  elif args.debug:
+    debug_log = sys.stdout
+    verbose = True
+  else:
+    debug_log = None
+    verbose = args.verbose
+
+  timer = RoomTimer(rooms, doors, store, sock, debug_log=debug_log, verbose=verbose)
 
   while True:
     timer.poll()
