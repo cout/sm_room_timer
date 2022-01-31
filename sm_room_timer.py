@@ -164,7 +164,9 @@ class RoomTimer(object):
     # changed, but once the game state has changed, we can be sure the
     # state has the room times.
     elif change.transition_finished:
-      if state.last_door_lag_frames == FrameCount(0):
+      if state.seg_rt < self.prev_state.seg_rt:
+        print("Ignoring transition (segment timer went backward)")
+      elif state.last_door_lag_frames == FrameCount(0):
         print("Transition not yet finished? (door time is 0.00)")
       else:
         if not self.ignore_next_transition:
