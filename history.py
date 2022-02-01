@@ -141,7 +141,7 @@ def history_report(history):
       id(tid.exit_room)))
   print()
 
-def read_history_file(filename, rooms, doors):
+def read_history_file_incrementally(filename, rooms, doors):
   history = History()
   with open(filename) as csvfile:
     reader = csv.DictReader(csvfile)
@@ -153,8 +153,13 @@ def read_history_file(filename, rooms, doors):
         transition = Transition.from_csv_row(rooms, doors, row)
         action = 'recording transition'
         history.record(transition, from_file=True)
+        yield history, transition
       except Exception as e:
         raise RuntimeError("Error %s, line %d\nrow: %s" % (action, n, row)) from e
-  print("Read history for {} rooms.".format(len(history)))
   return history
 
+def read_history_file(filename, rooms, doors):
+  for history, transition in read_history_file_incrementally(filename, rooms, doors):
+    pass
+  print("Read history for {} rooms.".format(len(history)))
+  return history
