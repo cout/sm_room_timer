@@ -132,6 +132,9 @@ class RoomTimer(object):
 
   def poll(self):
     state = State.read_from(self.sock, self.rooms, self.doors)
+    if state is None:
+      return
+
     change = StateChange(self.prev_state, state, self.current_room)
 
     self.log_state_changes(change)

@@ -19,7 +19,10 @@ class MemoryRegion(MemoryMixin):
   @staticmethod
   def read_from(sock, addr, size):
     s = sock.read_core_ram(addr, size)
-    return MemoryRegion(addr, s)
+    if s is not None:
+      return MemoryRegion(addr, s)
+    else:
+      return None
 
   def __getitem__(self, addr):
     return self.s[addr - self.start]
@@ -30,6 +33,18 @@ class MemoryRegion(MemoryMixin):
 class SparseMemory(MemoryMixin):
   def __init__(self, *regions):
     self.regions = regions
+
+  @staticmethod
+  def read_from(sock, *addresses):
+    regions = [ ]
+
+    for start, length in addresses:
+      region = MemoryRegion.read_from(sock, start, length)
+      if region is None:
+        return None
+      regions.append(region)
+
+    return SparseMemory(*regions)
 
   def __getitem__(self, addr):
     for region in self.regions:

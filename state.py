@@ -44,12 +44,16 @@ class State(object):
 
   @staticmethod
   def read_from(sock, rooms, doors):
-    mem = SparseMemory(
-        MemoryRegion.read_from(sock, 0x0770, 0x3f),
-        MemoryRegion.read_from(sock, 0x0990, 0xef),
-        MemoryRegion.read_from(sock, 0xD800, 0x8f),
-        MemoryRegion.read_from(sock, 0x0F80, 0x4f),
-        MemoryRegion.read_from(sock, 0x0FB00, 0x20))
+    addresses = (
+        (0x0770, 0x3f),
+        (0x0990, 0xef),
+        (0xD800, 0x8f),
+        (0x0F80, 0x4f),
+        (0x0FB00, 0x20))
+
+    mem = SparseMemory.read_from(sock, *addresses)
+    if mem is None:
+      return None
 
     door_id = mem.short(0x78D)
     room_id = mem.short(0x79B)
