@@ -51,4 +51,6 @@ class SparseMemory(MemoryMixin):
       if addr >= region.start and addr < region.start + len(region):
         return region[addr]
 
-    raise IndexError("address out of range")
+    valid_regions = [ (r.start, r.start + len(r) - 1) for r in self.regions ]
+    raise IndexError("address 0x%x out of range (valid ranges: %s)" %
+        (addr, ', '.join([ '0x%x-0x%x' % r for r in valid_regions ])))
