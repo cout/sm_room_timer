@@ -103,7 +103,7 @@ class StateChange(object):
     self.is_playing = state.game_state_id >= 0x08 and state.game_state_id <= 0x18
 
   def __repr__(self):
-    return "State(%s)" % ', '.join([ '%s=%s' % (k,repr(v)) for k,v in
+    return "StateChange(%s)" % ', '.join([ '%s=%s' % (k,repr(v)) for k,v in
       self.__dict__.items() ])
 
 class RoomTimer(object):
