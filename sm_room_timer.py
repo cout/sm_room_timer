@@ -122,6 +122,10 @@ class RoomTimer(object):
     self.ignore_next_transition = False
     self.prev_state = NullState
 
+  def log(self, *args):
+    print(*args)
+    self.log_debug(*args)
+
   def log_debug(self, *args):
     if self.debug_log:
       print(*args, file=self.debug_log)
@@ -148,7 +152,7 @@ class RoomTimer(object):
     # that would require changes to the practice ROM.
     if change.is_room_change or change.reached_ship:
       if state.door.is_unknown:
-        print("Unknown door %04x from %s (%04x) to %s (%04x)" % (
+        self.log("Unknown door %04x from %s (%04x) to %s (%04x)" % (
           state.door.door_id, self.current_room,
           self.current_room.room_id, state.room,
           state.room.room_id))
@@ -168,9 +172,10 @@ class RoomTimer(object):
     # state has the room times.
     elif change.transition_finished:
       if state.seg_rt < self.prev_state.seg_rt:
-        print("Ignoring transition (segment timer went backward)")
+        self.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
+          self.last_room, state.room, self.prev_state.seg_rt, state.seg_rt))
       elif state.last_door_lag_frames == FrameCount(0):
-        print("Transition not yet finished? (door time is 0.00)")
+        self.log("Transition not yet finished? (door time is 0.00)")
       else:
         if not self.ignore_next_transition:
           self.handle_transition(state)
@@ -191,14 +196,14 @@ class RoomTimer(object):
       # TODO: This does not always detect loading of a preset, and when
       # it does detect it, we should ignore all transitions until the
       # next IGT reset is detected
-      print("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
+      self.log("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
 
     if change.is_playing and change.is_program_start and change.is_preset:
-      print("Ignoring next transition due to starting in a room where a preset was loaded")
+      self.log("Ignoring next transition due to starting in a room where a preset was loaded")
       self.ignore_next_transition = True
 
     elif change.is_playing and change.is_reset and change.is_preset:
-      print("Ignoring next transition due to loading a preset")
+      self.log("Ignoring next transition due to loading a preset")
       self.ignore_next_transition = True
 
     self.prev_state = state
@@ -250,10 +255,10 @@ class RoomTimer(object):
             NullDoor, state.items, state.beams)
         self.store.room_reset(reset_id)
       except Exception as exc:
-        print("Exception handing reset:")
-        print("  state=%s" % state)
-        print("  change=%s" % change)
-        print("  exc=%s" % exc)
+        self.log("Exception handing reset:")
+        self.log("  state=%s" % state)
+        self.log("  change=%s" % change)
+        self.log("  exc=%s" % exc)
 
     # If we reset state to the middle of a door transition, then we
     # don't want to count the next transition, because it has already
@@ -262,16 +267,16 @@ class RoomTimer(object):
       self.ignore_next_transition = True
 
     if change.transition_finished:
-      print("Reset detected during door transition")
+      self.log("Reset detected during door transition")
 
   def handle_transition(self, state):
     if self.last_room is not self.last_most_recent_door.exit_room:
-      print("Ignoring transition (entry door leads to %s, not %s)" %
+      self.log("Ignoring transition (entry door leads to %s, not %s)" %
           (self.last_most_recent_door.exit_room, self.last_room))
       return
 
     if self.last_room is not self.most_recent_door.entry_room:
-      print("Ignoring transition (exit door is located in room %s, not %s)" %
+      self.log("Ignoring transition (exit door is located in room %s, not %s)" %
           (self.most_recent_door.entry_room, self.last_room))
       return
 
@@ -281,10 +286,10 @@ class RoomTimer(object):
           self.last_room, self.last_most_recent_door,
           self.most_recent_door, state.items, state.beams)
     except Exception as exc:
-      print("Exception constructing transition id:")
-      print("  state=%s" % state)
-      print("  change=%s" % change)
-      print("  exc=%s" % exc)
+      self.log("Exception constructing transition id:")
+      self.log("  state=%s" % state)
+      self.log("  change=%s" % change)
+      self.log("  exc=%s" % exc)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, state.last_door_lag_frames,
@@ -322,7 +327,7 @@ class RoomTimer(object):
       # When verbose logging is enabled, we  want to minimize the number
       # of lines displayed
       # TODO: Colorize this the same as below
-      print('%s #%s:' % (transition.id, len(attempts)))
+      self.log('%s #%s:' % (transition.id, len(attempts)))
     else:
       # Without verbose logging, we want to minimize the width of the
       # lines we are printing
@@ -332,17 +337,17 @@ class RoomTimer(object):
       completions = self.store.history.completed_count(transition.id)
       denom = float(resets + completions)
       success_rate = int(float(completions) / denom * 100) if denom != 0 else 0
-      print('Room: \033[1m%s\033[m (#%d, %d%% success)' %
+      self.log('Room: \033[1m%s\033[m (#%d, %d%% success)' %
           (transition.id.room, len(attempts), success_rate))
-      print('Entered from: %s' % transition.id.entry_room)
-      print('Exited to: %s' % transition.id.exit_room)
+      self.log('Entered from: %s' % transition.id.entry_room)
+      self.log('Exited to: %s' % transition.id.exit_room)
 
-    print('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
-    print('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
-    print('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
-    print('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
-    print('RD:   %s (%s)' % (transition.time.realtime_door, transition.time.realtime_door - transition.time.door))
-    print('')
+    self.log('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
+    self.log('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
+    self.log('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
+    self.log('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
+    self.log('RD:   %s (%s)' % (transition.time.realtime_door, transition.time.realtime_door - transition.time.door))
+    self.log('')
 
   def colorize(self, ttime, atimes):
     mean = atimes.mean()
