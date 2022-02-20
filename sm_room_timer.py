@@ -107,13 +107,12 @@ class StateChange(object):
       self.__dict__.items() ])
 
 class RoomTimer(object):
-  def __init__(self, rooms, doors, store, sock, debug_log=None, verbose=False):
+  def __init__(self, frontend, rooms, doors, store, sock, debug_log=None):
+    self.frontend = frontend
     self.rooms = rooms
     self.doors = doors
     self.store = store
     self.sock = sock
-    self.debug_log = debug_log
-    self.verbose = verbose
 
     self.current_room = NullRoom
     self.last_room = NullRoom
@@ -123,16 +122,14 @@ class RoomTimer(object):
     self.prev_state = NullState
 
   def log(self, *args):
-    print(*args)
+    self.frontend.log(*args)
     self.log_debug(*args)
 
   def log_debug(self, *args):
-    if self.debug_log:
-      print(*args, file=self.debug_log)
+    self.frontend.log_debug(*args)
 
   def log_verbose(self, *args):
-    if self.verbose:
-      print(*args)
+    self.frontend.log_verbose(*args)
 
   def poll(self):
     state = State.read_from(self.sock, self.rooms, self.doors)
@@ -141,7 +138,7 @@ class RoomTimer(object):
 
     change = StateChange(self.prev_state, state, self.current_room)
 
-    self.log_state_changes(change)
+    self.frontend.log_state_changes(change)
 
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
@@ -208,43 +205,6 @@ class RoomTimer(object):
 
     self.prev_state = state
 
-  def log_state_changes(self, change):
-    state_changed = False
-
-    if change.is_program_start:
-      self.log_verbose("Starting in room %s at %s, door=%s" % (
-        change.state.room, change.state.igt, change.state.door))
-    elif change.is_room_change and change.transition_finished:
-      self.log_verbose("Transition to %s (%x) at %s using door %s" % (
-          change.state.room, change.state.room.room_id,
-          change.state.igt, change.state.door))
-    elif change.reached_ship:
-      self.log_verbose("Reached ship at %s" % (change.state.igt))
-      state_changed = True
-    elif change.is_room_change:
-      self.log_verbose("Room changed to %s (%x) at %s without using a door" % (
-        change.state.room, change.state.room.room_id,
-        change.state.igt))
-      state_changed = True
-
-    if change.is_reset:
-      self.log_verbose("Reset detected to %s" % change.state.igt)
-      state_changed = True
-
-    if change.door_changed:
-      self.log_debug("Door changed to %s at %s" % (change.state.door, change.state.igt))
-      state_changed = True
-
-    if change.game_state_changed:
-      self.log_debug("%s Game state changed to %s at %s" % (time.time(), change.state.game_state, change.state.igt))
-      state_changed = True
-
-    if state_changed:
-      self.log_debug("Previous state:", self.prev_state)
-      self.log_debug("State:", change.state)
-      self.log_debug("Changes:", change)
-      self.log_debug()
-
   def handle_reset(self, state, change):
     # TODO: Can we differentiate between a reset due to failing the room
     # and a reset due to wanting to try the previous room again?
@@ -296,7 +256,8 @@ class RoomTimer(object):
         state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
-    if attempts: self.log_transition(transition, attempts)
+    if attempts:
+      self.frontend.log_transition(transition, attempts, self.store.history)
 
   def handle_escaped_ceres(self, state):
     ts = datetime.datetime.now()
@@ -308,7 +269,8 @@ class RoomTimer(object):
         state.last_room_lag, FrameCount(0), state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
-    if attempts: self.log_transition(transition, attempts)
+    if attempts:
+      self.frontend.log_transition(transition, attempts, self.store.history)
 
   def handle_reached_ship(self, state):
     ts = datetime.datetime.now()
@@ -320,9 +282,63 @@ class RoomTimer(object):
         state.last_room_lag, FrameCount(0), state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
-    if attempts: self.log_transition(transition, attempts)
+    if attempts:
+      self.frontend.log_transition(transition, attempts, self.store.history)
 
-  def log_transition(self, transition, attempts):
+class TerminalFrontend(object):
+  def __init__(self, debug_log=None, verbose=False):
+    self.debug_log = debug_log
+    self.verbose = verbose
+
+  def log(self, *args):
+    print(*args)
+
+  def log_debug(self, *args):
+    if self.debug_log:
+      print(*args, file=self.debug_log)
+
+  def log_verbose(self, *args):
+    if self.verbose:
+      self.log(*args)
+
+  def log_state_changes(self, change):
+    state_changed = False
+
+    if change.is_program_start:
+      self.log_verbose("Starting in room %s at %s, door=%s" % (
+        change.state.room, change.state.igt, change.state.door))
+    elif change.is_room_change and change.transition_finished:
+      self.log_verbose("Transition to %s (%x) at %s using door %s" % (
+          change.state.room, change.state.room.room_id,
+          change.state.igt, change.state.door))
+    elif change.reached_ship:
+      self.log_verbose("Reached ship at %s" % (change.state.igt))
+      state_changed = True
+    elif change.is_room_change:
+      self.log_verbose("Room changed to %s (%x) at %s without using a door" % (
+        change.state.room, change.state.room.room_id,
+        change.state.igt))
+      state_changed = True
+
+    if change.is_reset:
+      self.log_verbose("Reset detected to %s" % change.state.igt)
+      state_changed = True
+
+    if change.door_changed:
+      self.log_debug("Door changed to %s at %s" % (change.state.door, change.state.igt))
+      state_changed = True
+
+    if change.game_state_changed:
+      self.log_debug("%s Game state changed to %s at %s" % (time.time(), change.state.game_state, change.state.igt))
+      state_changed = True
+
+    if state_changed:
+      self.log_debug("Previous state:", change.prev_state)
+      self.log_debug("State:", change.state)
+      self.log_debug("Changes:", change)
+      self.log_debug()
+
+  def log_transition(self, transition, attempts, history):
     if self.verbose:
       # When verbose logging is enabled, we  want to minimize the number
       # of lines displayed
@@ -333,8 +349,8 @@ class RoomTimer(object):
       # lines we are printing
       reset_id = TransitionId(transition.id.room, transition.id.entry_door,
           NullDoor, transition.id.items, transition.id.beams)
-      resets = self.store.history.reset_count(reset_id)
-      completions = self.store.history.completed_count(transition.id)
+      resets = history.reset_count(reset_id)
+      completions = history.completed_count(transition.id)
       denom = float(resets + completions)
       success_rate = int(float(completions) / denom * 100) if denom != 0 else 0
       self.log('Room: \033[1m%s\033[m (#%d, %d%% success)' %
@@ -439,7 +455,8 @@ def main():
     debug_log = None
     verbose = args.verbose
 
-  timer = RoomTimer(rooms, doors, store, sock, debug_log=debug_log, verbose=verbose)
+  frontend = TerminalFrontend(verbose=verbose, debug_log=debug_log)
+  timer = RoomTimer(frontend, rooms, doors, store, sock)
 
   while True:
     timer.poll()
