@@ -179,7 +179,7 @@ class RoomTimer(object):
       else:
         if not self.ignore_next_transition:
           self.handle_transition(state)
-        self.ignore_next_transition = False
+      self.ignore_next_transition = False
 
     if change.escaped_ceres:
       self.handle_escaped_ceres(state)
