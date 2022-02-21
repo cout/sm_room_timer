@@ -58,6 +58,7 @@ class Attempts(object):
     self.realtimes = FrameCountList()
     self.roomlagtimes = FrameCountList()
     self.doortimes = FrameCountList()
+    self.totalrealtimes = FrameCountList()
 
     for transition in transitions:
       self.append(transition)
@@ -68,6 +69,7 @@ class Attempts(object):
     self.realtimes.append(transition.time.realtime)
     self.roomlagtimes.append(transition.time.roomlag)
     self.doortimes.append(transition.time.door)
+    self.totalrealtimes.append(transition.time.totalrealtime)
 
   def __iter__(self):
     return iter(self.attempts)
