@@ -20,6 +20,9 @@ class Segment(object):
     self.start = start
     self.end = end
 
+  def __str__(self):
+    return "%s to %s" % (self.start.room, self.end.room)
+
   def __repr__(self):
     return "Segment(%s, %s)" % (self.start, self.end)
 
@@ -132,23 +135,40 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     TerminalFrontend.__init__(self, debug_log=debug_log, verbose=verbose)
 
   def log_transition(self, transition, attempts, store):
-    print("Current segment: %s" % store.current_attempt.segment)
+    # print("Current segment: %s" % store.current_attempt.segment)
+
+    # seg_attempts = find_segment_in_history(store.current_attempt.segment, store.history, store.route)
+    # mean = seg_attempts.realtimes.mean()
+    # p50 = seg_attempts.realtimes.median()
+    # best = seg_attempts.realtimes.best()
+    # stats = 'avg %s, median %s, best %s' % (mean, p50, best)
+    # print("Realtime: %s (%s)" % (store.current_attempt.time.realtime, stats))
+    # mean = seg_attempts.totalrealtimes.mean()
+    # p50 = seg_attempts.totalrealtimes.median()
+    # best = seg_attempts.totalrealtimes.best()
+    # stats = 'avg %s, median %s, best %s' % (mean, p50, best)
+    # print("Total: %s (%s)" % (store.current_attempt.time.totalrealtime, stats))
+    # print("")
+
+    # TerminalFrontend.log_transition(self, transition, attempts, store)
+
+    print("Segment: \033[1m%s\033[m" % store.current_attempt.segment)
+    print("Room\tTime\tMedian\tBest")
+    for transition in store.current_attempt:
+      # TODO: Colorize rooms
+      # TODO: Print in tabular form
+      print("%s\t%s\t%s\t%s"% (
+        transition.id.room,
+        transition.time.totalrealtime,
+        'TODO', # TODO: median
+        'TODO')) # TODO: best
 
     seg_attempts = find_segment_in_history(store.current_attempt.segment, store.history, store.route)
-    mean = seg_attempts.realtimes.mean()
-    p50 = seg_attempts.realtimes.median()
-    best = seg_attempts.realtimes.best()
-    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
-    print("Realtime: %s (%s)" % (store.current_attempt.time.realtime, stats))
-    mean = seg_attempts.totalrealtimes.mean()
-    p50 = seg_attempts.totalrealtimes.median()
-    best = seg_attempts.totalrealtimes.best()
-    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
-    print("Total: %s (%s)" % (store.current_attempt.time.totalrealtime, stats))
-    print("")
-
-    TerminalFrontend.log_transition(self, transition, attempts, store)
-
+    print("Total\t%s\t%s\t%s" % (
+      store.current_attempt.time.totalrealtime,
+      seg_attempts.realtimes.median(),
+      seg_attempts.realtimes.best()))
+    print('')
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
