@@ -27,11 +27,14 @@ class Segment(object):
     if self.start is None: self.start = tid
     self.end = tid
 
+class SegmentTime(TransitionTime):
+  pass
+
 class SegmentAttempt(object):
   def __init__(self, transitions=None):
     self.segment = Segment()
     self.transitions = transitions or [ ]
-    self.time = TransitionTime(
+    self.time = SegmentTime(
         gametime=FrameCount(0),
         realtime=FrameCount(0),
         roomlag=FrameCount(0),
@@ -137,6 +140,11 @@ class SegmentStore(Store):
     best = attempts.realtimes.best()
     stats = 'avg %s, median %s, best %s' % (mean, p50, best)
     print("Realtime: %s (%s)" % (self.current_attempt.time.realtime, stats))
+    mean = attempts.totalrealtimes.mean()
+    p50 = attempts.totalrealtimes.median()
+    best = attempts.totalrealtimes.best()
+    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
+    print("Total: %s (%s)" % (self.current_attempt.time.totalrealtime, stats))
     print("")
 
     return ret
