@@ -362,7 +362,7 @@ class TerminalFrontend(object):
     self.log('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
     self.log('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
     # self.log('RD:   %s (%s)' % (transition.time.realtime_door, transition.time.realtime_door - transition.time.door))
-    self.log('Tot:   %s' % (transition.time.totalrealtime))
+    self.log('Tot:  %s' % (transition.time.totalrealtime))
     self.log('')
 
   def colorize(self, ttime, atimes):
