@@ -4,6 +4,9 @@ from sm_room_timer import Store, RoomTimer, TerminalFrontend, backup_and_rebuild
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from route import Route
+from frame_count import FrameCount
+from transition import TransitionTime
+from history import Attempts
 from rebuild_history import need_rebuild, rebuild_history
 from retroarch.network_command_socket import NetworkCommandSocket
 from qusb2snes.websocket_client import WebsocketClient
@@ -25,17 +28,73 @@ class Segment(object):
     self.end = tid
 
 class SegmentAttempt(object):
-  def __init__(self):
-    pass
+  def __init__(self, transitions=None):
+    self.segment = Segment()
+    self.transitions = transitions or [ ]
+    self.time = TransitionTime(
+        gametime=FrameCount(0),
+        realtime=FrameCount(0),
+        roomlag=FrameCount(0),
+        door=FrameCount(0),
+        realtime_door=FrameCount(0))
+
+  def __repr__(self):
+    return 'SegmentAttempt(%s)' % repr(self.transitions)
+
+  def __len__(self):
+    return len(self.transitions)
+
+  def __iter__(self):
+    return iter(self.transitions)
 
   def append(self, transition):
-    pass
+    self.segment.extend_to(transition.id)
+    self.transitions.append(transition)
+    self.time += transition.time
+
+class SegmentAttempts(Attempts):
+  def __init__(self, transitions=None):
+    Attempts.__init__(self, transitions)
+
+  def __repr__(self):
+    return 'SegmentAttempt(%s)' % repr(self.attempts)
+
+def find_segment_in_history(self, history, route):
+  attempts = SegmentAttempts()
+  attempt = None
+  route_iter = None
+  next_tid = None
+
+  for transition in history.all_transitions:
+    if transition.id == self.start:
+      # This is the start
+      attempt = SegmentAttempt()
+      route_iter = itertools.dropwhile(
+          lambda tid: transition.id != tid,
+          route)
+      next_tid = next(route_iter, None)
+
+    if next_tid is not None and transition.id == next_tid:
+      # This is the next transition in the segment
+      attempt.append(transition)
+      next_tid = next(route_iter, None)
+      if transition.id == self.end:
+        attempts.append(attempt)
+
+    else:
+      # This is not the next transition in the segment (or the
+      # previous transtition was the end of the segment)
+      attempt = None
+      route_iter = None
+      next_tid = None
+
+  return attempts
 
 class SegmentStore(Store):
   def __init__(self, rooms, doors, route, filename=None):
     Store.__init__(self, rooms, doors, route, filename=filename)
 
-    self.current_segment = Segment()
+    self.current_attempt = SegmentAttempt()
     self.route_iter = None
 
   def transitioned(self, transition):
@@ -60,22 +119,24 @@ class SegmentStore(Store):
       next_tid = next(self.route_iter, None)
       new_segment = next_tid != transition.id
 
-    print("New segment: %s" % new_segment)
-    print("TID: %s" % transition.id)
-    print("Next TID: %s" % next_tid)
-
     if new_segment:
       # This is the first transition in a segment
       self.route_iter = itertools.dropwhile(
           lambda tid: transition.id != tid,
           self.route)
       next(self.route_iter)
-      self.current_segment = Segment(start=transition.id, end=transition.id)
-    else:
-      # This is a continuation of the current segment
-      self.current_segment.extend_to(transition.id)
+      self.current_attempt = SegmentAttempt()
 
-    print("Current segment: %s" % self.current_segment)
+    self.current_attempt.append(transition)
+
+    print("Current segment: %s" % self.current_attempt.segment)
+
+    attempts = find_segment_in_history(self.current_attempt.segment, self.history, self.route)
+    mean = attempts.realtimes.mean()
+    p50 = attempts.realtimes.median()
+    best = attempts.realtimes.best()
+    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
+    print("Realtime: %s (%s)" % (self.current_attempt.time.realtime, stats))
     print("")
 
     return ret
