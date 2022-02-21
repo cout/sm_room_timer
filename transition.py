@@ -62,6 +62,10 @@ class TransitionTime(NamedTuple):
         door=(self.door + t.door),
         realtime_door=(self.realtime_door + t.realtime_door))
 
+  @property
+  def totalrealtime(self):
+    return self.realtime + self.realtime_door
+
 class Transition(NamedTuple):
   ts: datetime.datetime
   id: TransitionId
