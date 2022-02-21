@@ -81,6 +81,7 @@ class Attempts(object):
 class History(object):
   def __init__(self, history=None, reset_rooms=None, completed_rooms=None):
     self.history = history or { }
+    self.all_transitions = [ ]
     self.reset_rooms = reset_rooms or { }
     self.completed_rooms = completed_rooms or { }
 
@@ -91,6 +92,7 @@ class History(object):
       self.history[transition.id] = attempts
 
     attempts.append(transition)
+    self.all_transitions.append(transition)
 
     if not from_file:
       completed_rooms = self.completed_rooms.get(transition.id, 0) + 1
