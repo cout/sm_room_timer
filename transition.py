@@ -54,6 +54,14 @@ class TransitionTime(NamedTuple):
   door: FrameCount
   realtime_door: FrameCount
 
+  def __add__(self, t):
+    return TransitionTime(
+        gametime=(self.gametime + t.gametime),
+        realtime=(self.realtime + t.realtime),
+        roomlag=(self.roomlag + t.roomlag),
+        door=(self.door + t.door),
+        realtime_door=(self.realtime_door + t.door))
+
 class Transition(NamedTuple):
   ts: datetime.datetime
   id: TransitionId
