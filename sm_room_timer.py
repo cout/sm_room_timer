@@ -7,7 +7,6 @@ import csv
 import os.path
 import sys
 import tempfile
-import math
 
 from retroarch.network_command_socket import NetworkCommandSocket
 from qusb2snes.websocket_client import WebsocketClient
