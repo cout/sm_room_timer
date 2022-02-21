@@ -62,6 +62,7 @@ class SegmentAttempts(Attempts):
   def __repr__(self):
     return 'SegmentAttempt(%s)' % repr(self.attempts)
 
+# TODO: Move this function to SegmentStore?
 def find_segment_in_history(self, history, route):
   attempts = SegmentAttempts()
   attempt = None
@@ -101,19 +102,7 @@ class SegmentStore(Store):
     self.route_iter = None
 
   def transitioned(self, transition):
-    ret = Store.transitioned(self, transition)
-
-    # TODO:
-    # * For the first version, whenever a transition is completed, we
-    #   can brute force search the history for that segment and compute
-    #   the median times on the fly, rather than keeping running totals.
-    # * As an optimization, we can store a mapping of transition id to
-    #   segment attempts so we don't have to iterate over the entire
-    #   history each time.  A SegmentAttempt would be mapped from each
-    #   transition id in the segment.
-    # * We also need to know whether to extend the segment.  For this we
-    #   need to know if the transition is the next transition in the
-    #   route.  Use external iterator for this.
+    attempts = Store.transitioned(self, transition)
 
     if self.route_iter is None:
       next_tid = None
@@ -132,22 +121,7 @@ class SegmentStore(Store):
 
     self.current_attempt.append(transition)
 
-    print("Current segment: %s" % self.current_attempt.segment)
-
-    attempts = find_segment_in_history(self.current_attempt.segment, self.history, self.route)
-    mean = attempts.realtimes.mean()
-    p50 = attempts.realtimes.median()
-    best = attempts.realtimes.best()
-    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
-    print("Realtime: %s (%s)" % (self.current_attempt.time.realtime, stats))
-    mean = attempts.totalrealtimes.mean()
-    p50 = attempts.totalrealtimes.median()
-    best = attempts.totalrealtimes.best()
-    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
-    print("Total: %s (%s)" % (self.current_attempt.time.totalrealtime, stats))
-    print("")
-
-    return ret
+    return attempts
 
 class SegmentTimer(RoomTimer):
   def __init__(self, rooms, doors, store, sock, debug_log=None, verbose=False):
@@ -156,6 +130,25 @@ class SegmentTimer(RoomTimer):
 class SegmentTimerTerminalFrontend(TerminalFrontend):
   def __init__(self, debug_log=None, verbose=False):
     TerminalFrontend.__init__(self, debug_log=debug_log, verbose=verbose)
+
+  def log_transition(self, transition, attempts, store):
+    print("Current segment: %s" % store.current_attempt.segment)
+
+    seg_attempts = find_segment_in_history(store.current_attempt.segment, store.history, store.route)
+    mean = seg_attempts.realtimes.mean()
+    p50 = seg_attempts.realtimes.median()
+    best = seg_attempts.realtimes.best()
+    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
+    print("Realtime: %s (%s)" % (store.current_attempt.time.realtime, stats))
+    mean = seg_attempts.totalrealtimes.mean()
+    p50 = seg_attempts.totalrealtimes.median()
+    best = seg_attempts.totalrealtimes.best()
+    stats = 'avg %s, median %s, best %s' % (mean, p50, best)
+    print("Total: %s (%s)" % (store.current_attempt.time.totalrealtime, stats))
+    print("")
+
+    TerminalFrontend.log_transition(self, transition, attempts, store)
+
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')

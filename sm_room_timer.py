@@ -256,7 +256,7 @@ class RoomTimer(object):
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.store.history)
+      self.frontend.log_transition(transition, attempts, self.store)
 
   def handle_escaped_ceres(self, state):
     ts = datetime.datetime.now()
@@ -269,7 +269,7 @@ class RoomTimer(object):
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.store.history)
+      self.frontend.log_transition(transition, attempts, self.store)
 
   def handle_reached_ship(self, state):
     ts = datetime.datetime.now()
@@ -282,7 +282,7 @@ class RoomTimer(object):
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.store.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.store.history)
+      self.frontend.log_transition(transition, attempts, self.store)
 
 class TerminalFrontend(object):
   def __init__(self, debug_log=None, verbose=False):
@@ -337,7 +337,7 @@ class TerminalFrontend(object):
       self.log_debug("Changes:", change)
       self.log_debug()
 
-  def log_transition(self, transition, attempts, history):
+  def log_transition(self, transition, attempts, store):
     if self.verbose:
       # When verbose logging is enabled, we  want to minimize the number
       # of lines displayed
@@ -348,8 +348,8 @@ class TerminalFrontend(object):
       # lines we are printing
       reset_id = TransitionId(transition.id.room, transition.id.entry_door,
           NullDoor, transition.id.items, transition.id.beams)
-      resets = history.reset_count(reset_id)
-      completions = history.completed_count(transition.id)
+      resets = store.history.reset_count(reset_id)
+      completions = store.history.completed_count(transition.id)
       denom = float(resets + completions)
       success_rate = int(float(completions) / denom * 100) if denom != 0 else 0
       self.log('Room: \033[1m%s\033[m (#%d, %d%% success)' %
