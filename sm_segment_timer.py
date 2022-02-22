@@ -177,9 +177,12 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
 
     seg_attempts = find_segment_in_history(
         store.current_attempt.segment, store.history, store.route)
+    color = self.color_for_time(
+        store.current_attempt.time.totalrealtime,
+        seg_attempts.totalrealtimes)
     table.append([
       Cell('Total'),
-      Cell(store.current_attempt.time.totalrealtime),
+      Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color),
       Cell(seg_attempts.totalrealtimes.median()),
       Cell(seg_attempts.totalrealtimes.best()),
     ])
