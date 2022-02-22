@@ -162,13 +162,15 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     table.append(header)
 
     for transition in store.current_attempt:
+      attempts = store.history.history[transition.id]
+
       # TODO: Colorize rooms
       # TODO: Print in tabular form
       table.append([
         Cell(transition.id.room),
         Cell(transition.time.totalrealtime),
-        Cell('TODO'), # TODO: median
-        Cell('TODO'), # TODO: best
+        Cell(attempts.totalrealtimes.median()),
+        Cell(attempts.totalrealtimes.best()),
       ])
 
     seg_attempts = find_segment_in_history(
@@ -176,8 +178,8 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     table.append([
       Cell('Total'),
       Cell(store.current_attempt.time.totalrealtime),
-      Cell(seg_attempts.realtimes.median()),
-      Cell(seg_attempts.realtimes.best()),
+      Cell(seg_attempts.totalrealtimes.median()),
+      Cell(seg_attempts.totalrealtimes.best()),
     ])
 
     print(table.render())
