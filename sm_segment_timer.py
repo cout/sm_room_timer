@@ -7,6 +7,7 @@ from route import Route
 from frame_count import FrameCount
 from transition import TransitionTime
 from history import Attempts
+from table import Cell, Table
 from rebuild_history import need_rebuild, rebuild_history
 from retroarch.network_command_socket import NetworkCommandSocket
 from qusb2snes.websocket_client import WebsocketClient
@@ -153,21 +154,33 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     # TerminalFrontend.log_transition(self, transition, attempts, store)
 
     print("Segment: \033[1m%s\033[m" % store.current_attempt.segment)
-    print("Room\tTime\tMedian\tBest")
+
+    table = Table()
+
+    underline = 4
+    header = [ Cell(s, underline) for s in ( 'Room', 'Time', 'Median', 'Best' ) ]
+    table.append(header)
+
     for transition in store.current_attempt:
       # TODO: Colorize rooms
       # TODO: Print in tabular form
-      print("%s\t%s\t%s\t%s"% (
-        transition.id.room,
-        transition.time.totalrealtime,
-        'TODO', # TODO: median
-        'TODO')) # TODO: best
+      table.append([
+        Cell(transition.id.room),
+        Cell(transition.time.totalrealtime),
+        Cell('TODO'), # TODO: median
+        Cell('TODO'), # TODO: best
+      ])
 
-    seg_attempts = find_segment_in_history(store.current_attempt.segment, store.history, store.route)
-    print("Total\t%s\t%s\t%s" % (
-      store.current_attempt.time.totalrealtime,
-      seg_attempts.realtimes.median(),
-      seg_attempts.realtimes.best()))
+    seg_attempts = find_segment_in_history(
+        store.current_attempt.segment, store.history, store.route)
+    table.append([
+      Cell('Total'),
+      Cell(store.current_attempt.time.totalrealtime),
+      Cell(seg_attempts.realtimes.median()),
+      Cell(seg_attempts.realtimes.best()),
+    ])
+
+    print(table.render())
     print('')
 
 def main():
