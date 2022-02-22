@@ -158,25 +158,26 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     table = Table()
 
     underline = 4
-    header = [ Cell(s, underline) for s in ( 'Room', 'Time', 'Median', 'Best' ) ]
+    header = [ Cell(s, underline) for s in ( 'Room', 'Time', 'Median', 'Best', '+/-' ) ]
     table.append(header)
 
     for transition in store.current_attempt:
       attempts = store.history.history[transition.id]
-
+      delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
       color = self.color_for_time(
           transition.time.totalrealtime,
           attempts.totalrealtimes)
-
       table.append([
         Cell(transition.id.room),
         Cell(transition.time.totalrealtime, '38;5;%s' % color),
         Cell(attempts.totalrealtimes.median()),
         Cell(attempts.totalrealtimes.best()),
+        Cell(delta),
       ])
 
     seg_attempts = find_segment_in_history(
         store.current_attempt.segment, store.history, store.route)
+    delta = store.current_attempt.time.totalrealtime - seg_attempts.totalrealtimes.median();
     color = self.color_for_time(
         store.current_attempt.time.totalrealtime,
         seg_attempts.totalrealtimes)
@@ -185,6 +186,7 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
       Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color),
       Cell(seg_attempts.totalrealtimes.median()),
       Cell(seg_attempts.totalrealtimes.best()),
+      Cell(delta),
     ])
 
     print(table.render())
