@@ -136,23 +136,6 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     TerminalFrontend.__init__(self, debug_log=debug_log, verbose=verbose)
 
   def log_transition(self, transition, attempts, store):
-    # print("Current segment: %s" % store.current_attempt.segment)
-
-    # seg_attempts = find_segment_in_history(store.current_attempt.segment, store.history, store.route)
-    # mean = seg_attempts.realtimes.mean()
-    # p50 = seg_attempts.realtimes.median()
-    # best = seg_attempts.realtimes.best()
-    # stats = 'avg %s, median %s, best %s' % (mean, p50, best)
-    # print("Realtime: %s (%s)" % (store.current_attempt.time.realtime, stats))
-    # mean = seg_attempts.totalrealtimes.mean()
-    # p50 = seg_attempts.totalrealtimes.median()
-    # best = seg_attempts.totalrealtimes.best()
-    # stats = 'avg %s, median %s, best %s' % (mean, p50, best)
-    # print("Total: %s (%s)" % (store.current_attempt.time.totalrealtime, stats))
-    # print("")
-
-    # TerminalFrontend.log_transition(self, transition, attempts, store)
-
     print("Segment: \033[1m%s\033[m" % store.current_attempt.segment)
 
     table = Table()
