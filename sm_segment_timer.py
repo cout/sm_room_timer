@@ -120,6 +120,10 @@ class SegmentStore(Store):
       self.route_iter = itertools.dropwhile(
           lambda tid: transition.id != tid,
           self.route)
+      # TODO: This throws if we visit a room that is not in the route.
+      # What we want to do in that case is see if the player came back
+      # to the route, e.g. if I get health bombed from mini kraid I
+      # probably want to go back and get super drops.
       next(self.route_iter)
       self.current_attempt = SegmentAttempt()
 
