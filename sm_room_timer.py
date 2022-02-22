@@ -365,7 +365,7 @@ class TerminalFrontend(object):
     self.log('Tot:  %s' % (transition.time.totalrealtime))
     self.log('')
 
-  def colorize(self, ttime, atimes):
+  def color_for_time(self, ttime, atimes):
     mean = atimes.mean()
     best = atimes.best()
     prev_best = atimes.prev_best()
@@ -384,6 +384,11 @@ class TerminalFrontend(object):
       color = 204
     else:
       color = 196
+
+    return color
+
+  def colorize(self, ttime, atimes):
+    color = self.color_for_time(ttime, atimes)
 
     if ttime == best and prev_best != FrameCount.max:
       stats = 'avg %s, median %s, previous best %s' % (mean, p50, prev_best)

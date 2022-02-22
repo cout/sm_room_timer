@@ -164,11 +164,13 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     for transition in store.current_attempt:
       attempts = store.history.history[transition.id]
 
-      # TODO: Colorize rooms
-      # TODO: Print in tabular form
+      color = self.color_for_time(
+          transition.time.totalrealtime,
+          attempts.totalrealtimes)
+
       table.append([
         Cell(transition.id.room),
-        Cell(transition.time.totalrealtime),
+        Cell(transition.time.totalrealtime, '38;5;%s' % color),
         Cell(attempts.totalrealtimes.median()),
         Cell(attempts.totalrealtimes.best()),
       ])
