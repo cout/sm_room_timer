@@ -20,6 +20,8 @@ class MemoryRegion(MemoryMixin):
   def read_from(sock, addr, size):
     s = sock.read_core_ram(addr, size)
     if s is not None:
+      if len(s) != size:
+        raise RuntimeError("Expected to read %s bytes at address 0x%x but got %s bytes: %s" % (size, addr, len(s), s))
       return MemoryRegion(addr, s)
     else:
       return None
