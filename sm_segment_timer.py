@@ -170,7 +170,7 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
         store.current_attempt.time.totalrealtime,
         seg_attempts.totalrealtimes)
     table.append([
-      Cell('Total'),
+      Cell('Segment'),
       Cell(len(seg_attempts)),
       Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color),
       Cell(seg_attempts.totalrealtimes.median()),
