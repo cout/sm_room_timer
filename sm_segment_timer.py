@@ -109,6 +109,8 @@ class SegmentStore(Store):
   def transitioned(self, transition):
     attempts = Store.transitioned(self, transition)
 
+    # TODO: Do we really want to check if the transition is in the route
+    # when not using --route?
     if self.route_iter is None:
       next_tid = None
       new_segment = True
