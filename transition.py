@@ -140,5 +140,5 @@ class Transition(NamedTuple):
         FrameCount.from_seconds(float(row['realtime'])),
         FrameCount.from_seconds(float(row['roomlagtime'])) if 'roomlagtime' in row else None,
         FrameCount.from_seconds(float(row['doortime'])),
-        FrameCount(120))
+        FrameCount(120) + FrameCount.from_seconds(float(row['doortime'])))
     return Transition(ts, transition_id, transition_time)
