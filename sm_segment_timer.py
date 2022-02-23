@@ -151,19 +151,36 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', 'Median', 'Best', '+/-' ) ]
     table.append(header)
 
+    deltas = [ transition.time.totalrealtime -
+        store.history.history[transition.id].totalrealtimes.median()
+        for transition in store.current_attempt ]
+    max_delta = max(deltas)
+    min_delta = min(deltas)
+
     for transition in store.current_attempt:
       attempts = store.history.history[transition.id]
-      delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
-      color = self.color_for_time(
+
+      time_color = self.color_for_time(
           transition.time.totalrealtime,
           attempts.totalrealtimes)
+      time_color = '38;5;%s' % time_color
+
+      delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
+      if delta == max_delta or delta == min_delta:
+        # TODO: Change background color (w/ black text probably) instead
+        # of bold?
+        cell_color = '1'
+        time_color += ';1'
+      else:
+        cell_color = None
+
       table.append([
-        Cell(transition.id.room),
-        Cell(len(attempts), justify='right'),
-        Cell(transition.time.totalrealtime, '38;5;%s' % color, justify='right'),
-        Cell(attempts.totalrealtimes.median(), justify='right'),
-        Cell(attempts.totalrealtimes.best(), justify='right'),
-        Cell(delta, justify='right'),
+        Cell(transition.id.room, color=cell_color),
+        Cell(len(attempts), color=cell_color, justify='right'),
+        Cell(transition.time.totalrealtime, color=time_color, justify='right'),
+        Cell(attempts.totalrealtimes.median(), color=cell_color, justify='right'),
+        Cell(attempts.totalrealtimes.best(), color=cell_color, justify='right'),
+        Cell(delta, color=cell_color, justify='right'),
       ])
 
     seg_attempts = find_segment_in_history(
