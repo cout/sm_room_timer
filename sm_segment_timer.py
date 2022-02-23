@@ -113,7 +113,7 @@ class SegmentStore(Store):
       new_segment = True
     else:
       next_tid = next(self.route_iter, None)
-      new_segment = next_tid != transition.id
+      new_segment = next_tid is None or next_tid != transition.id
 
     if new_segment:
       # This is the first transition in a segment
