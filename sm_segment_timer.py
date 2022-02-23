@@ -15,6 +15,7 @@ from qusb2snes.websocket_client import WebsocketClient
 import argparse
 import itertools
 import time
+import sys
 
 class Segment(object):
   def __init__(self, start=None, end=None):
