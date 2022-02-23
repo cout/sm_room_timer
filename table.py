@@ -1,7 +1,8 @@
 class Cell(object):
-  def __init__(self, text, color=None):
+  def __init__(self, text, color=None, justify='left'):
     self.text = text
     self.color = color
+    self.justify = justify
 
   def __len__(self):
     return len(self.text)
@@ -18,8 +19,15 @@ class Cell(object):
   def width(self):
     return len(str(self.text))
 
-  def render(self):
-    return "\033[%sm%s\033[m" % ('' if self.color is None else self.color, self.text)
+  def render(self, width):
+    text = "\033[%sm%s\033[m" % ('' if self.color is None else self.color, self.text)
+    spacing = ' ' * (width - self.width())
+    if self.justify == 'left':
+      return text + spacing
+    elif self.justify == 'right':
+      return spacing + text
+    else:
+      raise ValueError("Invalid value for justify: %s" % self.justify)
 
 class Table(object):
   def __init__(self):
@@ -42,6 +50,6 @@ class Table(object):
 
     lines = [ ]
     for row in self.rows:
-      lines.append('  '.join([ cell.render() + ' '*(width[idx]-cell.width()) for idx, cell in enumerate(row) ]))
+      lines.append('  '.join([ cell.render(width=width[idx]) for idx, cell in enumerate(row) ]))
 
     return "\n".join(lines)

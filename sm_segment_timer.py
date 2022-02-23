@@ -159,11 +159,11 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
           attempts.totalrealtimes)
       table.append([
         Cell(transition.id.room),
-        Cell(len(attempts)),
-        Cell(transition.time.totalrealtime, '38;5;%s' % color),
-        Cell(attempts.totalrealtimes.median()),
-        Cell(attempts.totalrealtimes.best()),
-        Cell(delta),
+        Cell(len(attempts), justify='right'),
+        Cell(transition.time.totalrealtime, '38;5;%s' % color, justify='right'),
+        Cell(attempts.totalrealtimes.median(), justify='right'),
+        Cell(attempts.totalrealtimes.best(), justify='right'),
+        Cell(delta, justify='right'),
       ])
 
     seg_attempts = find_segment_in_history(
@@ -174,11 +174,11 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
         seg_attempts.totalrealtimes)
     table.append([
       Cell('Segment'),
-      Cell(len(seg_attempts)),
-      Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color),
-      Cell(seg_attempts.totalrealtimes.median()),
-      Cell(seg_attempts.totalrealtimes.best()),
-      Cell(delta),
+      Cell(len(seg_attempts), justify='right'),
+      Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
+      Cell(seg_attempts.totalrealtimes.median(), justify='right'),
+      Cell(seg_attempts.totalrealtimes.best(), justify='right'),
+      Cell(delta, justify='right'),
     ])
 
     print(table.render())
