@@ -443,13 +443,6 @@ def main():
 
     backup_and_rebuild(rooms, doors, args.filename)
 
-  store = Store(rooms, doors, route, args.filename)
-
-  if args.usb2snes:
-    sock = WebsocketClient('sm_room_timer')
-  else:
-    sock = NetworkCommandSocket()
-
   if args.debug_log_filename:
     debug_log = open(args.debug_log_filename, 'a')
     verbose = True
@@ -460,7 +453,14 @@ def main():
     debug_log = None
     verbose = args.verbose
 
+  store = Store(rooms, doors, route, args.filename)
   frontend = TerminalFrontend(verbose=verbose, debug_log=debug_log)
+
+  if args.usb2snes:
+    sock = WebsocketClient('sm_room_timer')
+  else:
+    sock = NetworkCommandSocket(logger=frontend)
+
   timer = RoomTimer(frontend, rooms, doors, store, sock)
 
   while True:

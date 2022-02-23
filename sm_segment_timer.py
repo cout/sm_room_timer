@@ -204,13 +204,6 @@ def main():
 
     backup_and_rebuild(rooms, doors, args.filename)
 
-  store = SegmentStore(rooms, doors, route, args.filename)
-
-  if args.usb2snes:
-    sock = WebsocketClient('sm_room_timer')
-  else:
-    sock = NetworkCommandSocket()
-
   if args.debug_log_filename:
     debug_log = open(args.debug_log_filename, 'a')
     verbose = True
@@ -221,7 +214,14 @@ def main():
     debug_log = None
     verbose = args.verbose
 
+  store = SegmentStore(rooms, doors, route, args.filename)
   frontend = SegmentTimerTerminalFrontend(verbose=verbose, debug_log=debug_log)
+
+  if args.usb2snes:
+    sock = WebsocketClient('sm_room_timer', logger=frontend)
+  else:
+    sock = NetworkCommandSocket()
+
   timer = SegmentTimer(frontend, rooms, doors, store, sock)
 
   while True:
