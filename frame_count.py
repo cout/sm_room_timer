@@ -32,9 +32,9 @@ class FrameCount(object):
     return FrameCount(self.count - other.count)
 
   def __repr__(self):
-    if self.count / 60 < 60:
-      return '%d\'%02d' % (self.count / 60, self.count % 60)
+    if abs(self.count) / 60 < 60:
+      return '%d\'%02d' % (self.count / 60, abs(self.count) % 60)
     else:
-      return '%d:%02d\'%02d' % (self.count / 60 / 60, (self.count / 60) % 60, self.count % 60)
+      return '%d:%02d\'%02d' % (self.count / 60 / 60, (self.count / 60) % 60, abs(self.count) % 60)
 
 FrameCount.max = FrameCount(sys.maxsize)
