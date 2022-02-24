@@ -19,15 +19,16 @@ class Cell(object):
   def width(self):
     return len(str(self.text))
 
-  def render(self, width):
+  def render(self, width, margin_width):
     color_on = "\033[%sm" % ('' if self.color is None else self.color)
     text = "%s" % self.text
     color_off = "\033[m"
     spacing = ' ' * (width - self.width())
+    margin = ' ' * margin_width
     if self.justify == 'left':
-      return color_on + text + spacing + color_off
+      return margin + color_on + text + spacing + color_off
     elif self.justify == 'right':
-      return color_on + spacing + text + color_off
+      return margin + color_on + spacing + text + color_off
     else:
       raise ValueError("Invalid value for justify: %s" % self.justify)
 
@@ -45,8 +46,8 @@ class Table(object):
     return iter(self.rows)
 
   def render_cell(self, cell, width, idx):
-    extra_spacing = 0 if idx == 0 else 2
-    return cell.render(width=(width + extra_spacing))
+    margin_width = 0 if idx == 0 else 2
+    return cell.render(width=width, margin_width=margin_width)
 
 
   def render(self):
