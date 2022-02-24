@@ -163,15 +163,20 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
       time_color = self.color_for_time(
           transition.time.totalrealtime,
           attempts.totalrealtimes)
-      time_color = '38;5;%s' % time_color
 
       delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
-      if delta == max_delta or delta == min_delta:
-        # TODO: Change background color (w/ black text probably) instead
-        # of bold?
-        cell_color = '1'
-        time_color += ';1'
+      if delta == max_delta:
+        # time_color = '1;48;5;65;38;5;%s' % time_color
+        # cell_color = '48;5;65'
+        time_color = '38;5;%s' % time_color
+        cell_color = None
+      elif delta == min_delta:
+        # time_color = '1;48;5;95;38;5;%s' % time_color
+        # cell_color = '48;5;95'
+        time_color = '38;5;%s' % time_color
+        cell_color = None
       else:
+        time_color = '38;5;%s' % time_color
         cell_color = None
 
       table.append([
