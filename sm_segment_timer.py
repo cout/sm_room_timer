@@ -185,7 +185,7 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
         Cell(transition.time.totalrealtime, color=time_color, justify='right'),
         Cell(attempts.totalrealtimes.median(), color=cell_color, justify='right'),
         Cell(attempts.totalrealtimes.best(), color=cell_color, justify='right'),
-        Cell(delta, color=cell_color, justify='right'),
+        Cell(('+' if delta > FrameCount(0) else '') + str(delta), color=cell_color, justify='right'),
       ])
 
     seg_attempts = find_segment_in_history(
@@ -200,7 +200,7 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
       Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
       Cell(seg_attempts.totalrealtimes.median(), justify='right'),
       Cell(seg_attempts.totalrealtimes.best(), justify='right'),
-      Cell(delta, justify='right'),
+      Cell(('+' if delta > FrameCount(0) else '') + str(delta), justify='right'),
     ])
 
     print(table.render())
