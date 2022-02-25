@@ -48,6 +48,22 @@ def segment_from_name(name, rooms, route):
   end = transition_from_name(end_transition_name, rooms, route)
   return Segment(start, end)
 
+def transitions_in_segment(segment, route):
+  tids = [ ]
+  append = False
+  for tid in route:
+    if tid == segment.start: append = True
+    if append: tids.append(tid)
+    if tid == segment.end: break
+  return tids
+
+def sum_of_best(segment, history, route):
+  total = FrameCount(0)
+  tids = transitions_in_segment(segment, route)
+  for tid in tids:
+    total += history[tid].totalrealtimes.best()
+  return total
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -66,28 +82,32 @@ if __name__ == '__main__':
   table = Table()
 
   underline = 4
-  header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best', 'P50-P0' ) ]
+  header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best', 'SOB', 'P50-P0' ) ]
   table.append(header)
 
   segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
 
   total_p50 = FrameCount(0)
   total_p0 = FrameCount(0)
+  total_sob = FrameCount(0)
 
   for segment in segments:
     attempts = find_segment_in_history(segment, history, route)
 
     p50 = attempts.totalrealtimes.median()
     p0 = attempts.totalrealtimes.best()
+    sob = sum_of_best(segment, history, route)
 
     total_p50 += p50
     total_p0 += p0
+    total_sob += sob
 
     table.append([
       Cell(segment),
       Cell(len(attempts), justify='right'),
       Cell(p50, justify='right'),
       Cell(p0, justify='right'),
+      Cell(sob, justify='right'),
       Cell(p50 - p0, justify='right'),
     ])
 
@@ -96,6 +116,7 @@ if __name__ == '__main__':
     Cell('', justify='right'),
     Cell(total_p50, justify='right'),
     Cell(total_p0, justify='right'),
+    Cell(total_sob, justify='right'),
     Cell(total_p50 - total_p0, justify='right'),
   ])
 
