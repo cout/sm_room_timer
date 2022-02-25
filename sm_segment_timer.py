@@ -68,14 +68,14 @@ class SegmentAttempts(Attempts):
     return 'SegmentAttempt(%s)' % repr(self.attempts)
 
 # TODO: Move this function to SegmentStore?
-def find_segment_in_history(self, history, route):
+def find_segment_in_history(segment, history, route):
   attempts = SegmentAttempts()
   attempt = None
   route_iter = None
   next_tid = None
 
   for transition in history.all_transitions:
-    if transition.id == self.start:
+    if transition.id == segment.start:
       # This is the start
       attempt = SegmentAttempt()
       route_iter = itertools.dropwhile(
@@ -87,7 +87,7 @@ def find_segment_in_history(self, history, route):
       # This is the next transition in the segment
       attempt.append(transition)
       next_tid = next(route_iter, None)
-      if transition.id == self.end:
+      if transition.id == segment.end:
         attempts.append(attempt)
 
     else:

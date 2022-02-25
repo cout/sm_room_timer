@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from frame_count import FrameCount
 from rooms import Room, Rooms, NullRoom
 from doors import Doors, NullDoor
 from history import History, read_history_file
@@ -70,13 +71,30 @@ if __name__ == '__main__':
 
   segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
 
+  total_p50 = FrameCount(0)
+  total_p0 = FrameCount(0)
+
   for segment in segments:
     attempts = find_segment_in_history(segment, history, route)
+
+    p50 = attempts.totalrealtimes.median()
+    p0 = attempts.totalrealtimes.best()
+
+    total_p50 += p50
+    total_p0 += p0
+
     table.append([
       Cell(segment),
       Cell(len(attempts), justify='right'),
-      Cell(attempts.totalrealtimes.median(), justify='right'),
-      Cell(attempts.totalrealtimes.best(), justify='right'),
+      Cell(p50, justify='right'),
+      Cell(p0, justify='right'),
     ])
+
+  table.append([
+    Cell('Total'),
+    Cell('', justify='right'),
+    Cell(total_p50, justify='right'),
+    Cell(total_p0, justify='right'),
+  ])
 
   print(table.render())
