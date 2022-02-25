@@ -180,7 +180,7 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
         cell_color = None
 
       table.append([
-        Cell(transition.id.room, color=cell_color),
+        Cell(transition.id.room, color=cell_color, max_width=28),
         Cell(len(attempts), color=cell_color, justify='right'),
         Cell(transition.time.totalrealtime, color=time_color, justify='right'),
         Cell(attempts.totalrealtimes.median(), color=cell_color, justify='right'),

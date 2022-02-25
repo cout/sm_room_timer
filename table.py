@@ -1,8 +1,9 @@
 class Cell(object):
-  def __init__(self, text, color=None, justify='left'):
+  def __init__(self, text, color=None, justify='left', max_width=None):
     self.text = text
     self.color = color
     self.justify = justify
+    self.max_width = max_width
 
   def __len__(self):
     return len(self.text)
@@ -17,11 +18,15 @@ class Cell(object):
     return iter(self.text)
 
   def width(self):
-    return len(str(self.text))
+    if self.max_width is None:
+      return len(str(self.text))
+    else:
+      return min(len(str(self.text)), self.max_width)
 
   def render(self, width, margin_width):
     color_on = "\033[%sm" % ('' if self.color is None else self.color)
     text = "%s" % self.text
+    if self.max_width: text = text[0:self.max_width]
     color_off = "\033[m"
     spacing = ' ' * (width - self.width())
     margin = ' ' * margin_width
@@ -48,7 +53,6 @@ class Table(object):
   def render_cell(self, cell, width, idx):
     margin_width = 0 if idx == 0 else 2
     return cell.render(width=width, margin_width=margin_width)
-
 
   def render(self):
     width = { }
