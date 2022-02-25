@@ -66,7 +66,7 @@ if __name__ == '__main__':
   table = Table()
 
   underline = 4
-  header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best' ) ]
+  header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best', 'P50-P0' ) ]
   table.append(header)
 
   segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
@@ -88,6 +88,7 @@ if __name__ == '__main__':
       Cell(len(attempts), justify='right'),
       Cell(p50, justify='right'),
       Cell(p0, justify='right'),
+      Cell(p50 - p0, justify='right'),
     ])
 
   table.append([
@@ -95,6 +96,7 @@ if __name__ == '__main__':
     Cell('', justify='right'),
     Cell(total_p50, justify='right'),
     Cell(total_p0, justify='right'),
+    Cell(total_p50 - total_p0, justify='right'),
   ])
 
   print(table.render())
