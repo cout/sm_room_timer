@@ -6,7 +6,7 @@ from doors import Doors, NullDoor
 from history import History, read_history_file
 from route import build_route, is_ceres_escape
 from table import Cell, Table
-from stats import transition_stats, ceres_cutscene_stats, door_stats
+from stats import transition_stats
 from sm_segment_timer import Segment, SegmentTime, SegmentAttempt, SegmentAttempts, find_segment_in_history
 
 import sys
@@ -93,10 +93,16 @@ if __name__ == '__main__':
 
   for segment in segments:
     attempts = find_segment_in_history(segment, history, route)
+    tids = transitions_in_segment(segment, route)
 
     p50 = attempts.totalrealtimes.median()
     p0 = attempts.totalrealtimes.best()
     sob = sum_of_best(segment, history, route)
+
+    if any(( is_ceres_escape(tid) for tid in tids )):
+      p50 += FrameCount(2591)
+      p0 += FrameCount(2591)
+      sob += FrameCount(2591)
 
     total_p50 += p50
     total_p0 += p0
