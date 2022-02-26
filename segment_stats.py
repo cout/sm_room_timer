@@ -61,7 +61,7 @@ def print_room_stats(history, segment_history, segments):
     table = Table()
 
     underline = 4
-    header = [ Cell(s, underline) for s in ( 'Room', '#', 'Median',
+    header = [ Cell(s, underline) for s in ( 'Room', '#', '%', 'Median',
       'Best', 'Seg Median', 'Seg Best', 'Delta Median', 'Delta Best' ) ]
     table.append(header)
 
@@ -70,7 +70,11 @@ def print_room_stats(history, segment_history, segments):
     total_p50_seg = FrameCount(0)
     total_p0_seg = FrameCount(0)
 
-    for tid in segment:
+    for idx, tid in enumerate(segment):
+      if idx <= 2: segment_attempt_count = len(segment_history[tid])
+      room_attempt_count = len(segment_history[tid])
+      rate = room_attempt_count / segment_attempt_count
+
       p50 = history[tid].totalrealtimes.median()
       p0 = history[tid].totalrealtimes.best()
       seg_p50 = segment_history[tid].totalrealtimes.median()
@@ -84,6 +88,7 @@ def print_room_stats(history, segment_history, segments):
       table.append([
         Cell(tid.room.name),
         Cell(len(segment_history[tid]), justify='right'),
+        Cell('%d%%' % (100 * rate), justify='right'),
         Cell(p50, justify='right'),
         Cell(p0, justify='right'),
         Cell(seg_p50, justify='right'),
