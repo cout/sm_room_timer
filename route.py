@@ -47,6 +47,9 @@ class Route(object):
   def __contains__(self, tid):
     return tid in self._ids
 
+  def __getitem__(self, idx):
+    return self._ids[idx]
+
   def __repr__(self):
     return 'Route(%s)' % repr(self._ids)
 

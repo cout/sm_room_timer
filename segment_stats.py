@@ -69,7 +69,8 @@ if __name__ == '__main__':
   parser.add_argument('-f', '--file', dest='filename', default=None)
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
-  parser.add_argument('--segment', dest='segments', action='append')
+  parser.add_argument('--segment', dest='segments', action='append', default=[])
+  parser.add_argument('--split', dest='splits', action='append', default=[])
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -86,6 +87,17 @@ if __name__ == '__main__':
   table.append(header)
 
   segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
+
+  splits = [ transition_from_name(name, rooms, route) for name in args.splits ]
+  start_split = False
+  segment_start = route[0]
+  for tid in route:
+    if start_split:
+      segment_start = tid
+      start_split = False
+    if tid in splits:
+      segments.append(Segment(segment_start, tid))
+      start_split = True
 
   total_p50 = FrameCount(0)
   total_p0 = FrameCount(0)
