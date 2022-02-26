@@ -70,12 +70,6 @@ if __name__ == '__main__':
   # ids = build_route(history) if args.build_route else history.keys()
   route = build_route(history) # TODO: Needed?
 
-  table = Table()
-
-  underline = 4
-  header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
-  table.append(header)
-
   segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
 
   splits = [ transition_from_name(name, rooms, route) for name in args.splits ]
@@ -88,6 +82,69 @@ if __name__ == '__main__':
     if tid in splits:
       segments.append(Segment(route, segment_start, tid))
       start_split = True
+
+  segment_history = History()
+  for segment in segments:
+    attempts = find_segment_in_history(segment, history, route)
+    for attempt in attempts:
+      for transition in attempt:
+        segment_history.record(transition)
+
+  underline = 4
+
+  for segment in segments:
+    print("Segment: \033[1m%s\033[m" % segment)
+
+    table = Table()
+    header = [ Cell(s, underline) for s in ( 'Room', '#', 'Median',
+      'Best', 'Seg Median', 'Seg Best', 'Delta Median', 'Delta Best' ) ]
+    table.append(header)
+
+    total_p50 = FrameCount(0)
+    total_p0 = FrameCount(0)
+    total_p50_seg = FrameCount(0)
+    total_p0_seg = FrameCount(0)
+
+    for tid in segment:
+      p50 = history[tid].totalrealtimes.median()
+      p0 = history[tid].totalrealtimes.best()
+      seg_p50 = segment_history[tid].totalrealtimes.median()
+      seg_p0 = segment_history[tid].totalrealtimes.best()
+
+      total_p50 += p50
+      total_p0 += p0
+      total_p50_seg += seg_p50
+      total_p0_seg += seg_p0
+
+      table.append([
+        Cell(tid.room.name),
+        Cell(len(segment_history[tid]), justify='right'),
+        Cell(p50, justify='right'),
+        Cell(p0, justify='right'),
+        Cell(seg_p50, justify='right'),
+        Cell(seg_p0, justify='right'),
+        Cell(seg_p50 - p50, justify='right'),
+        Cell(seg_p0 - p0, justify='right'),
+      ])
+
+    table.append([
+      Cell('Total'),
+      Cell('', justify='right'),
+      Cell(total_p50, justify='right'),
+      Cell(total_p0, justify='right'),
+      Cell(total_p50_seg, justify='right'),
+      Cell(total_p0_seg, justify='right'),
+      Cell(total_p50_seg - total_p50, justify='right'),
+      Cell(total_p0_seg - total_p0, justify='right'),
+    ])
+
+    print(table.render())
+    print('')
+
+  table = Table()
+
+  header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
+  table.append(header)
 
   total_p50 = FrameCount(0)
   total_p0 = FrameCount(0)

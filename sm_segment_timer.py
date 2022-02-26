@@ -6,7 +6,7 @@ from doors import Doors, NullDoor
 from route import Route
 from frame_count import FrameCount
 from transition import TransitionTime
-from history import Attempts
+from history import Attempts, History
 from table import Cell, Table
 from rebuild_history import need_rebuild, rebuild_history
 from retroarch.network_command_socket import NetworkCommandSocket
@@ -73,7 +73,7 @@ class SegmentAttempts(Attempts):
     Attempts.__init__(self, transitions)
 
   def __repr__(self):
-    return 'SegmentAttempt(%s)' % repr(self.attempts)
+    return 'SegmentAttempts(%s)' % repr(self.attempts)
 
 # TODO: Move this function to SegmentStore?
 def find_segment_in_history(segment, history, route):
