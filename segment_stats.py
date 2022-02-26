@@ -111,11 +111,11 @@ def print_room_stats(history, segment_history, segments):
     print(table.render())
     print('')
 
-def print_segment_stats(history, segments):
+def print_segment_stats(history, segment_history, segments):
   table = Table()
 
   underline = 4
-  header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
+  header = [ Cell(s, underline) for s in ( 'Segment', '%', '#', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
   table.append(header)
 
   total_p50 = FrameCount(0)
@@ -124,6 +124,14 @@ def print_segment_stats(history, segments):
 
   for segment in segments:
     attempts = find_segment_in_history(segment, history, route)
+    segment_attempts = segment_history.get(tid, None)
+    transitions = list(segment)
+    if len(transitions) > 1:
+      segment_attempt_count = len(segment_history[transitions[1]])
+    else:
+      segment_attempt_count = len(attempts)
+    segment_success_count = len(attempts)
+    rate = segment_success_count / segment_attempt_count
 
     p50 = attempts.totalrealtimes.median()
     p0 = attempts.totalrealtimes.best()
@@ -140,7 +148,8 @@ def print_segment_stats(history, segments):
 
     table.append([
       Cell(segment),
-      Cell(len(attempts), justify='right'),
+      Cell(segment_success_count, justify='right'),
+      Cell('%d%%' % (100 * rate), justify='right'),
       Cell(p50, justify='right'),
       Cell(p0, justify='right'),
       Cell(sob, justify='right'),
@@ -197,4 +206,4 @@ if __name__ == '__main__':
         segment_history.record(transition)
 
   print_room_stats(history, segment_history, segments)
-  print_segment_stats(history, segments)
+  print_segment_stats(history, segment_history, segments)
