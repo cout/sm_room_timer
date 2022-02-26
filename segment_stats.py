@@ -54,48 +54,13 @@ def sum_of_best(segment, history, route):
     total += history[tid].totalrealtimes.best()
   return total
 
-if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='SM Room Timer')
-  parser.add_argument('-f', '--file', dest='filename', default=None)
-  parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
-  parser.add_argument('--doors', dest='doors_filename', default='doors.json')
-  parser.add_argument('--segment', dest='segments', action='append', default=[])
-  parser.add_argument('--split', dest='splits', action='append', default=[])
-  args = parser.parse_args()
-
-  rooms = Rooms.read(args.rooms_filename)
-  doors = Doors.read(args.doors_filename, rooms)
-  history = read_history_file(args.filename, rooms, doors)
-
-  # ids = build_route(history) if args.build_route else history.keys()
-  route = build_route(history) # TODO: Needed?
-
-  segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
-
-  splits = [ transition_from_name(name, rooms, route) for name in args.splits ]
-  start_split = False
-  segment_start = route[0]
-  for tid in route:
-    if start_split:
-      segment_start = tid
-      start_split = False
-    if tid in splits:
-      segments.append(Segment(route, segment_start, tid))
-      start_split = True
-
-  segment_history = History()
-  for segment in segments:
-    attempts = find_segment_in_history(segment, history, route)
-    for attempt in attempts:
-      for transition in attempt:
-        segment_history.record(transition)
-
-  underline = 4
-
+def print_room_stats(history, segment_history, segments):
   for segment in segments:
     print("Segment: \033[1m%s\033[m" % segment)
 
     table = Table()
+
+    underline = 4
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Median',
       'Best', 'Seg Median', 'Seg Best', 'Delta Median', 'Delta Best' ) ]
     table.append(header)
@@ -141,8 +106,10 @@ if __name__ == '__main__':
     print(table.render())
     print('')
 
+def print_segment_stats(history, segments):
   table = Table()
 
+  underline = 4
   header = [ Cell(s, underline) for s in ( 'Segment', '#', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
   table.append(header)
 
@@ -187,3 +154,42 @@ if __name__ == '__main__':
   ])
 
   print(table.render())
+
+if __name__ == '__main__':
+  parser = argparse.ArgumentParser(description='SM Room Timer')
+  parser.add_argument('-f', '--file', dest='filename', default=None)
+  parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
+  parser.add_argument('--doors', dest='doors_filename', default='doors.json')
+  parser.add_argument('--segment', dest='segments', action='append', default=[])
+  parser.add_argument('--split', dest='splits', action='append', default=[])
+  args = parser.parse_args()
+
+  rooms = Rooms.read(args.rooms_filename)
+  doors = Doors.read(args.doors_filename, rooms)
+  history = read_history_file(args.filename, rooms, doors)
+
+  # ids = build_route(history) if args.build_route else history.keys()
+  route = build_route(history) # TODO: Needed?
+
+  segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
+
+  splits = [ transition_from_name(name, rooms, route) for name in args.splits ]
+  start_split = False
+  segment_start = route[0]
+  for tid in route:
+    if start_split:
+      segment_start = tid
+      start_split = False
+    if tid in splits:
+      segments.append(Segment(route, segment_start, tid))
+      start_split = True
+
+  segment_history = History()
+  for segment in segments:
+    attempts = find_segment_in_history(segment, history, route)
+    for attempt in attempts:
+      for transition in attempt:
+        segment_history.record(transition)
+
+  print_room_stats(history, segment_history, segments)
+  print_segment_stats(history, segments)
