@@ -7,7 +7,7 @@ from history import History, read_history_file
 from route import build_route, is_ceres_escape
 from table import Cell, Table
 from stats import transition_stats
-from sm_segment_timer import Segment, SegmentTime, SegmentAttempt, SegmentAttempts, find_segment_in_history
+from sm_segment_timer import Segment, find_segment_in_history
 
 import sys
 import argparse
@@ -48,19 +48,9 @@ def segment_from_name(name, rooms, route):
   end = transition_from_name(end_transition_name, rooms, route)
   return Segment(start, end)
 
-def transitions_in_segment(segment, route):
-  tids = [ ]
-  append = False
-  for tid in route:
-    if tid == segment.start: append = True
-    if append: tids.append(tid)
-    if tid == segment.end: break
-  return tids
-
 def sum_of_best(segment, history, route):
   total = FrameCount(0)
-  tids = transitions_in_segment(segment, route)
-  for tid in tids:
+  for tid in segment:
     total += history[tid].totalrealtimes.best()
   return total
 
@@ -96,7 +86,7 @@ if __name__ == '__main__':
       segment_start = tid
       start_split = False
     if tid in splits:
-      segments.append(Segment(segment_start, tid))
+      segments.append(Segment(route, segment_start, tid))
       start_split = True
 
   total_p50 = FrameCount(0)
@@ -105,13 +95,12 @@ if __name__ == '__main__':
 
   for segment in segments:
     attempts = find_segment_in_history(segment, history, route)
-    tids = transitions_in_segment(segment, route)
 
     p50 = attempts.totalrealtimes.median()
     p0 = attempts.totalrealtimes.best()
     sob = sum_of_best(segment, history, route)
 
-    if any(( is_ceres_escape(tid) for tid in tids )):
+    if any(( is_ceres_escape(tid) for tid in segment )):
       p50 += FrameCount(2591)
       p0 += FrameCount(2591)
       sob += FrameCount(2591)

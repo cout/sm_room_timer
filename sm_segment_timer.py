@@ -18,7 +18,8 @@ import time
 import sys
 
 class Segment(object):
-  def __init__(self, start=None, end=None):
+  def __init__(self, route, start=None, end=None):
+    self.route = route
     self.start = start
     self.end = end
 
@@ -26,7 +27,14 @@ class Segment(object):
     return "%s to %s" % (self.start.room, self.end.room)
 
   def __repr__(self):
-    return "Segment(%s, %s)" % (self.start, self.end)
+    return "Segment(%s, %s, %s)" % (self.route, self.start, self.end)
+
+  def __iter__(self):
+    in_segment = False
+    for tid in self.route:
+      if tid == self.start: in_segment = True
+      if in_segment: yield tid
+      if tid == self.end: break
 
   def extend_to(self, tid):
     if self.start is None: self.start = tid
@@ -36,8 +44,8 @@ class SegmentTime(TransitionTime):
   pass
 
 class SegmentAttempt(object):
-  def __init__(self, transitions=None):
-    self.segment = Segment()
+  def __init__(self, route, transitions=None):
+    self.segment = Segment(route)
     self.transitions = transitions or [ ]
     self.time = SegmentTime(
         gametime=FrameCount(0),
@@ -47,7 +55,7 @@ class SegmentAttempt(object):
         realtime_door=FrameCount(0))
 
   def __repr__(self):
-    return 'SegmentAttempt(%s)' % repr(self.transitions)
+    return 'SegmentAttempt(%s, %s)' % repr(self.route, self.transitions)
 
   def __len__(self):
     return len(self.transitions)
@@ -77,7 +85,7 @@ def find_segment_in_history(segment, history, route):
   for transition in history.all_transitions:
     if transition.id == segment.start:
       # This is the start
-      attempt = SegmentAttempt()
+      attempt = SegmentAttempt(route)
       route_iter = itertools.dropwhile(
           lambda tid: transition.id != tid,
           route)
@@ -103,7 +111,7 @@ class SegmentStore(Store):
   def __init__(self, rooms, doors, route, filename=None):
     Store.__init__(self, rooms, doors, route, filename=filename)
 
-    self.current_attempt = SegmentAttempt()
+    self.current_attempt = SegmentAttempt(route)
     self.route_iter = None
 
   def transitioned(self, transition):
@@ -128,7 +136,7 @@ class SegmentStore(Store):
       # to the route, e.g. if I get health bombed from mini kraid I
       # probably want to go back and get super drops.
       next(self.route_iter)
-      self.current_attempt = SegmentAttempt()
+      self.current_attempt = SegmentAttempt(self.route)
 
     self.current_attempt.append(transition)
 
