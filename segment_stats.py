@@ -178,6 +178,7 @@ if __name__ == '__main__':
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
   parser.add_argument('--segment', dest='segments', action='append', default=[])
   parser.add_argument('--split', dest='splits', action='append', default=[])
+  parser.add_argument('--splits', dest='splits_filename')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -187,9 +188,16 @@ if __name__ == '__main__':
   # ids = build_route(history) if args.build_route else history.keys()
   route = build_route(history) # TODO: Needed?
 
-  segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
+  split_names = args.splits
 
-  splits = [ transition_from_name(name, rooms, route) for name in args.splits ]
+  if args.splits_filename is not None:
+    with open(args.splits_filename) as f:
+      lines = f.readlines()
+      split_names.extend([ line.strip() for line in lines ])
+
+  segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
+  splits = [ transition_from_name(name, rooms, route) for name in split_names ]
+
   start_split = False
   segment_start = route[0]
   for tid in route:
