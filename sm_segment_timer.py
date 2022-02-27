@@ -128,6 +128,7 @@ class SegmentStore(Store):
 
     if new_segment:
       # This is the first transition in a segment
+      print("New segment starting at %s" % transition.id)
       self.route_iter = itertools.dropwhile(
           lambda tid: transition.id != tid,
           self.route)
