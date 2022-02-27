@@ -46,7 +46,7 @@ def segment_from_name(name, rooms, route):
   start_transition_name, end_transition_name = name.split(' to ')
   start = transition_from_name(start_transition_name, rooms, route)
   end = transition_from_name(end_transition_name, rooms, route)
-  return Segment(start, end)
+  return Segment(route, start, end)
 
 def sum_of_best(segment, history, route):
   total = FrameCount(0)
