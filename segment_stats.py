@@ -71,7 +71,7 @@ def print_room_stats(history, segment_history, segments):
     total_p0_seg = FrameCount(0)
 
     for idx, tid in enumerate(segment):
-      if idx <= 2: segment_attempt_count = len(segment_history[tid])
+      if idx <= 1: segment_attempt_count = len(segment_history[tid])
       room_attempt_count = len(segment_history[tid])
       rate = room_attempt_count / segment_attempt_count
 
