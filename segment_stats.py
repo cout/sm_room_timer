@@ -100,6 +100,7 @@ def print_room_stats(history, segment_history, segments):
     table.append([
       Cell('Total'),
       Cell('', justify='right'),
+      Cell(''),
       Cell(total_p50, justify='right'),
       Cell(total_p0, justify='right'),
       Cell(total_p50_seg, justify='right'),
@@ -159,7 +160,8 @@ def print_segment_stats(history, segment_history, segments):
 
   table.append([
     Cell('Total'),
-    Cell('', justify='right'),
+    Cell(''),
+    Cell(''),
     Cell(total_p50, justify='right'),
     Cell(total_p0, justify='right'),
     Cell(total_sob, justify='right'),
