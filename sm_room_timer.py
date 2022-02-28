@@ -388,6 +388,11 @@ class TerminalFrontend(object):
     return color
 
   def colorize(self, ttime, atimes):
+    mean = atimes.mean()
+    best = atimes.best()
+    prev_best = atimes.prev_best()
+    p50 = atimes.median()
+
     color = self.color_for_time(ttime, atimes)
 
     if ttime == best and prev_best != FrameCount.max:
