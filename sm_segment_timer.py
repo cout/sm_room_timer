@@ -157,14 +157,20 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     table = Table()
 
     underline = 4
-    header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', 'Median', 'Best', '+/-' ) ]
+    header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '+/- Median', '+/- Best' ) ]
     table.append(header)
 
-    deltas = [ transition.time.totalrealtime -
+    p50_deltas = [ transition.time.totalrealtime -
         store.history.history[transition.id].totalrealtimes.median()
         for transition in store.current_attempt ]
-    max_delta = max(deltas)
-    min_delta = min(deltas)
+    max_p50_delta = max(p50_deltas)
+    min_p50_delta = min(p50_deltas)
+
+    p0_deltas = [ transition.time.totalrealtime -
+        store.history.history[transition.id].totalrealtimes.best()
+        for transition in store.current_attempt ]
+    max_p0_delta = max(p0_deltas)
+    min_p0_delta = min(p0_deltas)
 
     for transition in store.current_attempt:
       attempts = store.history.history[transition.id]
@@ -173,13 +179,15 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
           transition.time.totalrealtime,
           attempts.totalrealtimes)
 
-      delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
-      if delta == max_delta:
+      p50_delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
+      p0_delta = transition.time.totalrealtime - attempts.totalrealtimes.best()
+
+      if p50_delta == max_p50_delta:
         # time_color = '1;48;5;65;38;5;%s' % time_color
         # cell_color = '48;5;65'
         time_color = '38;5;%s' % time_color
         cell_color = None
-      elif delta == min_delta:
+      elif p50_delta == min_p50_delta:
         # time_color = '1;48;5;95;38;5;%s' % time_color
         # cell_color = '48;5;95'
         time_color = '38;5;%s' % time_color
@@ -192,14 +200,14 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
         Cell(transition.id.room, color=cell_color, max_width=28),
         Cell(len(attempts), color=cell_color, justify='right'),
         Cell(transition.time.totalrealtime, color=time_color, justify='right'),
-        Cell(attempts.totalrealtimes.median(), color=cell_color, justify='right'),
-        Cell(attempts.totalrealtimes.best(), color=cell_color, justify='right'),
-        Cell(('+' if delta > FrameCount(0) else '') + str(delta), color=cell_color, justify='right'),
+        Cell(('+' if p50_delta > FrameCount(0) else '') + str(p50_delta), color=cell_color, justify='right'),
+        Cell(('+' if p0_delta > FrameCount(0) else '') + str(p0_delta), color=cell_color, justify='right'),
       ])
 
     seg_attempts = find_segment_in_history(
         store.current_attempt.segment, store.history, store.route)
-    delta = store.current_attempt.time.totalrealtime - seg_attempts.totalrealtimes.median();
+    p50_delta = store.current_attempt.time.totalrealtime - seg_attempts.totalrealtimes.median();
+    p0_delta = store.current_attempt.time.totalrealtime - seg_attempts.totalrealtimes.best();
     color = self.color_for_time(
         store.current_attempt.time.totalrealtime,
         seg_attempts.totalrealtimes)
@@ -207,9 +215,8 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
       Cell('Segment'),
       Cell(len(seg_attempts), justify='right'),
       Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
-      Cell(seg_attempts.totalrealtimes.median(), justify='right'),
-      Cell(seg_attempts.totalrealtimes.best(), justify='right'),
-      Cell(('+' if delta > FrameCount(0) else '') + str(delta), justify='right'),
+      Cell(('+' if p50_delta > FrameCount(0) else '') + str(p50_delta), justify='right'),
+      Cell(('+' if p0_delta > FrameCount(0) else '') + str(p0_delta), justify='right'),
     ])
 
     print(table.render())
