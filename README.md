@@ -38,7 +38,7 @@ route are processed.  For example:
   without that item (e.g. KPDR with spazer)
 
 To define a route, complete a run from beginning to end.  A route is a
-series of transitions starting anywhere and ending at Ceres escape.  It
+series of transitions starting anywhere and ending at Zebes escape.  It
 is okay to load state when defining a route, so long as you do not
 deviate from the route until it is complete; duplicate transitions
 (same item set and entry/exit door) will be ignored.  When the route is
