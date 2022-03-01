@@ -107,6 +107,32 @@ def find_segment_in_history(segment, history, route):
 
   return attempts
 
+class SegmentTransitionAttemptStats(object):
+  def __init__(self, transition, history):
+    self.attempts = history.history[transition.id]
+    self.transition = transition
+    self.num_attempts = len(self.attempts)
+    self.p50_delta = transition.time.totalrealtime - self.attempts.totalrealtimes.median()
+    self.p0_delta = transition.time.totalrealtime - self.attempts.totalrealtimes.best()
+
+class SegmentAttemptStats(object):
+  def __init__(self, current_attempt, history):
+    self.p50_deltas = [ transition.time.totalrealtime -
+        history.history[transition.id].totalrealtimes.median()
+        for transition in current_attempt ]
+    self.max_p50_delta = max(self.p50_deltas)
+    self.min_p50_delta = min(self.p50_deltas)
+
+    self.p0_deltas = [ transition.time.totalrealtime -
+        history.history[transition.id].totalrealtimes.best()
+        for transition in current_attempt ]
+    self.max_p0_delta = max(self.p0_deltas)
+    self.min_p0_delta = min(self.p0_deltas)
+
+    self.transitions = {
+        SegmentTransitionAttemptStats(transition, history)
+        for transition in current_attempt }
+
 class SegmentStore(Store):
   def __init__(self, rooms, doors, route, filename=None):
     Store.__init__(self, rooms, doors, route, filename=filename)
@@ -157,37 +183,24 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     table = Table()
 
     underline = 4
-    header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '+/- Median', '+/- Best' ) ]
+    header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    p50_deltas = [ transition.time.totalrealtime -
-        store.history.history[transition.id].totalrealtimes.median()
-        for transition in store.current_attempt ]
-    max_p50_delta = max(p50_deltas)
-    min_p50_delta = min(p50_deltas)
+    stats = SegmentAttemptStats(store.current_attempt, store.history)
 
-    p0_deltas = [ transition.time.totalrealtime -
-        store.history.history[transition.id].totalrealtimes.best()
-        for transition in store.current_attempt ]
-    max_p0_delta = max(p0_deltas)
-    min_p0_delta = min(p0_deltas)
-
-    for transition in store.current_attempt:
-      attempts = store.history.history[transition.id]
+    for transition_stats in stats.transitions:
+      transition = transition_stats.transition
 
       time_color = self.color_for_time(
           transition.time.totalrealtime,
-          attempts.totalrealtimes)
+          transition_stats.attempts.totalrealtimes)
 
-      p50_delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
-      p0_delta = transition.time.totalrealtime - attempts.totalrealtimes.best()
-
-      if p50_delta == max_p50_delta:
+      if transition_stats.p50_delta == stats.max_p50_delta:
         # time_color = '1;48;5;65;38;5;%s' % time_color
         # cell_color = '48;5;65'
         time_color = '38;5;%s' % time_color
         cell_color = None
-      elif p50_delta == min_p50_delta:
+      elif transition_stats.p50_delta == stats.min_p50_delta:
         # time_color = '1;48;5;95;38;5;%s' % time_color
         # cell_color = '48;5;95'
         time_color = '38;5;%s' % time_color
@@ -198,10 +211,12 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
 
       table.append([
         Cell(transition.id.room, color=cell_color, max_width=28),
-        Cell(len(attempts), color=cell_color, justify='right'),
+        Cell(transition_stats.num_attempts, color=cell_color, justify='right'),
         Cell(transition.time.totalrealtime, color=time_color, justify='right'),
-        Cell(('+' if p50_delta > FrameCount(0) else '') + str(p50_delta), color=cell_color, justify='right'),
-        Cell(('+' if p0_delta > FrameCount(0) else '') + str(p0_delta), color=cell_color, justify='right'),
+        Cell(('+' if transition_stats.p50_delta > FrameCount(0) else '')
+          + str(transition_stats.p50_delta), color=cell_color, justify='right'),
+        Cell(('+' if transition_stats.p0_delta > FrameCount(0) else '')
+          + str(transition_stats.p0_delta), color=cell_color, justify='right'),
       ])
 
     seg_attempts = find_segment_in_history(
