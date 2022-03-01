@@ -116,7 +116,7 @@ class SegmentTransitionAttemptStats(object):
     self.p0_delta = transition.time.totalrealtime - self.attempts.totalrealtimes.best()
 
 class SegmentAttemptStats(object):
-  def __init__(self, current_attempt, history):
+  def __init__(self, current_attempt, history, route):
     self.p50_deltas = [ transition.time.totalrealtime -
         history.history[transition.id].totalrealtimes.median()
         for transition in current_attempt ]
@@ -132,6 +132,12 @@ class SegmentAttemptStats(object):
     self.transitions = {
         SegmentTransitionAttemptStats(transition, history)
         for transition in current_attempt }
+
+    self.seg_attempts = find_segment_in_history(
+        current_attempt.segment, history, route)
+    self.num_attempts = len(self.seg_attempts)
+    self.p50_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.median();
+    self.p0_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.best();
 
 class SegmentStore(Store):
   def __init__(self, rooms, doors, route, filename=None):
@@ -186,7 +192,8 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    stats = SegmentAttemptStats(store.current_attempt, store.history)
+    stats = SegmentAttemptStats(store.current_attempt, store.history,
+        store.route)
 
     for transition_stats in stats.transitions:
       transition = transition_stats.transition
@@ -219,19 +226,15 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
           + str(transition_stats.p0_delta), color=cell_color, justify='right'),
       ])
 
-    seg_attempts = find_segment_in_history(
-        store.current_attempt.segment, store.history, store.route)
-    p50_delta = store.current_attempt.time.totalrealtime - seg_attempts.totalrealtimes.median();
-    p0_delta = store.current_attempt.time.totalrealtime - seg_attempts.totalrealtimes.best();
     color = self.color_for_time(
         store.current_attempt.time.totalrealtime,
-        seg_attempts.totalrealtimes)
+        stats.seg_attempts.totalrealtimes)
     table.append([
       Cell('Segment'),
-      Cell(len(seg_attempts), justify='right'),
+      Cell(stats.num_attempts, justify='right'),
       Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
-      Cell(('+' if p50_delta > FrameCount(0) else '') + str(p50_delta), justify='right'),
-      Cell(('+' if p0_delta > FrameCount(0) else '') + str(p0_delta), justify='right'),
+      Cell(('+' if stats.p50_delta > FrameCount(0) else '') + str(stats.p50_delta), justify='right'),
+      Cell(('+' if stats.p0_delta > FrameCount(0) else '') + str(stats.p0_delta), justify='right'),
     ])
 
     print(table.render())
