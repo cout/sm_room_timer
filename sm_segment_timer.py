@@ -129,9 +129,9 @@ class SegmentAttemptStats(object):
     self.max_p0_delta = max(self.p0_deltas)
     self.min_p0_delta = min(self.p0_deltas)
 
-    self.transitions = {
+    self.transitions = [
         SegmentTransitionAttemptStats(transition, history)
-        for transition in current_attempt }
+        for transition in current_attempt ]
 
     self.seg_attempts = find_segment_in_history(
         current_attempt.segment, history, route)
