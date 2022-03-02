@@ -116,25 +116,37 @@ class SegmentTransitionAttemptStats(object):
     self.p0_delta = transition.time.totalrealtime - self.attempts.totalrealtimes.best()
 
 class SegmentAttemptStats(object):
-  def __init__(self, current_attempt, history, route):
-    self.p50_deltas = [ transition.time.totalrealtime -
-        history.history[transition.id].totalrealtimes.median()
-        for transition in current_attempt ]
+  def __init__(self, history, route):
+    self.history = history
+    self.route = route
+
+    self.p50_deltas = [ ]
+    self.max_p50_delta = None
+    self.min_p50_delta = None
+
+    self.p0_deltas = [ ]
+    self.max_p0_delta = None
+    self.min_p0_delta = None
+
+    self.transitions = [ ]
+    self.seg_attempts = [ ]
+
+  def append(self, transition, current_attempt):
+    self.p50_deltas.append(transition.time.totalrealtime -
+        self.history.history[transition.id].totalrealtimes.median())
     self.max_p50_delta = max(self.p50_deltas)
     self.min_p50_delta = min(self.p50_deltas)
 
-    self.p0_deltas = [ transition.time.totalrealtime -
-        history.history[transition.id].totalrealtimes.best()
-        for transition in current_attempt ]
+    self.p0_deltas.append(transition.time.totalrealtime -
+        self.history.history[transition.id].totalrealtimes.median())
     self.max_p0_delta = max(self.p0_deltas)
     self.min_p0_delta = min(self.p0_deltas)
 
-    self.transitions = [
-        SegmentTransitionAttemptStats(transition, history)
-        for transition in current_attempt ]
+    self.transitions.append(
+        SegmentTransitionAttemptStats(transition, self.history))
 
     self.seg_attempts = find_segment_in_history(
-        current_attempt.segment, history, route)
+        current_attempt.segment, self.history, self.route)
     self.num_attempts = len(self.seg_attempts)
     self.p50_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.median();
     self.p0_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.best();
@@ -144,11 +156,10 @@ class SegmentStore(Store):
     Store.__init__(self, rooms, doors, route, filename=filename)
 
     self.current_attempt = SegmentAttempt(route)
+    self.current_attempt_stats = None
     self.route_iter = None
 
   def transitioned(self, transition):
-    attempts = Store.transitioned(self, transition)
-
     # TODO: Do we really want to check if the transition is in the route
     # when not using --route?
     if self.route_iter is None:
@@ -170,8 +181,13 @@ class SegmentStore(Store):
       # probably want to go back and get super drops.
       next(self.route_iter)
       self.current_attempt = SegmentAttempt(self.route)
+      self.current_attempt_stats = SegmentAttemptStats(self.history,
+          self.route)
 
     self.current_attempt.append(transition)
+    self.current_attempt_stats.append(transition, self.current_attempt)
+
+    attempts = Store.transitioned(self, transition)
 
     return attempts
 
@@ -192,8 +208,13 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    stats = SegmentAttemptStats(store.current_attempt, store.history,
-        store.route)
+    # stats = SegmentAttemptStats(store.current_attempt, store.history,
+        # store.route)
+
+    # stats = SegmentAttemptStats(store.history, store.route)
+    # for transition in store.current_attempt:
+      # stats.append(transition, store.current_attempt)
+    stats = store.current_attempt_stats
 
     for transition_stats in stats.transitions:
       transition = transition_stats.transition
