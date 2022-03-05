@@ -42,10 +42,15 @@ class TransitionId(object):
     return (self.room, self.entry_room, self.exit_room, self.items, self.beams) == \
            (other.room, other.entry_room, other.exit_room, other.items, other.beams)
 
-  def __repr__(self):
+  def __str__(self):
     return '%s (entering from %s via %x, exiting to %s via %x)' % (
         self.room, self.entry_room, self.entry_door.door_id, self.exit_room,
         self.exit_door.door_id)
+
+  def __repr__(self):
+    return 'TransitionId(%s,%s,%s,items=%s,beams=%s)' % (
+        repr(self.room), repr(self.entry_door), repr(self.exit_door),
+        repr(self.items), repr(self.beams))
 
 class TransitionTime(NamedTuple):
   gametime: FrameCount
