@@ -120,7 +120,7 @@ def print_segment_stats(history, segment_history, segments):
   table = Table()
 
   underline = 4
-  header = [ Cell(s, underline) for s in ( 'Segment', '%', '#', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
+  header = [ Cell(s, underline) for s in ( 'Segment', '#', '%', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
   table.append(header)
 
   total_p50 = FrameCount(0)
