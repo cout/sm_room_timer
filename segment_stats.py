@@ -120,7 +120,7 @@ def print_segment_stats(history, segment_history, segments):
   table = Table()
 
   underline = 4
-  header = [ Cell(s, underline) for s in ( 'Segment', '#', '%', 'Median', 'Best', 'SOB', 'P50-P0', 'P50-SOB' ) ]
+  header = [ Cell(s, underline) for s in ( 'Segment', '#', '%', 'Median', 'Best', 'SOB', 'P50-P0', 'P0-SOB' ) ]
   table.append(header)
 
   total_p50 = FrameCount(0)
@@ -159,7 +159,7 @@ def print_segment_stats(history, segment_history, segments):
       Cell(p0, justify='right'),
       Cell(sob, justify='right'),
       Cell(p50 - p0, justify='right'),
-      Cell(p50 - sob, justify='right'),
+      Cell(p0 - sob, justify='right'),
     ])
 
   table.append([
@@ -170,7 +170,7 @@ def print_segment_stats(history, segment_history, segments):
     Cell(total_p0, justify='right'),
     Cell(total_sob, justify='right'),
     Cell(total_p50 - total_p0, justify='right'),
-    Cell(total_p50 - total_sob, justify='right'),
+    Cell(total_p0 - total_sob, justify='right'),
   ])
 
   print(table.render())
