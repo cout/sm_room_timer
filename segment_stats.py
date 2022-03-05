@@ -71,6 +71,10 @@ def print_room_stats(history, segment_history, segments):
     total_p0_seg = FrameCount(0)
 
     for idx, tid in enumerate(segment):
+      if not tid in segment_history:
+        print("BUG? Could not find any attempts for %s in segment %s" % (tid, segment))
+        continue
+
       if idx <= 1: segment_attempt_count = len(segment_history[tid])
       room_attempt_count = len(segment_history[tid])
       rate = room_attempt_count / segment_attempt_count
@@ -192,7 +196,8 @@ if __name__ == '__main__':
 
   if args.splits_filename is not None:
     with open(args.splits_filename) as f:
-      lines = f.readlines()
+      lines = [ line for line in f.readlines()
+          if not line.startswith('#') and not line.isspace() ]
       split_names.extend([ line.strip() for line in lines ])
 
   segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
