@@ -170,22 +170,29 @@ class SegmentStore(Store):
       new_segment = next_tid is None or next_tid != transition.id
 
     if new_segment:
-      # This is the first transition in a segment
-      print("New segment starting at %s" % transition.id)
+      # This is the first transition in a segment; let's see if we can
+      # find the segment in the route.
       self.route_iter = itertools.dropwhile(
           lambda tid: transition.id != tid,
           self.route)
-      # TODO: This throws if we visit a room that is not in the route.
-      # What we want to do in that case is see if the player came back
-      # to the route, e.g. if I get health bombed from mini kraid I
-      # probably want to go back and get super drops.
-      next(self.route_iter)
-      self.current_attempt = SegmentAttempt(self.route)
-      self.current_attempt_stats = SegmentAttemptStats(self.history,
-          self.route)
+      next_tid = next(self.route_iter, None)
 
-    self.current_attempt.append(transition)
-    self.current_attempt_stats.append(transition, self.current_attempt)
+      if next_tid is not None:
+        # If this transition is in the route, start a new segment.
+        print("New segment starting at %s" % transition.id)
+        self.current_attempt = SegmentAttempt(self.route)
+        self.current_attempt_stats = SegmentAttemptStats(self.history,
+            self.route)
+
+      else:
+        # If this transition is not in the route, ignore it (base class
+        # will display a message to the user).
+        self.current_attempt = None
+        self.current_attempt_stats = None
+
+    if self.current_attempt is not None and self.current_attempt_stats is not None:
+      self.current_attempt.append(transition)
+      self.current_attempt_stats.append(transition, self.current_attempt)
 
     attempts = Store.transitioned(self, transition)
 
