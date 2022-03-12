@@ -183,6 +183,7 @@ if __name__ == '__main__':
   parser.add_argument('--segment', dest='segments', action='append', default=[])
   parser.add_argument('--split', dest='splits', action='append', default=[])
   parser.add_argument('--splits', dest='splits_filename')
+  parser.add_argument('--brief', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -220,5 +221,6 @@ if __name__ == '__main__':
       for transition in attempt:
         segment_history.record(transition)
 
-  print_room_stats(history, segment_history, segments)
+  if not args.brief:
+    print_room_stats(history, segment_history, segments)
   print_segment_stats(history, segment_history, segments)
