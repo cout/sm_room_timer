@@ -132,11 +132,11 @@ def print_segment_stats(history, segment_history, segments):
     segment_attempts = segment_history.get(tid, None)
     transitions = list(segment)
     if len(transitions) > 1:
-      segment_attempt_count = len(segment_history[transitions[1]])
+      segment_attempt_count = len(segment_history.get(transitions[1], []))
     else:
       segment_attempt_count = len(attempts)
     segment_success_count = len(attempts)
-    rate = segment_success_count / segment_attempt_count
+    rate = segment_success_count / segment_attempt_count if segment_attempt_count > 0 else 0
 
     p50 = attempts.totalrealtimes.median()
     p0 = attempts.totalrealtimes.best()
