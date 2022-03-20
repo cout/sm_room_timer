@@ -116,7 +116,7 @@ def print_room_stats(history, segment_history, segments):
     print(table.render())
     print('')
 
-def print_segment_stats(history, segment_history, segments, route):
+def print_segment_stats(history, segment_history, segments):
   table = Table()
 
   underline = 4
@@ -224,7 +224,7 @@ def main():
 
   if not args.brief:
     print_room_stats(history, segment_history, segments)
-  print_segment_stats(history, segment_history, segments, route)
+  print_segment_stats(history, segment_history, segments)
 
 if __name__ == '__main__':
   main()
