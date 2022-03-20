@@ -48,7 +48,7 @@ def segment_from_name(name, rooms, route):
   end = transition_from_name(end_transition_name, rooms, route)
   return Segment.from_route(route, start, end)
 
-def sum_of_best(segment, history, route):
+def sum_of_best(segment, history):
   total = FrameCount(0)
   for tid in segment:
     total += history[tid].totalrealtimes.best()
@@ -141,7 +141,7 @@ def print_segment_stats(history, segment_history, segments, route):
 
     p50 = successful_attempts.totalrealtimes.median()
     p0 = successful_attempts.totalrealtimes.best()
-    sob = sum_of_best(segment, history, route)
+    sob = sum_of_best(segment, history)
 
     if any(( is_ceres_escape(tid) for tid in segment )):
       p50 += FrameCount(2591)
