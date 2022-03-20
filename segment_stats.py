@@ -116,7 +116,7 @@ def print_room_stats(history, segment_history, segments):
     print(table.render())
     print('')
 
-def print_segment_stats(history, segment_history, segments):
+def print_segment_stats(history, segment_history, segments, route):
   table = Table()
 
   underline = 4
@@ -128,18 +128,19 @@ def print_segment_stats(history, segment_history, segments):
   total_sob = FrameCount(0)
 
   for segment in segments:
-    attempts = find_segment_in_history(segment, history, route)
-    segment_attempts = segment_history.get(tid, None)
+    successful_attempts = find_segment_in_history(segment, history, route)
     transitions = list(segment)
-    if len(transitions) > 1:
-      segment_attempt_count = len(segment_history.get(transitions[1], []))
-    else:
-      segment_attempt_count = len(attempts)
-    segment_success_count = len(attempts)
+
+    # The number of segment attempts is the number of times we attempted
+    # the first three rooms in the segment in succession.
+    all_attempts = find_segment_in_history(Segment(transitions[0:2]), history, route)
+    segment_attempt_count = len(all_attempts)
+
+    segment_success_count = len(successful_attempts)
     rate = segment_success_count / segment_attempt_count if segment_attempt_count > 0 else 0
 
-    p50 = attempts.totalrealtimes.median()
-    p0 = attempts.totalrealtimes.best()
+    p50 = successful_attempts.totalrealtimes.median()
+    p0 = successful_attempts.totalrealtimes.best()
     sob = sum_of_best(segment, history, route)
 
     if any(( is_ceres_escape(tid) for tid in segment )):
@@ -175,7 +176,7 @@ def print_segment_stats(history, segment_history, segments):
 
   print(table.render())
 
-if __name__ == '__main__':
+def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
@@ -223,4 +224,7 @@ if __name__ == '__main__':
 
   if not args.brief:
     print_room_stats(history, segment_history, segments)
-  print_segment_stats(history, segment_history, segments)
+  print_segment_stats(history, segment_history, segments, route)
+
+if __name__ == '__main__':
+  main()

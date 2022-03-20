@@ -89,22 +89,20 @@ class SegmentAttempts(Attempts):
 def find_segment_in_history(segment, history, route):
   attempts = SegmentAttempts()
   attempt = None
-  route_iter = None
+  segment_iter = None
   next_tid = None
 
   for transition in history.all_transitions:
     if transition.id == segment.start:
       # This is the start
       attempt = SegmentAttempt()
-      route_iter = itertools.dropwhile(
-          lambda tid: transition.id != tid,
-          route)
-      next_tid = next(route_iter, None)
+      segment_iter = iter(segment)
+      next_tid = next(segment_iter, None)
 
     if next_tid is not None and transition.id == next_tid:
       # This is the next transition in the segment
       attempt.append(transition)
-      next_tid = next(route_iter, None)
+      next_tid = next(segment_iter, None)
       if transition.id == segment.end:
         attempts.append(attempt)
 
@@ -112,7 +110,7 @@ def find_segment_in_history(segment, history, route):
       # This is not the next transition in the segment (or the
       # previous transtition was the end of the segment)
       attempt = None
-      route_iter = None
+      segment_iter = None
       next_tid = None
 
   return attempts
