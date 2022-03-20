@@ -86,7 +86,7 @@ class SegmentAttempts(Attempts):
   def __repr__(self):
     return 'SegmentAttempts(%s)' % repr(self.attempts)
 
-def find_segment_in_history(segment, history, route):
+def find_segment_in_history(segment, history):
   attempts = SegmentAttempts()
   attempt = None
   segment_iter = None
@@ -154,7 +154,7 @@ class SegmentAttemptStats(object):
         SegmentTransitionAttemptStats(transition, self.history))
 
     self.seg_attempts = find_segment_in_history(
-        current_attempt.segment, self.history, self.route)
+        current_attempt.segment, self.history)
     self.num_attempts = len(self.seg_attempts)
     self.p50_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.median();
     self.p0_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.best();
