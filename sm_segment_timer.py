@@ -18,34 +18,45 @@ import time
 import sys
 
 class Segment(object):
-  def __init__(self, route, start=None, end=None):
-    self.route = route
-    self.start = start
-    self.end = end
+  def __init__(self, tids=None):
+    self.tids = tids or []
+
+  @classmethod
+  def from_route(cls, route, start=None, end=None):
+    in_segment = False
+    tids = [ ]
+    for tid in route:
+      if tid == start: in_segment = True
+      if in_segment: tids.append(tid)
+      if tid == end: break
+    return Segment(tids)
+
+  @property
+  def start(self):
+    return self.tids[0]
+
+  @property
+  def end(self):
+    return self.tids[-1]
 
   def __str__(self):
     return "%s to %s" % (self.start.room, self.end.room)
 
   def __repr__(self):
-    return "Segment(%s, %s, %s)" % (self.route, self.start, self.end)
+    return "Segment(%s)" % (self.tids)
 
   def __iter__(self):
-    in_segment = False
-    for tid in self.route:
-      if tid == self.start: in_segment = True
-      if in_segment: yield tid
-      if tid == self.end: break
+    return iter(self.tids)
 
   def extend_to(self, tid):
-    if self.start is None: self.start = tid
-    self.end = tid
+    self.tids.append(tid)
 
 class SegmentTime(TransitionTime):
   pass
 
 class SegmentAttempt(object):
-  def __init__(self, route, transitions=None):
-    self.segment = Segment(route)
+  def __init__(self, transitions=None):
+    self.segment = Segment()
     self.transitions = transitions or [ ]
     self.time = SegmentTime(
         gametime=FrameCount(0),
@@ -55,7 +66,7 @@ class SegmentAttempt(object):
         realtime_door=FrameCount(0))
 
   def __repr__(self):
-    return 'SegmentAttempt(%s, %s)' % repr(self.route, self.transitions)
+    return 'SegmentAttempt(%s)' % repr(self.transitions)
 
   def __len__(self):
     return len(self.transitions)
@@ -84,7 +95,7 @@ def find_segment_in_history(segment, history, route):
   for transition in history.all_transitions:
     if transition.id == segment.start:
       # This is the start
-      attempt = SegmentAttempt(route)
+      attempt = SegmentAttempt()
       route_iter = itertools.dropwhile(
           lambda tid: transition.id != tid,
           route)
@@ -154,7 +165,7 @@ class SegmentStore(Store):
   def __init__(self, rooms, doors, route, filename=None):
     Store.__init__(self, rooms, doors, route, filename=filename)
 
-    self.current_attempt = SegmentAttempt(route)
+    self.current_attempt = SegmentAttempt()
     self.current_attempt_stats = None
     self.route_iter = None
 
@@ -179,7 +190,7 @@ class SegmentStore(Store):
       if next_tid is not None:
         # If this transition is in the route, start a new segment.
         print("New segment starting at %s" % transition.id)
-        self.current_attempt = SegmentAttempt(self.route)
+        self.current_attempt = SegmentAttempt()
         self.current_attempt_stats = SegmentAttemptStats(self.history,
             self.route)
 
