@@ -20,7 +20,7 @@ def find_transition_in_route(room, n, route):
       if n <= 0:
         return tid
 
-  raise RuntimeError("Could not find %s in route" % room_name)
+  raise RuntimeError("Could not find %s in route" % room.name)
 
 def transition_from_name(name, rooms, route):
   if name == 'Alcatraz':
