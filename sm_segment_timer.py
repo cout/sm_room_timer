@@ -75,7 +75,6 @@ class SegmentAttempts(Attempts):
   def __repr__(self):
     return 'SegmentAttempts(%s)' % repr(self.attempts)
 
-# TODO: Move this function to SegmentStore?
 def find_segment_in_history(segment, history, route):
   attempts = SegmentAttempts()
   attempt = None
