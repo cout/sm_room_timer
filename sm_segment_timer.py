@@ -124,9 +124,8 @@ class SegmentTransitionAttemptStats(object):
     self.p0_delta = transition.time.totalrealtime - self.attempts.totalrealtimes.best()
 
 class SegmentAttemptStats(object):
-  def __init__(self, history, route):
+  def __init__(self, history):
     self.history = history
-    self.route = route
 
     self.p50_deltas = [ ]
     self.max_p50_delta = None
@@ -189,8 +188,7 @@ class SegmentStore(Store):
         # If this transition is in the route, start a new segment.
         print("New segment starting at %s" % transition.id)
         self.current_attempt = SegmentAttempt()
-        self.current_attempt_stats = SegmentAttemptStats(self.history,
-            self.route)
+        self.current_attempt_stats = SegmentAttemptStats(self.history)
 
       else:
         # If this transition is not in the route, ignore it (base class
