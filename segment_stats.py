@@ -129,11 +129,9 @@ def print_segment_stats(history, segment_history, segments):
 
   for segment in segments:
     successful_attempts = find_segment_in_history(segment, history)
-    transitions = list(segment)
-
     # The number of segment attempts is the number of times we attempted
     # the first three rooms in the segment in succession.
-    all_attempts = find_segment_in_history(Segment(transitions[0:2]), history)
+    all_attempts = find_segment_in_history(segment[0:2], history)
     segment_attempt_count = len(all_attempts)
 
     segment_success_count = len(successful_attempts)

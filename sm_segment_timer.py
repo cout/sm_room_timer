@@ -48,6 +48,12 @@ class Segment(object):
   def __iter__(self):
     return iter(self.tids)
 
+  def __getitem__(self, key):
+    if isinstance(key, slice):
+      return Segment(self.tids[key])
+    else:
+      return self.tids[key]
+
   def extend_to(self, tid):
     self.tids.append(tid)
 
