@@ -208,12 +208,6 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    # stats = SegmentAttemptStats(store.current_attempt, store.history,
-        # store.route)
-
-    # stats = SegmentAttemptStats(store.history, store.route)
-    # for transition in store.current_attempt:
-      # stats.append(transition, store.current_attempt)
     stats = store.current_attempt_stats
 
     for transition_stats in stats.transitions:
