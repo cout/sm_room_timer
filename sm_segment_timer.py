@@ -170,37 +170,14 @@ class SegmentStore(Store):
 
     self.current_attempt = SegmentAttempt()
     self.current_attempt_stats = None
-    self.route_iter = None
+    self.new_segment = True
 
   def transitioned(self, transition):
-    # TODO: Do we really want to check if the transition is in the route
-    # when not using --route?
-    if self.route_iter is None:
-      next_tid = None
-      new_segment = True
-    else:
-      next_tid = next(self.route_iter, None)
-      new_segment = next_tid is None or next_tid != transition.id
-
-    if new_segment:
-      # This is the first transition in a segment; let's see if we can
-      # find the segment in the route.
-      self.route_iter = itertools.dropwhile(
-          lambda tid: transition.id != tid,
-          self.route)
-      next_tid = next(self.route_iter, None)
-
-      if next_tid is not None:
-        # If this transition is in the route, start a new segment.
-        print("New segment starting at %s" % transition.id)
-        self.current_attempt = SegmentAttempt()
-        self.current_attempt_stats = SegmentAttemptStats(self.history)
-
-      else:
-        # If this transition is not in the route, ignore it (base class
-        # will display a message to the user).
-        self.current_attempt = None
-        self.current_attempt_stats = None
+    if self.new_segment and transition.id in self.route:
+      print("New segment starting at %s" % transition.id)
+      self.current_attempt = SegmentAttempt()
+      self.current_attempt_stats = SegmentAttemptStats(self.history)
+      self.new_segment = False
 
     if self.current_attempt is not None and self.current_attempt_stats is not None:
       self.current_attempt.append(transition)
@@ -209,6 +186,10 @@ class SegmentStore(Store):
     attempts = Store.transitioned(self, transition)
 
     return attempts
+
+  def room_reset(self, reset_id):
+    self.new_segment = True
+    return Store.room_reset(self, reset_id)
 
 class SegmentTimer(RoomTimer):
   def __init__(self, rooms, doors, store, sock, debug_log=None, verbose=False):
