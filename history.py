@@ -10,6 +10,7 @@ from scipy import stats
 class FrameCountList(object):
   def __init__(self):
     self._list = [ ]
+    self._values = [ ]
     self._best = FrameCount.max
     self._prev_best = FrameCount.max
 
@@ -18,6 +19,7 @@ class FrameCountList(object):
       self._prev_best = self._best
       self._best = frame_count
     self._list.append(frame_count.count if frame_count is not None else None)
+    if frame_count is not None: self._values.append(frame_count.count)
 
   def mean(self):
     return FrameCount(statistics.mean(self.values()))
@@ -44,7 +46,7 @@ class FrameCountList(object):
     return p
 
   def values(self):
-    return [ x for x in self._list if x is not None ]
+    return self._values
 
   def __repr__(self):
     return 'avg %s, median %s, best %s' % (self.mean(), self.median(), self.best())
