@@ -122,47 +122,49 @@ def find_segment_in_history(segment, history):
   return attempts
 
 class SegmentTransitionAttemptStats(object):
+  """
+  Statistics for a single transition in a segment attempt.
+  """
+
   def __init__(self, transition, history):
-    self.attempts = history.history[transition.id]
     self.transition = transition
-    self.num_attempts = len(self.attempts)
-    self.p50_delta = transition.time.totalrealtime - self.attempts.totalrealtimes.median()
-    self.p0_delta = transition.time.totalrealtime - self.attempts.totalrealtimes.best()
+
+    attempts = history.history.get(transition.id, None)
+
+    if attempts is not None:
+      self.attempts = attempts
+      self.num_attempts = len(attempts)
+      self.p50_delta = transition.time.totalrealtime - attempts.totalrealtimes.median()
+      self.p0_delta = transition.time.totalrealtime - attempts.totalrealtimes.best()
+    else:
+      self.attempts = Attempts()
+      self.num_attempts = 0
+      self.p50_delta = FrameCount(0)
+      self.p0_delta = FrameCount(0)
 
 class SegmentAttemptStats(object):
+  """
+  Statistics for an entire segment attempt.
+  """
+
   def __init__(self, history):
     self.history = history
-
-    self.p50_deltas = [ ]
-    self.max_p50_delta = None
-    self.min_p50_delta = None
-
-    self.p0_deltas = [ ]
-    self.max_p0_delta = None
-    self.min_p0_delta = None
-
     self.transitions = [ ]
     self.seg_attempts = [ ]
 
   def append(self, transition, current_attempt):
-    self.p50_deltas.append(transition.time.totalrealtime -
-        self.history.history[transition.id].totalrealtimes.median())
-    self.max_p50_delta = max(self.p50_deltas)
-    self.min_p50_delta = min(self.p50_deltas)
-
-    self.p0_deltas.append(transition.time.totalrealtime -
-        self.history.history[transition.id].totalrealtimes.median())
-    self.max_p0_delta = max(self.p0_deltas)
-    self.min_p0_delta = min(self.p0_deltas)
-
     self.transitions.append(
         SegmentTransitionAttemptStats(transition, self.history))
 
     self.seg_attempts = find_segment_in_history(
         current_attempt.segment, self.history)
+
+    attempt_time = current_attempt.time.totalrealtime
+    historical_times = self.seg_attempts.totalrealtimes
+
     self.num_attempts = len(self.seg_attempts)
-    self.p50_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.median();
-    self.p0_delta = current_attempt.time.totalrealtime - self.seg_attempts.totalrealtimes.best();
+    self.p50_delta = attempt_time - historical_times.median() if len(historical_times.values()) > 0 else FrameCount(0)
+    self.p0_delta = attempt_time - historical_times.best() if len(historical_times.values()) > 0 else FrameCount(0)
 
 class SegmentStore(Store):
   def __init__(self, rooms, doors, route, filename=None):
@@ -173,7 +175,8 @@ class SegmentStore(Store):
     self.new_segment = True
 
   def transitioned(self, transition):
-    if self.new_segment and transition.id in self.route:
+
+    if self.new_segment and (not self.route.complete or transition.id in self.route):
       print("New segment starting at %s" % transition.id)
       self.current_attempt = SegmentAttempt()
       self.current_attempt_stats = SegmentAttemptStats(self.history)
@@ -217,19 +220,8 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
           transition.time.totalrealtime,
           transition_stats.attempts.totalrealtimes)
 
-      if transition_stats.p50_delta == stats.max_p50_delta:
-        # time_color = '1;48;5;65;38;5;%s' % time_color
-        # cell_color = '48;5;65'
-        time_color = '38;5;%s' % time_color
-        cell_color = None
-      elif transition_stats.p50_delta == stats.min_p50_delta:
-        # time_color = '1;48;5;95;38;5;%s' % time_color
-        # cell_color = '48;5;95'
-        time_color = '38;5;%s' % time_color
-        cell_color = None
-      else:
-        time_color = '38;5;%s' % time_color
-        cell_color = None
+      time_color = '38;5;%s' % time_color
+      cell_color = None
 
       table.append([
         Cell(transition.id.room, color=cell_color, max_width=28),
