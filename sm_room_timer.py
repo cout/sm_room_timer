@@ -63,7 +63,7 @@ class Store(object):
       if self.route.complete:
         print('GG! Route is complete!')
     elif transition.id not in self.route:
-      print('Ignoring transition (not in route)')
+      print('Ignoring transition (not in route):', transition.id)
       return None
 
     attempts = self.history.record(transition)
@@ -144,18 +144,10 @@ class RoomTimer(object):
     # doorTransition, and we'll record the transition below.
     #
     # TODO: if we just started the room timer, or if we just loaded a
-    # preset, then we won't know wha the previous room was.  I think
+    # preset, then we won't know what the previous room was.  I think
     # that would require changes to the practice ROM.
     if change.is_room_change or change.reached_ship:
-      if state.door.is_unknown:
-        self.log("Unknown door %04x from %s (%04x) to %s (%04x)" % (
-          state.door.door_id, self.current_room,
-          self.current_room.room_id, state.room,
-          state.room.room_id))
-      self.last_room = self.current_room
-      self.current_room = state.room
-      self.last_most_recent_door = self.most_recent_door
-      self.most_recent_door = state.door
+      self.handle_room_change(state, change)
 
     if change.is_reset:
       self.handle_reset(state, change)
@@ -227,6 +219,23 @@ class RoomTimer(object):
 
     if change.transition_finished:
       self.log("Reset detected during door transition")
+
+    # TODO: I'm not sure if I want to do everything in
+    # handle_room_change or just a subset
+    self.current_room = None
+    self.most_recent_door = None
+    self.handle_room_change(state, change)
+
+  def handle_room_change(self, state, change):
+    if state.door.is_unknown:
+      self.log("Unknown door %04x from %s (%04x) to %s (%04x)" % (
+        state.door.door_id, self.current_room,
+        self.current_room.room_id, state.room,
+        state.room.room_id))
+    self.last_room = self.current_room
+    self.current_room = state.room
+    self.last_most_recent_door = self.most_recent_door
+    self.most_recent_door = state.door
 
   def handle_transition(self, state):
     if self.last_room is not self.last_most_recent_door.exit_room:
