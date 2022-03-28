@@ -222,8 +222,8 @@ class RoomTimer(object):
 
     # TODO: I'm not sure if I want to do everything in
     # handle_room_change or just a subset
-    self.current_room = None
-    self.most_recent_door = None
+    self.current_room = NullRoom
+    self.most_recent_door = NullDoor
     self.handle_room_change(state, change)
 
   def handle_room_change(self, state, change):
