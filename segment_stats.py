@@ -7,7 +7,8 @@ from history import History, read_history_file
 from route import build_route, is_ceres_escape
 from table import Cell, Table
 from stats import transition_stats
-from sm_segment_timer import Segment, find_segment_in_history
+from segment import Segment
+from sm_segment_timer import find_segment_in_history
 
 import sys
 import argparse
