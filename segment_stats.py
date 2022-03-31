@@ -143,7 +143,7 @@ class SegmentStats(object):
 
       self.total_p50 += stats.p50
       self.total_p0 += stats.p0
-      self.total_sob += stats.p0
+      self.total_sob += stats.sob
 
 def print_segment_stats(history, segments):
   stats = SegmentStats(history, segments)
