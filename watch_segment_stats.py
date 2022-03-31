@@ -52,7 +52,7 @@ def render_change(old, new, **kwargs):
 
   return Cell(new, **kwargs)
 
-def print_segment_stats(old_stats, stats):
+def render_segment_stats(old_stats, stats):
   table = Table()
 
   underline = 4
@@ -87,7 +87,7 @@ def print_segment_stats(old_stats, stats):
     render_change(old_stats.total_p50 - old_stats.total_sob, stats.total_p50 - stats.total_sob, justify='right'),
   ])
 
-  print(table.render())
+  return table.render()
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
@@ -126,13 +126,17 @@ def main():
     segments.extend(segments_from_splits(route, splits))
 
     old_stats = SegmentStats(history, segments)
+    old_rendered_stats = None
 
     while True:
       stats = SegmentStats(history, segments)
-      print_segment_stats(old_stats, stats)
+      rendered_stats = render_segment_stats(old_stats, stats)
+      if rendered_stats != old_rendered_stats:
+        print()
+        print(rendered_stats)
+        old_rendered_stats = rendered_stats
       old_stats = stats
       history, transition = next(history_reader)
-      print()
 
 if __name__ == '__main__':
   main()
