@@ -38,6 +38,15 @@ class Route(object):
     if is_final_transition(tid):
       self.complete = True
 
+  def find_nth_transition_by_room(self, room, n):
+    for tid in self:
+      if tid.room == room:
+        n -= 1
+        if n <= 0:
+          return tid
+
+    raise RuntimeError("Could not find %s in route" % room.name)
+
   def __len__(self):
     return len(self._ids)
 

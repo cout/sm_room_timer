@@ -13,15 +13,6 @@ import sys
 import argparse
 import re
 
-def find_transition_in_route(room, n, route):
-  for tid in route:
-    if tid.room == room:
-      n -= 1
-      if n <= 0:
-        return tid
-
-  raise RuntimeError("Could not find %s in route" % room.name)
-
 def transition_from_name(name, rooms, route):
   if name == 'Alcatraz':
     name = 'Parlor 3'
@@ -40,7 +31,7 @@ def transition_from_name(name, rooms, route):
 
   room = rooms.from_name(room_name)
 
-  return find_transition_in_route(room, n, route)
+  return route.find_nth_transition_by_room(room, n)
 
 def segment_from_name(name, rooms, route):
   start_transition_name, end_transition_name = name.split(' to ')
