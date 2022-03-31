@@ -107,60 +107,73 @@ def print_room_stats(history, segment_history, segments):
     print(table.render())
     print('')
 
+class SingleSegmentStats(object):
+  def __init__(self, segment, history):
+    self.segment = segment
+
+    successful_attempts = find_segment_in_history(segment, history)
+    # The number of segment attempts is the number of times we attempted
+    # the first three rooms in the segment in succession.
+    all_attempts = find_segment_in_history(segment[0:2], history)
+    self.segment_attempt_count = len(all_attempts)
+
+    self.segment_success_count = len(successful_attempts)
+    self.rate = self.segment_success_count / self.segment_attempt_count if self.segment_attempt_count > 0 else 0
+
+    self.p50 = successful_attempts.totalrealtimes.median()
+    self.p0 = successful_attempts.totalrealtimes.best()
+    self.sob = sum_of_best(segment, history)
+
+    if any(( is_ceres_escape(tid) for tid in segment )):
+      self.p50 += FrameCount(2591)
+      self.p0 += FrameCount(2591)
+      self.sob += FrameCount(2591)
+
+class SegmentStats(object):
+  def __init__(self, history, segments):
+    self.segments = [ ]
+    self.total_p50 = FrameCount(0)
+    self.total_p0 = FrameCount(0)
+    self.total_sob = FrameCount(0)
+
+    for segment in segments:
+      stats = SingleSegmentStats(segment, history)
+      self.segments.append(stats)
+
+      self.total_p50 += stats.p50
+      self.total_p0 += stats.p0
+      self.total_sob += stats.p0
+
 def print_segment_stats(history, segments):
+  stats = SegmentStats(history, segments)
+
   table = Table()
 
   underline = 4
   header = [ Cell(s, underline) for s in ( 'Segment', '#', '%', 'Median', 'Best', 'SOB', 'P50-P0', 'P0-SOB' ) ]
   table.append(header)
 
-  total_p50 = FrameCount(0)
-  total_p0 = FrameCount(0)
-  total_sob = FrameCount(0)
-
-  for segment in segments:
-    successful_attempts = find_segment_in_history(segment, history)
-    # The number of segment attempts is the number of times we attempted
-    # the first three rooms in the segment in succession.
-    all_attempts = find_segment_in_history(segment[0:2], history)
-    segment_attempt_count = len(all_attempts)
-
-    segment_success_count = len(successful_attempts)
-    rate = segment_success_count / segment_attempt_count if segment_attempt_count > 0 else 0
-
-    p50 = successful_attempts.totalrealtimes.median()
-    p0 = successful_attempts.totalrealtimes.best()
-    sob = sum_of_best(segment, history)
-
-    if any(( is_ceres_escape(tid) for tid in segment )):
-      p50 += FrameCount(2591)
-      p0 += FrameCount(2591)
-      sob += FrameCount(2591)
-
-    total_p50 += p50
-    total_p0 += p0
-    total_sob += sob
-
+  for seg in stats.segments:
     table.append([
-      Cell(segment),
-      Cell(segment_success_count, justify='right'),
-      Cell('%d%%' % (100 * rate), justify='right'),
-      Cell(p50, justify='right'),
-      Cell(p0, justify='right'),
-      Cell(sob, justify='right'),
-      Cell(p50 - p0, justify='right'),
-      Cell(p0 - sob, justify='right'),
+      Cell(seg.segment),
+      Cell(seg.segment_success_count, justify='right'),
+      Cell('%d%%' % (100 * seg.rate), justify='right'),
+      Cell(seg.p50, justify='right'),
+      Cell(seg.p0, justify='right'),
+      Cell(seg.sob, justify='right'),
+      Cell(seg.p50 - seg.p0, justify='right'),
+      Cell(seg.p0 - seg.sob, justify='right'),
     ])
 
   table.append([
     Cell('Total'),
     Cell(''),
     Cell(''),
-    Cell(total_p50, justify='right'),
-    Cell(total_p0, justify='right'),
-    Cell(total_sob, justify='right'),
-    Cell(total_p50 - total_p0, justify='right'),
-    Cell(total_p0 - total_sob, justify='right'),
+    Cell(stats.total_p50, justify='right'),
+    Cell(stats.total_p0, justify='right'),
+    Cell(stats.total_sob, justify='right'),
+    Cell(stats.total_p50 - stats.total_p0, justify='right'),
+    Cell(stats.total_p0 - stats.total_sob, justify='right'),
   ])
 
   print(table.render())
