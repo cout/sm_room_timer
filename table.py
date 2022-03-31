@@ -50,11 +50,11 @@ class Table(object):
   def __iter__(self):
     return iter(self.rows)
 
-  def render_cell(self, cell, width, idx):
-    margin_width = 0 if idx == 0 else 2
+  def render_cell(self, cell, width, idx, margin_width):
+    if idx == 0: margin_width = 0
     return cell.render(width=width, margin_width=margin_width)
 
-  def render(self):
+  def render(self, cell_margin_width=2):
     width = { }
     for row in self.rows:
       for idx, cell in enumerate(row):
@@ -62,7 +62,8 @@ class Table(object):
 
     lines = [ ]
     for row in self.rows:
-      rendered_cells = [ self.render_cell(cell, width[idx], idx) for idx, cell in enumerate(row) ]
+      rendered_cells = [ self.render_cell(cell, width[idx], idx, margin_width=cell_margin_width)
+          for idx, cell in enumerate(row) ]
       lines.append(''.join(rendered_cells))
 
     return "\n".join(lines)
