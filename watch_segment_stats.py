@@ -5,9 +5,9 @@ from doors import Doors, NullDoor
 from history import History, read_history_csv_incrementally
 from route import build_route, is_ceres_escape
 from sm_segment_timer import Segment, find_segment_in_history
-from segment_stats import print_room_stats, print_segment_stats, \
-segment_from_name, transition_from_name, segments_from_splits, \
-build_segment_history
+from segment_stats import print_room_stats, SegmentStats, \
+segment_from_name, transition_from_name, segments_from_splits
+from table import Cell, Table
 
 import sys
 import argparse
@@ -46,6 +46,46 @@ class Tailer(object):
         return line
       time.sleep(self._t)
 
+def render_change(old, new, **kwargs):
+  if old > new:
+    kwargs['color'] = '48;5;214'
+  elif old < new:
+    kwargs['color'] = '48;5;196'
+
+  return Cell(new, **kwargs)
+
+def print_segment_stats(old_stats, stats):
+  table = Table()
+
+  underline = 4
+  header = [ Cell(s, underline) for s in ( 'Segment', '#', '%', 'Median', 'Best', 'SOB', 'P50-P0', 'P0-SOB' ) ]
+  table.append(header)
+
+  for old_seg, seg in zip(old_stats.segments, stats.segments):
+    table.append([
+      Cell(seg.segment),
+      Cell(seg.segment_success_count, justify='right'),
+      Cell('%d%%' % (100 * seg.rate), justify='right'),
+      render_change(old_seg.p50, seg.p50, justify='right'),
+      render_change(old_seg.p0, seg.p0, justify='right'),
+      render_change(old_seg.sob, seg.sob, justify='right'),
+      render_change(old_seg.p50 - old_seg.p0, seg.p50 - seg.p0, justify='right'),
+      render_change(old_seg.p0 - old_seg.sob, seg.p0 - seg.sob, justify='right'),
+    ])
+
+  table.append([
+    Cell('Total'),
+    Cell(''),
+    Cell(''),
+    render_change(old_stats.total_p50, stats.total_p50, justify='right'),
+    render_change(old_stats.total_p0, stats.total_p0, justify='right'),
+    render_change(old_stats.total_sob, stats.total_sob, justify='right'),
+    render_change(old_stats.total_p50 - old_stats.total_p0, stats.total_p50 - stats.total_p0, justify='right'),
+    render_change(old_stats.total_p0 - old_stats.total_sob, stats.total_p0 - stats.total_sob, justify='right'),
+  ])
+
+  print(table.render())
+
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -54,7 +94,6 @@ def main():
   parser.add_argument('--segment', dest='segments', action='append', default=[])
   parser.add_argument('--split', dest='splits', action='append', default=[])
   parser.add_argument('--splits', dest='splits_filename')
-  parser.add_argument('--brief', action='store_true')
   args = parser.parse_args()
 
   rooms = Rooms.read(args.rooms_filename)
@@ -83,8 +122,12 @@ def main():
 
     segments.extend(segments_from_splits(route, splits))
 
+    old_stats = SegmentStats(history, segments)
+
     while True:
-      print_segment_stats(history, segments)
+      stats = SegmentStats(history, segments)
+      print_segment_stats(old_stats, stats)
+      old_stats = stats
       history, transition = next(history_reader)
       print()
 
