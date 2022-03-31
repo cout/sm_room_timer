@@ -178,6 +178,15 @@ def segments_from_splits(route, splits):
       start_split = True
   return segments
 
+def build_segment_history(segments, history):
+  segment_history = History()
+  for segment in segments:
+    attempts = find_segment_in_history(segment, history)
+    for attempt in attempts:
+      for transition in attempt:
+        segment_history.record(transition)
+  return segment_history
+
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -209,12 +218,7 @@ def main():
 
   segments.extend(segments_from_splits(route, splits))
 
-  segment_history = History()
-  for segment in segments:
-    attempts = find_segment_in_history(segment, history)
-    for attempt in attempts:
-      for transition in attempt:
-        segment_history.record(transition)
+  segment_history = build_segment_history(segments, history)
 
   if not args.brief:
     print_room_stats(history, segment_history, segments)
