@@ -61,7 +61,7 @@ def print_segment_stats(old_stats, stats):
 
   for old_seg, seg in zip(old_stats.segments, stats.segments):
     table.append([
-      Cell(seg.segment),
+      Cell(seg.segment.brief_name),
       Cell(seg.segment_success_count, justify='right'),
       Cell('%d%%' % (100 * seg.rate), justify='right'),
       render_change(old_seg.p50, seg.p50, justify='right'),

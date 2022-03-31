@@ -1,9 +1,10 @@
 import json
 
 class Room(object):
-  def __init__(self, room_id, name):
+  def __init__(self, room_id, name, brief_name=None):
     self.room_id = room_id
     self.name = name
+    self.brief_name = brief_name or name
 
   def __repr__(self):
     return self.name
@@ -12,7 +13,7 @@ NullRoom = Room(0, 'None')
 
 class Rooms(object):
   def __init__(self, raw_rooms):
-    self.rooms = [ Room(room_id=int(room_id, 16), name=room['name'])
+    self.rooms = [ Room(room_id=int(room_id, 16), name=room['name'], brief_name=room.get('brief_name'))
         for room_id, room in raw_rooms.items() ]
 
     self.by_id = { room.room_id : room for room in self.rooms }

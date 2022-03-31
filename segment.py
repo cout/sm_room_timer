@@ -20,11 +20,22 @@ class Segment(object):
   def end(self):
     return self.tids[-1]
 
-  def __str__(self):
+  @property
+  def name(self):
     if self.start.room is self.end.room:
       return "%s" % self.start.room
     else:
       return "%s to %s" % (self.start.room, self.end.room)
+
+  @property
+  def brief_name(self):
+    if self.start.room is self.end.room:
+      return "%s" % self.start.room
+    else:
+      return "%s to %s" % (self.start.room.brief_name, self.end.room.brief_name)
+
+  def __str__(self):
+    return self.name
 
   def __repr__(self):
     return "Segment(%s)" % (self.tids)
