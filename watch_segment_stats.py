@@ -45,10 +45,10 @@ class Tailer(object):
       time.sleep(self._t)
 
 def render_change(old, new, **kwargs):
-  if old > new:
-    kwargs['color'] = '48;5;214'
-  elif old < new:
-    kwargs['color'] = '48;5;196'
+  if new < old:
+    kwargs['color'] = '38;5;40;7'
+  elif new > old:
+    kwargs['color'] = '38;5;196;7'
 
   return Cell(new, **kwargs)
 
