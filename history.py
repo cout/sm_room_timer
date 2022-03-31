@@ -147,22 +147,26 @@ def history_report(history):
       id(tid.exit_room)))
   print()
 
-def read_history_file_incrementally(filename, rooms, doors):
+def read_history_csv_incrementally(csvfile, rooms, doors):
   history = History()
-  with open(filename) as csvfile:
-    reader = csv.DictReader(csvfile)
-    n = 1 # start at 1 for the header
-    for row in reader:
-      n += 1
-      try:
-        action = 'reading history file'
-        transition = Transition.from_csv_row(rooms, doors, row)
-        action = 'recording transition'
-        history.record(transition, from_file=True)
-        yield history, transition
-      except Exception as e:
-        raise RuntimeError("Error %s, line %d\nrow: %s" % (action, n, row)) from e
+  reader = csv.DictReader(csvfile)
+  n = 1 # start at 1 for the header
+  for row in reader:
+    n += 1
+    try:
+      action = 'reading history file'
+      transition = Transition.from_csv_row(rooms, doors, row)
+      action = 'recording transition'
+      history.record(transition, from_file=True)
+      yield history, transition
+    except Exception as e:
+      raise RuntimeError("Error %s, line %d\nrow: %s" % (action, n, row)) from e
   return history
+
+def read_history_file_incrementally(filename, rooms, doors):
+  with open(filename) as csvfile:
+    for history, transition in read_history_csv_incrementally(csvfile, rooms, doors):
+      yield history, transition
 
 def read_history_file(filename, rooms, doors):
   for history, transition in read_history_file_incrementally(filename, rooms, doors):
