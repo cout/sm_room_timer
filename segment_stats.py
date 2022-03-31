@@ -165,6 +165,19 @@ def print_segment_stats(history, segment_history, segments):
 
   print(table.render())
 
+def segments_from_splits(route, splits):
+  segments = [ ]
+  start_split = False
+  segment_start = route[0]
+  for tid in route:
+    if start_split:
+      segment_start = tid
+      start_split = False
+    if tid in splits:
+      segments.append(Segment.from_route(route, segment_start, tid))
+      start_split = True
+  return segments
+
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -194,15 +207,7 @@ def main():
   segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
   splits = [ transition_from_name(name, rooms, route) for name in split_names ]
 
-  start_split = False
-  segment_start = route[0]
-  for tid in route:
-    if start_split:
-      segment_start = tid
-      start_split = False
-    if tid in splits:
-      segments.append(Segment.from_route(route, segment_start, tid))
-      start_split = True
+  segments.extend(segments_from_splits(route, splits))
 
   segment_history = History()
   for segment in segments:
