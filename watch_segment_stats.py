@@ -46,9 +46,9 @@ class Tailer(object):
 
 def render_change(old, new, **kwargs):
   if new < old:
-    kwargs['color'] = '38;5;34;7'
+    kwargs['color'] = '48;5;34;1'
   elif new > old:
-    kwargs['color'] = '38;5;124;7'
+    kwargs['color'] = '48;5;124;1'
 
   return Cell(new, **kwargs)
 
