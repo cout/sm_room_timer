@@ -12,8 +12,8 @@ NullRoom = Room(0, 'None')
 
 class Rooms(object):
   def __init__(self, raw_rooms):
-    self.rooms = [ Room(room_id=int(room_id, 16), name=room_name)
-        for room_id, room_name in raw_rooms.items() ]
+    self.rooms = [ Room(room_id=int(room_id, 16), name=room['name'])
+        for room_id, room in raw_rooms.items() ]
 
     self.by_id = { room.room_id : room for room in self.rooms }
     self.by_name = { room.name : room for room in self.rooms }
