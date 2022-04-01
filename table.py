@@ -1,22 +1,22 @@
 class DefaultRenderer(object):
-  def render_cell(self, cell, width, idx, margin_width):
-    if idx == 0: margin_width = 0
-
+  def render_cell_contents(self, cell, width):
     color_on = "\033[%sm" % ('' if cell.color is None else cell.color)
     color_off = "\033[m"
 
+    spacing = ' ' * (width - cell.width())
     text = "%s" % cell.text
     if cell.max_width: text = text[0:cell.max_width]
 
-    spacing = ' ' * (width - cell.width())
-    margin = ' ' * margin_width
-
     if cell.justify == 'left':
-      return margin + color_on + text + spacing + color_off
+      return color_on + text + spacing + color_off
     elif cell.justify == 'right':
-      return margin + color_on + spacing + text + color_off
+      return color_on + spacing + text + color_off
     else:
       raise ValueError("Invalid value for justify: %s" % cell.justify)
+
+  def render_cell(self, cell, width, idx, margin_width):
+    margin = ' ' * (margin_width if idx != 0 else 0)
+    return margin + self.render_cell_contents(cell, width)
 
   def render(self, table, cell_margin_width=2):
     width = { }
