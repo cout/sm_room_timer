@@ -14,9 +14,11 @@ class DefaultRenderer(object):
     else:
       raise ValueError("Invalid value for justify: %s" % cell.justify)
 
+  def render_cell_margin(self, idx, margin_width):
+    return ' ' * (margin_width if idx != 0 else 0)
+
   def render_cell(self, cell, width, idx, margin_width):
-    margin = ' ' * (margin_width if idx != 0 else 0)
-    return margin + self.render_cell_contents(cell, width)
+    return self.render_cell_margin(idx, margin_width) + self.render_cell_contents(cell, width)
 
   def render(self, table, cell_margin_width=2):
     width = { }
