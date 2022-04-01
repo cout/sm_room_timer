@@ -17,8 +17,9 @@ class DefaultRenderer(object):
   def render_cell_margin(self, idx, margin_width):
     return ' ' * (margin_width if idx != 0 else 0)
 
-  def render_cell(self, cell, width, idx, margin_width):
-    return self.render_cell_margin(idx, margin_width) + self.render_cell_contents(cell, width)
+  def render_cell(self, cell, width, idx, cell_margin_width=2):
+    return self.render_cell_margin(idx, cell_margin_width) + \
+           self.render_cell_contents(cell, width)
 
   def compute_widths(self, table):
     width = { }
@@ -29,18 +30,18 @@ class DefaultRenderer(object):
 
     return width
 
-  def render_row(self, row, widths, cell_margin_width=2):
-      cells = [ self.render_cell(cell, widths[idx], idx, margin_width=cell_margin_width)
+  def render_row(self, row, widths, **kwargs):
+      cells = [ self.render_cell(cell, widths[idx], idx, **kwargs)
           for idx, cell in enumerate(row) ]
       return ''.join(cells)
 
-  def render_rows(self, table, widths, *args, **kwargs):
-    rows = [ self.render_row(row, widths, *args, **kwargs) for row in table.rows ]
+  def render_rows(self, table, widths, **kwargs):
+    rows = [ self.render_row(row, widths, **kwargs) for row in table.rows ]
     return "\n".join(rows)
 
-  def render(self, table, *args, **kwargs):
+  def render(self, table, **kwargs):
     widths = self.compute_widths(table)
-    return self.render_rows(table, widths, *args, **kwargs)
+    return self.render_rows(table, widths, **kwargs)
 
 class Cell(object):
   def __init__(self, text, color=None, justify='left', max_width=None):
