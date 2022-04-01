@@ -29,15 +29,13 @@ class DefaultRenderer(object):
 
     return width
 
-  def render_rows(self, table, widths, cell_margin_width=2):
-    rows = [ ]
-
-    for row in table.rows:
-      rendered_cells = [ self.render_cell(cell, widths[idx], idx, margin_width=cell_margin_width)
+  def render_row(self, row, widths, cell_margin_width=2):
+      cells = [ self.render_cell(cell, widths[idx], idx, margin_width=cell_margin_width)
           for idx, cell in enumerate(row) ]
-      rows.append(''.join(rendered_cells))
+      return ''.join(cells)
 
-    return rows
+  def render_rows(self, table, widths, *args, **kwargs):
+    return [ self.render_row(row, widths, *args, **kwargs) for row in table.rows ]
 
   def render(self, table, *args, **kwargs):
     widths = self.compute_widths(table)
