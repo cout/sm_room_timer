@@ -35,13 +35,12 @@ class DefaultRenderer(object):
       return ''.join(cells)
 
   def render_rows(self, table, widths, *args, **kwargs):
-    return [ self.render_row(row, widths, *args, **kwargs) for row in table.rows ]
+    rows = [ self.render_row(row, widths, *args, **kwargs) for row in table.rows ]
+    return "\n".join(rows)
 
   def render(self, table, *args, **kwargs):
     widths = self.compute_widths(table)
-    rows = self.render_rows(table, widths, *args, **kwargs)
-
-    return "\n".join(rows)
+    return self.render_rows(table, widths, *args, **kwargs)
 
 class Cell(object):
   def __init__(self, text, color=None, justify='left', max_width=None):
