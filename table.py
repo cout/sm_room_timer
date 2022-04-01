@@ -29,16 +29,21 @@ class DefaultRenderer(object):
 
     return width
 
-  def render(self, table, cell_margin_width=2):
-    width = self.compute_widths(table)
+  def render_rows(self, table, widths, cell_margin_width=2):
+    rows = [ ]
 
-    lines = [ ]
     for row in table.rows:
-      rendered_cells = [ self.render_cell(cell, width[idx], idx, margin_width=cell_margin_width)
+      rendered_cells = [ self.render_cell(cell, widths[idx], idx, margin_width=cell_margin_width)
           for idx, cell in enumerate(row) ]
-      lines.append(''.join(rendered_cells))
+      rows.append(''.join(rendered_cells))
 
-    return "\n".join(lines)
+    return rows
+
+  def render(self, table, *args, **kwargs):
+    widths = self.compute_widths(table)
+    rows = self.render_rows(table, widths, *args, **kwargs)
+
+    return "\n".join(rows)
 
 class Cell(object):
   def __init__(self, text, color=None, justify='left', max_width=None):
