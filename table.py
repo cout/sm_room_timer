@@ -20,11 +20,17 @@ class DefaultRenderer(object):
   def render_cell(self, cell, width, idx, margin_width):
     return self.render_cell_margin(idx, margin_width) + self.render_cell_contents(cell, width)
 
-  def render(self, table, cell_margin_width=2):
+  def compute_widths(self, table):
     width = { }
+
     for row in table.rows:
       for idx, cell in enumerate(row):
         width[idx] = max(cell.width(), width.get(idx, 0))
+
+    return width
+
+  def render(self, table, cell_margin_width=2):
+    width = self.compute_widths(table)
 
     lines = [ ]
     for row in table.rows:
