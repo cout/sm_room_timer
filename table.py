@@ -1,3 +1,37 @@
+class DefaultRenderer(object):
+  def render_cell(self, cell, width, idx, margin_width):
+    if idx == 0: margin_width = 0
+
+    color_on = "\033[%sm" % ('' if cell.color is None else cell.color)
+    color_off = "\033[m"
+
+    text = "%s" % cell.text
+    if cell.max_width: text = text[0:cell.max_width]
+
+    spacing = ' ' * (width - cell.width())
+    margin = ' ' * margin_width
+
+    if cell.justify == 'left':
+      return margin + color_on + text + spacing + color_off
+    elif cell.justify == 'right':
+      return margin + color_on + spacing + text + color_off
+    else:
+      raise ValueError("Invalid value for justify: %s" % cell.justify)
+
+  def render(self, table, cell_margin_width=2):
+    width = { }
+    for row in table.rows:
+      for idx, cell in enumerate(row):
+        width[idx] = max(cell.width(), width.get(idx, 0))
+
+    lines = [ ]
+    for row in table.rows:
+      rendered_cells = [ self.render_cell(cell, width[idx], idx, margin_width=cell_margin_width)
+          for idx, cell in enumerate(row) ]
+      lines.append(''.join(rendered_cells))
+
+    return "\n".join(lines)
+
 class Cell(object):
   def __init__(self, text, color=None, justify='left', max_width=None):
     self.text = text
@@ -23,23 +57,10 @@ class Cell(object):
     else:
       return min(len(str(self.text)), self.max_width)
 
-  def render(self, width, margin_width):
-    color_on = "\033[%sm" % ('' if self.color is None else self.color)
-    text = "%s" % self.text
-    if self.max_width: text = text[0:self.max_width]
-    color_off = "\033[m"
-    spacing = ' ' * (width - self.width())
-    margin = ' ' * margin_width
-    if self.justify == 'left':
-      return margin + color_on + text + spacing + color_off
-    elif self.justify == 'right':
-      return margin + color_on + spacing + text + color_off
-    else:
-      raise ValueError("Invalid value for justify: %s" % self.justify)
-
 class Table(object):
-  def __init__(self):
+  def __init__(self, renderer=None):
     self.rows = [ ]
+    self.renderer = renderer or DefaultRenderer()
 
   def append(self, row):
     self.rows.append(row)
@@ -50,20 +71,5 @@ class Table(object):
   def __iter__(self):
     return iter(self.rows)
 
-  def render_cell(self, cell, width, idx, margin_width):
-    if idx == 0: margin_width = 0
-    return cell.render(width=width, margin_width=margin_width)
-
-  def render(self, cell_margin_width=2):
-    width = { }
-    for row in self.rows:
-      for idx, cell in enumerate(row):
-        width[idx] = max(cell.width(), width.get(idx, 0))
-
-    lines = [ ]
-    for row in self.rows:
-      rendered_cells = [ self.render_cell(cell, width[idx], idx, margin_width=cell_margin_width)
-          for idx, cell in enumerate(row) ]
-      lines.append(''.join(rendered_cells))
-
-    return "\n".join(lines)
+  def render(self, *args, **kwargs):
+    return self.renderer.render(self, *args, **kwargs)
