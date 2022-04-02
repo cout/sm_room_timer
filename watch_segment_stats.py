@@ -5,7 +5,7 @@ from doors import Doors, NullDoor
 from history import History, read_history_csv_incrementally
 from route import build_route, is_ceres_escape
 from segment_stats import SegmentStats, segment_from_name, transition_from_name, segments_from_splits
-from table import Cell, Table
+from table import Cell, Table, CompactRenderer
 
 import sys
 import argparse
@@ -59,7 +59,7 @@ def render_delta_to_best(old_best, new_best, delta, **kwargs):
   return Cell(delta, **kwargs)
 
 def render_segment_stats(old_stats, stats):
-  table = Table()
+  table = Table(renderer=CompactRenderer())
 
   underline = 4
   header = [ Cell(s, underline) for s in ( 'Segment', '#', '%', 'Median', '±Best', '±SOB' ) ]

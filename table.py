@@ -14,12 +14,13 @@ class DefaultRenderer(object):
     else:
       raise ValueError("Invalid value for justify: %s" % cell.justify)
 
-  def render_cell_margin(self, idx, margin_width):
-    return ' ' * (margin_width if idx != 0 else 0)
+  def render_cell_margin(self, margin_width):
+    return ' ' * margin_width
 
   def render_cell(self, cell, width, idx, cell_margin_width=2):
-    return self.render_cell_margin(idx, cell_margin_width) + \
-           self.render_cell_contents(cell, width)
+    margin = self.render_cell_margin(cell_margin_width) if idx > 0 else ''
+    contents = self.render_cell_contents(cell, width)
+    return margin + contents
 
   def compute_widths(self, table):
     width = { }
@@ -42,6 +43,20 @@ class DefaultRenderer(object):
   def render(self, table, **kwargs):
     widths = self.compute_widths(table)
     return self.render_rows(table, widths, **kwargs)
+
+class CompactRenderer(DefaultRenderer):
+  def render_cell_margin(self, margin_width, divider='│', divider_brightness=3):
+    left = ' ' * (margin_width // 2)
+    right = ' ' * ((margin_width - 1) // 2)
+    color = '38;5;%s' % (232 + divider_brightness)
+    color_on = "\033[%sm" % color
+    color_off = "\033[m"
+    return ''.join((left, color_on, divider, color_off, right))
+
+  def render_cell(self, cell, width, idx, cell_margin_width=1):
+    margin = self.render_cell_margin(cell_margin_width) if idx > 0 else ''
+    contents = self.render_cell_contents(cell, width)
+    return margin + contents
 
 class Cell(object):
   def __init__(self, text, color=None, justify='left', max_width=None):
