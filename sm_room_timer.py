@@ -293,6 +293,28 @@ class RoomTimer(object):
     if attempts:
       self.frontend.log_transition(transition, attempts, self.store)
 
+def color_for_time(ttime, atimes):
+  mean = atimes.mean()
+  best = atimes.best()
+  prev_best = atimes.prev_best()
+  p25 = atimes.percentile(25)
+  p50 = atimes.median()
+  p75 = atimes.percentile(75)
+
+  color = 8
+  if ttime <= best:
+    color = 214
+  elif ttime <= p25:
+    color = 40
+  elif ttime <= p50:
+    color = 148
+  elif ttime <= p75:
+    color = 204
+  else:
+    color = 196
+
+  return color
+
 class TerminalFrontend(object):
   def __init__(self, debug_log=None, verbose=False):
     self.debug_log = debug_log
@@ -374,35 +396,13 @@ class TerminalFrontend(object):
     self.log('Tot:  %s' % (transition.time.totalrealtime))
     self.log('')
 
-  def color_for_time(self, ttime, atimes):
-    mean = atimes.mean()
-    best = atimes.best()
-    prev_best = atimes.prev_best()
-    p25 = atimes.percentile(25)
-    p50 = atimes.median()
-    p75 = atimes.percentile(75)
-
-    color = 8
-    if ttime <= best:
-      color = 214
-    elif ttime <= p25:
-      color = 40
-    elif ttime <= p50:
-      color = 148
-    elif ttime <= p75:
-      color = 204
-    else:
-      color = 196
-
-    return color
-
   def colorize(self, ttime, atimes):
     mean = atimes.mean()
     best = atimes.best()
     prev_best = atimes.prev_best()
     p50 = atimes.median()
 
-    color = self.color_for_time(ttime, atimes)
+    color = color_for_time(ttime, atimes)
 
     if ttime == best and prev_best != FrameCount.max:
       stats = 'avg %s, median %s, previous best %s' % (mean, p50, prev_best)

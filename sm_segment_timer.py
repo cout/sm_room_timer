@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from sm_room_timer import Store, RoomTimer, TerminalFrontend, backup_and_rebuild
+from sm_room_timer import Store, RoomTimer, TerminalFrontend, backup_and_rebuild, color_for_time
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from route import Route
@@ -159,25 +159,24 @@ class SegmentTimer(RoomTimer):
   def __init__(self, rooms, doors, store, sock, debug_log=None, verbose=False):
     RoomTimer.__init__(self, rooms, doors, store, sock, debug_log, verbose)
 
-class SegmentTimerTerminalFrontend(TerminalFrontend):
-  def __init__(self, debug_log=None, verbose=False):
-    TerminalFrontend.__init__(self, debug_log=debug_log, verbose=verbose)
+class SegmentTimeTable(object):
+  def __init__(self, attempts, store):
+    self.attempts = attempts
+    self.store = store
 
-  def log_transition(self, transition, attempts, store):
-    print("Segment: \033[1m%s\033[m" % store.current_attempt.segment)
-
+  def render(self):
     table = Table()
 
     underline = 4
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    stats = store.current_attempt_stats
+    stats = self.store.current_attempt_stats
 
     for transition_stats in stats.transitions:
       transition = transition_stats.transition
 
-      time_color = self.color_for_time(
+      time_color = color_for_time(
           transition.time.totalrealtime,
           transition_stats.attempts.totalrealtimes)
 
@@ -194,16 +193,27 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
           + str(transition_stats.p0_delta), color=cell_color, justify='right'),
       ])
 
-    color = self.color_for_time(
-        store.current_attempt.time.totalrealtime,
+    color = color_for_time(
+        self.store.current_attempt.time.totalrealtime,
         stats.seg_attempts.totalrealtimes)
     table.append([
       Cell('Segment'),
       Cell(stats.num_attempts, justify='right'),
-      Cell(store.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
+      Cell(self.store.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
       Cell(('+' if stats.p50_delta > FrameCount(0) else '') + str(stats.p50_delta), justify='right'),
       Cell(('+' if stats.p0_delta > FrameCount(0) else '') + str(stats.p0_delta), justify='right'),
     ])
+
+    return table.render()
+
+class SegmentTimerTerminalFrontend(TerminalFrontend):
+  def __init__(self, debug_log=None, verbose=False):
+    TerminalFrontend.__init__(self, debug_log=debug_log, verbose=verbose)
+
+  def log_transition(self, transition, attempts, store):
+    print("Segment: \033[1m%s\033[m" % store.current_attempt.segment)
+
+    table = SegmentTimeTable(attempts, store)
 
     print(table.render())
     print('')
