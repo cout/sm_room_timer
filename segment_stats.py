@@ -3,7 +3,8 @@
 from frame_count import FrameCount
 from rooms import Room, Rooms, NullRoom
 from doors import Doors, NullDoor
-from history import History, read_history_file
+from history import History
+from transition_log import read_transition_log
 from route import build_route, is_ceres_escape
 from table import Cell, Table
 from stats import transition_stats
@@ -214,7 +215,7 @@ def main():
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
-  history = read_history_file(args.filename, rooms, doors)
+  history = read_transition_log(args.filename, rooms, doors)
 
   # ids = build_route(history) if args.build_route else history.keys()
   route = build_route(history) # TODO: Needed?

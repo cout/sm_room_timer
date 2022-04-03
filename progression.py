@@ -3,7 +3,8 @@
 from frame_count import FrameCount
 from rooms import Room, Rooms, NullRoom
 from doors import Doors, NullDoor
-from history import History, read_history_file, read_history_file_incrementally
+from history import History
+from transition_log import read_transition_log, read_transition_log_incrementally
 from route import Route, build_route, is_ceres_escape
 from transition import Transition
 from stats import TransitionStats, transition_stats, ceres_cutscene_stats, door_stats
@@ -18,7 +19,7 @@ def progression_stats(filename, route, rooms, doors, start_room=None, end_room=N
   all_stats = { }
   route = Route()
 
-  for history, transition in read_history_file_incrementally(args.filename, rooms, doors):
+  for history, transition in read_transition_log_incrementally(args.filename, rooms, doors):
     tid = transition.id
     route.record(tid, verbose=False)
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
 
-  history = read_history_file(args.filename, rooms, doors)
+  history = read_transition_log(args.filename, rooms, doors)
   route = Route()
   ids = build_route(history)
   all_stats = { }

@@ -14,7 +14,8 @@ from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from frame_count import FrameCount
 from transition import TransitionId, TransitionTime, Transition
-from history import History, read_history_file
+from history import History
+from transition_log import read_transition_log
 from route import Route, DummyRoute
 from state import State, NullState
 from rebuild_history import need_rebuild, rebuild_history
@@ -23,7 +24,7 @@ from transition_log import FileTransitionLog, NullTransitionLog
 class Store(object):
   def __init__(self, rooms, doors, route, filename=None):
     if filename is not None and os.path.exists(filename):
-      self.history = read_history_file(filename, rooms, doors)
+      self.history = read_transition_log(filename, rooms, doors)
     else:
       self.history = History()
 

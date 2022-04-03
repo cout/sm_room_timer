@@ -2,7 +2,8 @@
 
 from rooms import Room, Rooms, NullRoom
 from doors import Doors, NullDoor
-from history import History, read_history_csv_incrementally
+from history import History
+from transition_log import read_transition_log_csv_incrementally
 from route import build_route, is_ceres_escape
 from segment_stats import SegmentStats, segment_from_name, transition_from_name, segments_from_splits
 from table import Cell, Table, CompactRenderer
@@ -101,7 +102,7 @@ def main():
 
   with open(args.filename) as csvfile:
     tailer = Tailer(csvfile)
-    history_reader = read_history_csv_incrementally(tailer, rooms, doors)
+    history_reader = read_transition_log_csv_incrementally(tailer, rooms, doors)
 
     while not tailer.at_eof():
       history, transition = next(history_reader)
