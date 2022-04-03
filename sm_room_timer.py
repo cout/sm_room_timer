@@ -18,6 +18,7 @@ from history import History, read_history_file
 from route import Route, DummyRoute
 from state import State, NullState
 from rebuild_history import need_rebuild, rebuild_history
+from transition_log import FileTransitionLog, NullTransitionLog
 
 class Store(object):
   def __init__(self, rooms, doors, route, filename=None):
@@ -33,15 +34,7 @@ class Store(object):
 
     print('Route is %s' % ('complete' if route.complete else 'incomplete'))
 
-    if filename is not None:
-      self.file = open(filename, 'a')
-      self.writer = csv.writer(self.file)
-      # TODO: this incorrectly appends headers to a file that only has a header line
-      if len(self.history) == 0:
-        print(','.join(Transition.csv_headers()), file=self.file)
-    else:
-      self.file = None
-      self.writer = None
+    self.transition_log = FileTransitionLog(filename) if filename is not None else NullTransitionLog()
 
   def transitioned(self, transition):
     if not self.route.complete:
@@ -54,9 +47,7 @@ class Store(object):
 
     attempts = self.history.record(transition)
 
-    if self.writer is not None:
-      self.writer.writerow(transition.as_csv_row())
-      self.file.flush()
+    self.transition_log.write_transition(transition)
 
     return attempts
 
@@ -68,7 +59,7 @@ class Store(object):
     # TODO: Write reset to history file
 
   def close(self):
-    self.file.close()
+    self.transition_log.close()
 
 class StateChange(object):
   def __init__(self, prev_state, state, current_room):
