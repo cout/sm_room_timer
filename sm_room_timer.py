@@ -67,7 +67,6 @@ class Store(object):
       return None
 
     attempts = self.history.record(transition)
-    # history_report(self.history)
 
     if self.writer is not None:
       self.writer.writerow(transition.as_csv_row())

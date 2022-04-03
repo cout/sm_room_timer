@@ -92,13 +92,6 @@ class History(object):
   def get(self, key, default=None):
     return self.history.get(key, default)
 
-def history_report(history):
-  for tid in sorted(history.keys(), key=lambda tid: (tid.room.room_id, tid.exit_room.room_id)):
-    print("%s: %s (%s/%s to %s/%s)" % (tid, len(history[tid]),
-      tid.room.room_id, id(tid.room), tid.exit_room.room_id,
-      id(tid.exit_room)))
-  print()
-
 def read_history_csv_incrementally(csvfile, rooms, doors):
   history = History()
   reader = csv.DictReader(csvfile)
