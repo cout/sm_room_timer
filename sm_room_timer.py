@@ -33,9 +33,6 @@ class Store(object):
 
     print('Route is %s' % ('complete' if route.complete else 'incomplete'))
 
-    self.extra_file = open('extra.csv', 'a')
-    self.extra_writer = csv.writer(self.extra_file)
-
     if filename is not None:
       self.file = open(filename, 'a')
       self.writer = csv.writer(self.file)
@@ -47,17 +44,6 @@ class Store(object):
       self.writer = None
 
   def transitioned(self, transition):
-    self.extra_writer.writerow((
-      '%04x' % transition.id.room.room_id,
-      '%04x' % transition.id.exit_room.room_id,
-      transition.id.room,
-      transition.id.exit_room,
-      transition.time.realtime_door,
-      transition.time.door,
-      transition.time.realtime_door - transition.time.door,
-      ))
-    self.extra_file.flush()
-
     if not self.route.complete:
       self.route.record(transition.id)
       if self.route.complete:
