@@ -271,7 +271,7 @@ class RoomTimer(object):
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.tracker.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.tracker)
+      self.frontend.room_completed(transition, attempts, self.tracker)
 
   def handle_escaped_ceres(self, state):
     ts = datetime.datetime.now()
@@ -284,7 +284,7 @@ class RoomTimer(object):
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.tracker.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.tracker)
+      self.frontend.room_completed(transition, attempts, self.tracker)
 
   def handle_reached_ship(self, state):
     ts = datetime.datetime.now()
@@ -297,7 +297,7 @@ class RoomTimer(object):
     transition = Transition(ts, transition_id, transition_time)
     attempts = self.tracker.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.tracker)
+      self.frontend.room_completed(transition, attempts, self.tracker)
 
 def color_for_time(ttime, atimes):
   mean = atimes.mean()
@@ -340,7 +340,7 @@ class RoomTimerTerminalFrontend(object):
   def log_state_changes(self, change):
     for s in change.description(): self.log_verbose(s)
 
-  def log_transition(self, transition, attempts, tracker):
+  def room_completed(self, transition, attempts, tracker):
     if self.verbose:
       # When verbose logging is enabled, we  want to minimize the number
       # of lines displayed
