@@ -309,8 +309,6 @@ class TerminalFrontend(object):
       self.log(*args)
 
   def log_state_changes(self, change):
-    state_changed = False
-
     if change.is_program_start:
       self.log_verbose("Starting in room %s at %s, door=%s" % (
         change.state.room, change.state.igt, change.state.door))
@@ -320,30 +318,19 @@ class TerminalFrontend(object):
           change.state.igt, change.state.door))
     elif change.reached_ship:
       self.log_verbose("Reached ship at %s" % (change.state.igt))
-      state_changed = True
     elif change.is_room_change:
       self.log_verbose("Room changed to %s (%x) at %s without using a door" % (
         change.state.room, change.state.room.room_id,
         change.state.igt))
-      state_changed = True
 
     if change.is_reset:
       self.log_verbose("Reset detected to %s" % change.state.igt)
-      state_changed = True
 
     if change.door_changed:
       self.log_debug("Door changed to %s at %s" % (change.state.door, change.state.igt))
-      state_changed = True
 
     if change.game_state_changed:
       self.log_debug("%s Game state changed to %s at %s" % (time.time(), change.state.game_state, change.state.igt))
-      state_changed = True
-
-    if state_changed:
-      self.log_debug("Previous state:", change.prev_state)
-      self.log_debug("State:", change.state)
-      self.log_debug("Changes:", change)
-      self.log_debug()
 
   def log_transition(self, transition, attempts, tracker):
     if self.verbose:
