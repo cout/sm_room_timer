@@ -124,8 +124,10 @@ class SegmentAttemptStats(object):
     historical_times = self.seg_attempts.totalrealtimes
 
     self.num_attempts = len(self.seg_attempts)
-    self.p50_delta = attempt_time - historical_times.median() if len(historical_times.values()) > 0 else FrameCount(0)
-    self.p0_delta = attempt_time - historical_times.best() if len(historical_times.values()) > 0 else FrameCount(0)
+    self.p50 = historical_times.median() if len(historical_times.values()) > 0 else FrameCount(0)
+    self.p0 = historical_times.best() if len(historical_times.values()) > 0 else FrameCount(0)
+    self.p50_delta = attempt_time - self.p50
+    self.p0_delta = attempt_time - self.p0
 
 class SegmentTimeTracker(RoomTimeTracker):
   def __init__(self, rooms, doors, route, filename=None):
@@ -156,8 +158,7 @@ class SegmentTimeTracker(RoomTimeTracker):
     return RoomTimeTracker.room_reset(self, reset_id)
 
 class SegmentTimer(RoomTimer):
-  def __init__(self, rooms, doors, tracker, sock, debug_log=None, verbose=False):
-    RoomTimer.__init__(self, rooms, doors, tracker, sock, debug_log, verbose)
+  pass
 
 class SegmentTimeTable(object):
   def __init__(self, attempts, tracker):
@@ -207,7 +208,8 @@ class SegmentTimeTable(object):
     return table.render()
 
 class SegmentTimerTerminalFrontend(object):
-  def __init__(self, debug_log=None, verbose=False):
+  def __init__(self, tracker, debug_log=None, verbose=False):
+    self.tracker = tracker
     self.debug_log = debug_log
     self.verbose = verbose
 
@@ -225,13 +227,23 @@ class SegmentTimerTerminalFrontend(object):
   def state_changed(self, change):
     for s in change.description(): self.log_verbose(s)
 
-  def room_completed(self, transition, attempts, tracker):
-    print("Segment: \033[1m%s\033[m" % tracker.current_attempt.segment)
+  def room_completed(self, transition, attempts):
+    print("Segment: \033[1m%s\033[m" % self.tracker.current_attempt.segment)
 
-    table = SegmentTimeTable(attempts, tracker)
+    table = SegmentTimeTable(attempts, self.tracker)
 
     print(table.render())
     print('')
+
+    # old_median = self.tracker.current_attempt_stats.p50
+    # new_median = find_segment_in_history(
+    #     self.tracker.current_attempt.segment,
+    #     self.tracker.history).totalrealtimes.median()
+    # self.log_verbose('Old median:', old_median)
+    # self.log_verbose('New median:', new_median)
+
+    # if new_median < old_median:
+     #  print("You lowered your median time by %s!" % (new_median - old_median))
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
@@ -269,14 +281,19 @@ def main():
     verbose = args.verbose
 
   tracker = SegmentTimeTracker(rooms, doors, route, args.filename)
-  frontend = SegmentTimerTerminalFrontend(verbose=verbose, debug_log=debug_log)
+  frontend = SegmentTimerTerminalFrontend(tracker=tracker, verbose=verbose, debug_log=debug_log)
 
   if args.usb2snes:
     sock = WebsocketClient('sm_room_timer', logger=frontend)
   else:
     sock = NetworkCommandSocket()
 
-  timer = SegmentTimer(frontend, rooms, doors, tracker, sock)
+  timer = SegmentTimer(
+      frontend, rooms, doors, sock,
+      on_transitioned=tracker.transitioned,
+      on_state_change=frontend.state_changed,
+      on_room_completed=frontend.room_completed,
+      on_reset=tracker.room_reset)
 
   while True:
     timer.poll()
