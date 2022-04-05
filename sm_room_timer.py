@@ -143,7 +143,7 @@ class RoomTimer(object):
 
     change = StateChange(self.prev_state, state, self.current_room)
 
-    self.frontend.log_state_changes(change)
+    self.frontend.state_changed(change)
 
     # When the room changes (and we're not in demo mode), we want to
     # take note.  Most of the time, the previous game state was
@@ -337,7 +337,7 @@ class RoomTimerTerminalFrontend(object):
     if self.verbose:
       self.log(*args)
 
-  def log_state_changes(self, change):
+  def state_changed(self, change):
     for s in change.description(): self.log_verbose(s)
 
   def room_completed(self, transition, attempts, tracker):

@@ -222,10 +222,10 @@ class SegmentTimerTerminalFrontend(object):
     if self.verbose:
       self.log(*args)
 
-  def log_state_changes(self, change):
+  def state_changed(self, change):
     for s in change.description(): self.log_verbose(s)
 
-  def log_transition(self, transition, attempts, tracker):
+  def room_completed(self, transition, attempts, tracker):
     print("Segment: \033[1m%s\033[m" % tracker.current_attempt.segment)
 
     table = SegmentTimeTable(attempts, tracker)
