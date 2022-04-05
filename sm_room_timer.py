@@ -82,6 +82,35 @@ class StateChange(object):
     return "StateChange(%s)" % ', '.join([ '%s=%s' % (k,repr(v)) for k,v in
       self.__dict__.items() ])
 
+  def description(self):
+    changes = [ ]
+
+    if self.is_program_start:
+      changes.append("Starting in room %s at %s, door=%s" % (
+        self.state.room, self.state.igt, self.state.door))
+    elif self.is_room_change and self.transition_finished:
+      changes.append("Transition to %s (%x) at %s using door %s" % (
+          self.state.room, self.state.room.room_id,
+          self.state.igt, self.state.door))
+    elif self.reached_ship:
+      changes.append("Reached ship at %s" % (self.state.igt))
+    elif self.is_room_change:
+      changes.append("Room changed to %s (%x) at %s without using a door" % (
+        self.state.room, self.state.room.room_id,
+        self.state.igt))
+
+    if self.is_reset:
+      changes.append("Reset detected to %s" % self.state.igt)
+
+    if self.door_changed:
+      changes.append("Door changed to %s at %s" % (self.state.door, self.state.igt))
+
+    if self.game_state_changed:
+      changes.append("Game state changed to %s at %s" % (
+        self.state.game_state, self.state.igt))
+
+    return changes
+
 class RoomTimer(object):
   def __init__(self, frontend, rooms, doors, tracker, sock, debug_log=None):
     self.frontend = frontend
@@ -309,28 +338,7 @@ class TerminalFrontend(object):
       self.log(*args)
 
   def log_state_changes(self, change):
-    if change.is_program_start:
-      self.log_verbose("Starting in room %s at %s, door=%s" % (
-        change.state.room, change.state.igt, change.state.door))
-    elif change.is_room_change and change.transition_finished:
-      self.log_verbose("Transition to %s (%x) at %s using door %s" % (
-          change.state.room, change.state.room.room_id,
-          change.state.igt, change.state.door))
-    elif change.reached_ship:
-      self.log_verbose("Reached ship at %s" % (change.state.igt))
-    elif change.is_room_change:
-      self.log_verbose("Room changed to %s (%x) at %s without using a door" % (
-        change.state.room, change.state.room.room_id,
-        change.state.igt))
-
-    if change.is_reset:
-      self.log_verbose("Reset detected to %s" % change.state.igt)
-
-    if change.door_changed:
-      self.log_debug("Door changed to %s at %s" % (change.state.door, change.state.igt))
-
-    if change.game_state_changed:
-      self.log_debug("%s Game state changed to %s at %s" % (time.time(), change.state.game_state, change.state.igt))
+    for s in change.description(): self.log_verbose(s)
 
   def log_transition(self, transition, attempts, tracker):
     if self.verbose:
