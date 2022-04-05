@@ -130,8 +130,10 @@ class SegmentAttemptStats(object):
     self.p0_delta = attempt_time - self.p0
 
 class SegmentTimeTracker(RoomTimeTracker):
-  def __init__(self, rooms, doors, route, filename=None):
-    RoomTimeTracker.__init__(self, rooms, doors, route, filename=filename)
+  def __init__(self, rooms, doors, route, filename=None,
+      on_new_room_time=lambda *args, **kwargs: None):
+    RoomTimeTracker.__init__(self, rooms, doors, route,
+        filename=filename, on_new_room_time=on_new_room_time)
 
     self.current_attempt = SegmentAttempt()
     self.current_attempt_stats = None
@@ -149,9 +151,7 @@ class SegmentTimeTracker(RoomTimeTracker):
       self.current_attempt.append(transition)
       self.current_attempt_stats.append(transition, self.current_attempt)
 
-    attempts = RoomTimeTracker.transitioned(self, transition)
-
-    return attempts
+    RoomTimeTracker.transitioned(self, transition)
 
   def room_reset(self, reset_id):
     self.new_segment = True
@@ -208,8 +208,7 @@ class SegmentTimeTable(object):
     return table.render()
 
 class SegmentTimerTerminalFrontend(object):
-  def __init__(self, tracker, debug_log=None, verbose=False):
-    self.tracker = tracker
+  def __init__(self, debug_log=None, verbose=False):
     self.debug_log = debug_log
     self.verbose = verbose
 
@@ -227,10 +226,10 @@ class SegmentTimerTerminalFrontend(object):
   def state_changed(self, change):
     for s in change.description(): self.log_verbose(s)
 
-  def room_completed(self, transition, attempts):
-    print("Segment: \033[1m%s\033[m" % self.tracker.current_attempt.segment)
+  def new_room_time(self, transition, attempts, tracker):
+    print("Segment: \033[1m%s\033[m" % tracker.current_attempt.segment)
 
-    table = SegmentTimeTable(attempts, self.tracker)
+    table = SegmentTimeTable(attempts, tracker)
 
     print(table.render())
     print('')
@@ -280,19 +279,22 @@ def main():
     debug_log = None
     verbose = args.verbose
 
-  tracker = SegmentTimeTracker(rooms, doors, route, args.filename)
-  frontend = SegmentTimerTerminalFrontend(tracker=tracker, verbose=verbose, debug_log=debug_log)
+  frontend = SegmentTimerTerminalFrontend(
+      verbose=verbose, debug_log=debug_log)
 
   if args.usb2snes:
     sock = WebsocketClient('sm_room_timer', logger=frontend)
   else:
     sock = NetworkCommandSocket()
 
+  tracker = SegmentTimeTracker(
+      rooms, doors, route, args.filename,
+      on_new_room_time=frontend.new_room_time)
+
   timer = SegmentTimer(
       frontend, rooms, doors, sock,
       on_transitioned=tracker.transitioned,
       on_state_change=frontend.state_changed,
-      on_room_completed=frontend.room_completed,
       on_reset=tracker.room_reset)
 
   while True:
