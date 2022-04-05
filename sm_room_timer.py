@@ -321,7 +321,7 @@ def color_for_time(ttime, atimes):
 
   return color
 
-class TerminalFrontend(object):
+class RoomTimerTerminalFrontend(object):
   def __init__(self, debug_log=None, verbose=False):
     self.debug_log = debug_log
     self.verbose = verbose
@@ -440,7 +440,7 @@ def main():
     verbose = args.verbose
 
   tracker = RoomTimeTracker(rooms, doors, route, args.filename)
-  frontend = TerminalFrontend(verbose=verbose, debug_log=debug_log)
+  frontend = RoomTimerTerminalFrontend(verbose=verbose, debug_log=debug_log)
 
   if args.usb2snes:
     sock = WebsocketClient('sm_room_timer')

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from sm_room_timer import RoomTimeTracker, RoomTimer, TerminalFrontend, backup_and_rebuild, color_for_time
+from sm_room_timer import RoomTimeTracker, RoomTimer, backup_and_rebuild, color_for_time
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from route import Route
@@ -206,9 +206,24 @@ class SegmentTimeTable(object):
 
     return table.render()
 
-class SegmentTimerTerminalFrontend(TerminalFrontend):
+class SegmentTimerTerminalFrontend(object):
   def __init__(self, debug_log=None, verbose=False):
-    TerminalFrontend.__init__(self, debug_log=debug_log, verbose=verbose)
+    self.debug_log = debug_log
+    self.verbose = verbose
+
+  def log(self, *args):
+    print(*args)
+
+  def log_debug(self, *args):
+    if self.debug_log:
+      print(*args, file=self.debug_log)
+
+  def log_verbose(self, *args):
+    if self.verbose:
+      self.log(*args)
+
+  def log_state_changes(self, change):
+    for s in change.description(): self.log_verbose(s)
 
   def log_transition(self, transition, attempts, tracker):
     print("Segment: \033[1m%s\033[m" % tracker.current_attempt.segment)
