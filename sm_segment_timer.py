@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from sm_room_timer import Store, RoomTimer, TerminalFrontend, backup_and_rebuild, color_for_time
+from sm_room_timer import RoomTimeTracker, RoomTimer, TerminalFrontend, backup_and_rebuild, color_for_time
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from route import Route
@@ -127,9 +127,9 @@ class SegmentAttemptStats(object):
     self.p50_delta = attempt_time - historical_times.median() if len(historical_times.values()) > 0 else FrameCount(0)
     self.p0_delta = attempt_time - historical_times.best() if len(historical_times.values()) > 0 else FrameCount(0)
 
-class SegmentStore(Store):
+class SegmentTimeTracker(RoomTimeTracker):
   def __init__(self, rooms, doors, route, filename=None):
-    Store.__init__(self, rooms, doors, route, filename=filename)
+    RoomTimeTracker.__init__(self, rooms, doors, route, filename=filename)
 
     self.current_attempt = SegmentAttempt()
     self.current_attempt_stats = None
@@ -147,22 +147,22 @@ class SegmentStore(Store):
       self.current_attempt.append(transition)
       self.current_attempt_stats.append(transition, self.current_attempt)
 
-    attempts = Store.transitioned(self, transition)
+    attempts = RoomTimeTracker.transitioned(self, transition)
 
     return attempts
 
   def room_reset(self, reset_id):
     self.new_segment = True
-    return Store.room_reset(self, reset_id)
+    return RoomTimeTracker.room_reset(self, reset_id)
 
 class SegmentTimer(RoomTimer):
-  def __init__(self, rooms, doors, store, sock, debug_log=None, verbose=False):
-    RoomTimer.__init__(self, rooms, doors, store, sock, debug_log, verbose)
+  def __init__(self, rooms, doors, tracker, sock, debug_log=None, verbose=False):
+    RoomTimer.__init__(self, rooms, doors, tracker, sock, debug_log, verbose)
 
 class SegmentTimeTable(object):
-  def __init__(self, attempts, store):
+  def __init__(self, attempts, tracker):
     self.attempts = attempts
-    self.store = store
+    self.tracker = tracker
 
   def render(self):
     table = Table()
@@ -171,7 +171,7 @@ class SegmentTimeTable(object):
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    stats = self.store.current_attempt_stats
+    stats = self.tracker.current_attempt_stats
 
     for transition_stats in stats.transitions:
       transition = transition_stats.transition
@@ -194,12 +194,12 @@ class SegmentTimeTable(object):
       ])
 
     color = color_for_time(
-        self.store.current_attempt.time.totalrealtime,
+        self.tracker.current_attempt.time.totalrealtime,
         stats.seg_attempts.totalrealtimes)
     table.append([
       Cell('Segment'),
       Cell(stats.num_attempts, justify='right'),
-      Cell(self.store.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
+      Cell(self.tracker.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
       Cell(('+' if stats.p50_delta > FrameCount(0) else '') + str(stats.p50_delta), justify='right'),
       Cell(('+' if stats.p0_delta > FrameCount(0) else '') + str(stats.p0_delta), justify='right'),
     ])
@@ -210,10 +210,10 @@ class SegmentTimerTerminalFrontend(TerminalFrontend):
   def __init__(self, debug_log=None, verbose=False):
     TerminalFrontend.__init__(self, debug_log=debug_log, verbose=verbose)
 
-  def log_transition(self, transition, attempts, store):
-    print("Segment: \033[1m%s\033[m" % store.current_attempt.segment)
+  def log_transition(self, transition, attempts, tracker):
+    print("Segment: \033[1m%s\033[m" % tracker.current_attempt.segment)
 
-    table = SegmentTimeTable(attempts, store)
+    table = SegmentTimeTable(attempts, tracker)
 
     print(table.render())
     print('')
@@ -253,7 +253,7 @@ def main():
     debug_log = None
     verbose = args.verbose
 
-  store = SegmentStore(rooms, doors, route, args.filename)
+  tracker = SegmentTimeTracker(rooms, doors, route, args.filename)
   frontend = SegmentTimerTerminalFrontend(verbose=verbose, debug_log=debug_log)
 
   if args.usb2snes:
@@ -261,7 +261,7 @@ def main():
   else:
     sock = NetworkCommandSocket()
 
-  timer = SegmentTimer(frontend, rooms, doors, store, sock)
+  timer = SegmentTimer(frontend, rooms, doors, tracker, sock)
 
   while True:
     timer.poll()

@@ -21,7 +21,7 @@ from state import State, NullState
 from rebuild_history import need_rebuild, rebuild_history
 from transition_log import FileTransitionLog, NullTransitionLog
 
-class Store(object):
+class RoomTimeTracker(object):
   def __init__(self, rooms, doors, route, filename=None):
     if filename is not None and os.path.exists(filename):
       self.history = read_transition_log(filename, rooms, doors)
@@ -83,11 +83,11 @@ class StateChange(object):
       self.__dict__.items() ])
 
 class RoomTimer(object):
-  def __init__(self, frontend, rooms, doors, store, sock, debug_log=None):
+  def __init__(self, frontend, rooms, doors, tracker, sock, debug_log=None):
     self.frontend = frontend
     self.rooms = rooms
     self.doors = doors
-    self.store = store
+    self.tracker = tracker
     self.sock = sock
 
     self.current_room = NullRoom
@@ -181,7 +181,7 @@ class RoomTimer(object):
       try:
         reset_id = TransitionId(self.last_room, self.last_most_recent_door,
             NullDoor, state.items, state.beams)
-        self.store.room_reset(reset_id)
+        self.tracker.room_reset(reset_id)
       except Exception as exc:
         self.log("Exception handing reset:")
         self.log("  state=%s" % state)
@@ -240,9 +240,9 @@ class RoomTimer(object):
         state.last_room_lag, state.last_door_lag_frames,
         state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
-    attempts = self.store.transitioned(transition)
+    attempts = self.tracker.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.store)
+      self.frontend.log_transition(transition, attempts, self.tracker)
 
   def handle_escaped_ceres(self, state):
     ts = datetime.datetime.now()
@@ -253,9 +253,9 @@ class RoomTimer(object):
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, FrameCount(0), state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
-    attempts = self.store.transitioned(transition)
+    attempts = self.tracker.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.store)
+      self.frontend.log_transition(transition, attempts, self.tracker)
 
   def handle_reached_ship(self, state):
     ts = datetime.datetime.now()
@@ -266,9 +266,9 @@ class RoomTimer(object):
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, FrameCount(0), state.last_realtime_door)
     transition = Transition(ts, transition_id, transition_time)
-    attempts = self.store.transitioned(transition)
+    attempts = self.tracker.transitioned(transition)
     if attempts:
-      self.frontend.log_transition(transition, attempts, self.store)
+      self.frontend.log_transition(transition, attempts, self.tracker)
 
 def color_for_time(ttime, atimes):
   mean = atimes.mean()
@@ -345,7 +345,7 @@ class TerminalFrontend(object):
       self.log_debug("Changes:", change)
       self.log_debug()
 
-  def log_transition(self, transition, attempts, store):
+  def log_transition(self, transition, attempts, tracker):
     if self.verbose:
       # When verbose logging is enabled, we  want to minimize the number
       # of lines displayed
@@ -356,8 +356,8 @@ class TerminalFrontend(object):
       # lines we are printing
       reset_id = TransitionId(transition.id.room, transition.id.entry_door,
           NullDoor, transition.id.items, transition.id.beams)
-      resets = store.history.reset_count(reset_id)
-      completions = store.history.completed_count(transition.id)
+      resets = tracker.history.reset_count(reset_id)
+      completions = tracker.history.completed_count(transition.id)
       denom = float(resets + completions)
       success_rate = int(float(completions) / denom * 100) if denom != 0 else 0
       self.log('Room: \033[1m%s\033[m (#%d, %d%% success)' %
@@ -444,7 +444,7 @@ def main():
     debug_log = None
     verbose = args.verbose
 
-  store = Store(rooms, doors, route, args.filename)
+  tracker = RoomTimeTracker(rooms, doors, route, args.filename)
   frontend = TerminalFrontend(verbose=verbose, debug_log=debug_log)
 
   if args.usb2snes:
@@ -452,7 +452,7 @@ def main():
   else:
     sock = NetworkCommandSocket(logger=frontend)
 
-  timer = RoomTimer(frontend, rooms, doors, store, sock)
+  timer = RoomTimer(frontend, rooms, doors, tracker, sock)
 
   while True:
     timer.poll()
