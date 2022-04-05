@@ -131,9 +131,12 @@ class SegmentAttemptStats(object):
 
 class SegmentTimeTracker(RoomTimeTracker):
   def __init__(self, rooms, doors, route, filename=None,
-      on_new_room_time=lambda *args, **kwargs: None):
+      on_new_room_time=lambda *args, **kwargs: None,
+      on_new_segment=lambda *args, **kwargs: None):
     RoomTimeTracker.__init__(self, rooms, doors, route,
         filename=filename, on_new_room_time=on_new_room_time)
+
+    self.on_new_segment = on_new_segment
 
     self.current_attempt = SegmentAttempt()
     self.current_attempt_stats = None
@@ -142,7 +145,7 @@ class SegmentTimeTracker(RoomTimeTracker):
   def transitioned(self, transition):
 
     if self.new_segment and (not self.route.complete or transition.id in self.route):
-      print("New segment starting at %s" % transition.id)
+      self.on_new_segment(transition)
       self.current_attempt = SegmentAttempt()
       self.current_attempt_stats = SegmentAttemptStats(self.history)
       self.new_segment = False
@@ -243,6 +246,9 @@ class SegmentTimerTerminalFrontend(object):
 
     # if new_median < old_median:
      #  print("You lowered your median time by %s!" % (new_median - old_median))
+
+  def new_segment(self, transition):
+    print("New segment starting at %s" % transition.id)
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
