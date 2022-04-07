@@ -27,6 +27,7 @@ if __name__ == '__main__':
 
   while True:
     state = State.read_from(sock, rooms, doors)
+    state.event_flags = '%x' % state.event_flags
     print("\033[2J")
     print("\033[H")
     for k,v in state.__dict__.items():
