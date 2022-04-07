@@ -11,6 +11,8 @@ class WebsocketClient(object):
     self.ws = await websockets.connect(uri)
     await self.send_async("Name", name)
     devices = (await self.request_async("DeviceList"))['Results']
+    if len(devices) == 0:
+      raise RuntimeError("No devices found via usb2snes")
     await self.send_async("Attach", devices[0])
     info = await self.request_async("Info")
 
