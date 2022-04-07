@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from sm_room_timer import RoomTimeTracker, RoomTimer, backup_and_rebuild, color_for_time
+from sm_room_timer import RoomTimeTracker, RoomTimer, ThreadedStateReader, backup_and_rebuild, color_for_time
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from route import Route
@@ -313,15 +313,20 @@ def main():
       history, transition_log, route,
       on_new_room_time=frontend.new_room_time)
 
-  timer = SegmentTimer(
-      frontend, rooms, doors, sock,
-      on_transitioned=tracker.transitioned,
-      on_state_change=frontend.state_changed,
-      on_reset=tracker.room_reset)
+  state_reader = ThreadedStateReader(rooms, doors, sock)
+  state_reader.start()
 
-  while True:
-    timer.poll()
-    time.sleep(1.0/60)
+  try:
+    timer = SegmentTimer(
+        frontend, state_reader,
+        on_transitioned=tracker.transitioned,
+        on_state_change=frontend.state_changed,
+        on_reset=tracker.room_reset)
+
+    while state_reader.is_alive(): timer.poll()
+
+  finally:
+    state_reader.stop()
 
 if __name__ == '__main__':
   main()

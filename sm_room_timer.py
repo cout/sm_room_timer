@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
 
-import datetime
-import time
-import argparse
-import csv
-import os.path
-import sys
-import tempfile
-
 from retroarch.network_command_socket import NetworkCommandSocket
 from qusb2snes.websocket_client import WebsocketClient
 from rooms import Rooms, NullRoom
@@ -19,6 +11,16 @@ from history import History
 from route import Route, DummyRoute
 from state import State, NullState
 from rebuild_history import need_rebuild, rebuild_history
+
+import datetime
+import time
+import argparse
+import csv
+import os.path
+import sys
+import tempfile
+from threading import Thread
+from queue import Queue
 
 class RoomTimeTracker(object):
   def __init__(self, history, transition_log, route,
@@ -104,14 +106,12 @@ class StateChange(object):
     return changes
 
 class RoomTimer(object):
-  def __init__(self, logger, rooms, doors, sock,
+  def __init__(self, logger, state_reader,
       on_transitioned=lambda *args, **kwargs: None,
       on_state_change=lambda *args, **kwargs: None,
       on_reset=lambda *args, **kwargs: None):
     self.logger = logger
-    self.rooms = rooms
-    self.doors = doors
-    self.sock = sock
+    self.state_reader = state_reader
 
     self.on_transitioned = on_transitioned
     self.on_state_change = on_state_change
@@ -126,7 +126,6 @@ class RoomTimer(object):
 
   def log(self, *args):
     self.logger.log(*args)
-    self.log_debug(*args)
 
   def log_debug(self, *args):
     self.logger.log_debug(*args)
@@ -135,12 +134,7 @@ class RoomTimer(object):
     self.logger.log_verbose(*args)
 
   def poll(self):
-    at_landing_site = (self.current_room.room_id == 0x91F8)
-    state = State.read_from(self.sock, self.rooms, self.doors,
-        read_ship_state=at_landing_site)
-    if state is None:
-      return
-
+    state = self.state_reader.read_state()
     change = StateChange(self.prev_state, state, self.current_room)
 
     self.on_state_change(change)
@@ -173,6 +167,7 @@ class RoomTimer(object):
       else:
         if not self.ignore_next_transition:
           self.handle_transition(state)
+      print("No longer ignoring next transition")
       self.ignore_next_transition = False
 
     if change.escaped_ceres:
@@ -192,13 +187,14 @@ class RoomTimer(object):
       # next IGT reset is detected
       self.log("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
 
-    if change.is_playing and change.is_program_start and change.is_preset:
-      self.log("Ignoring next transition due to starting in a room where a preset was loaded")
-      self.ignore_next_transition = True
+    if not self.ignore_next_transition:
+      if change.is_playing and change.is_program_start and change.is_preset:
+        self.log("Ignoring next transition due to starting in a room where a preset was loaded")
+        self.ignore_next_transition = True
 
-    elif change.is_playing and change.is_reset and change.is_preset:
-      self.log("Ignoring next transition due to loading a preset")
-      self.ignore_next_transition = True
+      elif change.is_playing and change.is_reset and change.is_preset:
+        self.log("Ignoring next transition due to loading a preset")
+        self.ignore_next_transition = True
 
     self.prev_state = state
 
@@ -399,6 +395,39 @@ def backup_and_rebuild(rooms, doors, filename):
     finally:
       if unlink: os.unlink(tmp.name)
 
+class ThreadedStateReader(object):
+  def __init__(self, rooms, doors, sock):
+    self.rooms = rooms
+    self.doors = doors
+    self.sock = sock
+    self.queue = Queue()
+    self.thread = Thread(target=self.run)
+    self.prev_state = NullState
+
+  def start(self):
+    self.done = False
+    self.thread.start()
+
+  def stop(self):
+    self.done = True
+    self.thread.join()
+
+  def is_alive(self):
+    return self.thread.is_alive()
+
+  def run(self):
+    while not self.done:
+      at_landing_site = (self.prev_state.room.room_id == 0x91F8)
+      state = State.read_from(self.sock, self.rooms, self.doors,
+          read_ship_state=at_landing_site)
+      if state is not None:
+        self.queue.put(state)
+        self.prev_state = state
+      time.sleep(1.0/60)
+
+  def read_state(self):
+    return self.queue.get()
+
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -458,15 +487,20 @@ def main():
       history, transition_log, route,
       on_new_room_time=frontend.new_room_time)
 
-  timer = RoomTimer(
-      frontend, rooms, doors, sock,
-      on_transitioned=tracker.transitioned,
-      on_state_change=frontend.state_changed,
-      on_reset=tracker.room_reset)
+  state_reader = ThreadedStateReader(rooms, doors, sock)
+  state_reader.start()
 
-  while True:
-    timer.poll()
-    time.sleep(1.0/60)
+  try:
+    timer = RoomTimer(
+        frontend, state_reader,
+        on_transitioned=tracker.transitioned,
+        on_state_change=frontend.state_changed,
+        on_reset=tracker.room_reset)
+
+    while state_reader.is_alive(): timer.poll()
+
+  finally:
+    state_reader.stop()
 
 if __name__ == '__main__':
   main()
