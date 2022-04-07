@@ -40,4 +40,19 @@ class WebsocketClient(object):
     return [ c for c in res ]
 
   def read_core_ram(self, addr, size):
-    return asyncio.get_event_loop().run_until_complete(self.read_core_ram_async(addr, size))
+    return asyncio.get_event_loop().run_until_complete(
+        self.read_core_ram_async(addr, size))
+
+  async def read_core_ram_multi_async(self, addrs):
+    pairs = [ ( '%X' % (0xF50000 + addr), '%X' % size ) for (addr, size) in addrs ]
+    args = [ arg for pair in pairs for arg in pair ]
+    await self.send_async('GetAddress', *args)
+    results = [ ]
+    for p in pairs:
+      res = await self.ws.recv()
+      results.append([ c for c in res ])
+    return results
+
+  def read_core_ram_multi(self, addrs):
+    return asyncio.get_event_loop().run_until_complete(
+        self.read_core_ram_multi_async(addrs))

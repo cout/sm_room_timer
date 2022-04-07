@@ -40,11 +40,19 @@ class SparseMemory(MemoryMixin):
   def read_from(sock, *addresses):
     regions = [ ]
 
-    for start, length in addresses:
-      region = MemoryRegion.read_from(sock, start, length)
-      if region is None:
+    results = sock.read_core_ram_multi(addresses)
+
+    if results is None:
+      return None
+
+    for ((addr, size), s) in zip(addresses, results):
+      if s is None:
         return None
-      regions.append(region)
+
+      if len(s) != size:
+        raise RuntimeError("Expected to read %s bytes at address 0x%x but got %s bytes: %s" % (size, addr, len(s), s))
+
+      regions.append(MemoryRegion(addr, s))
 
     return SparseMemory(*regions)
 

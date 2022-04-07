@@ -51,8 +51,14 @@ class NetworkCommandSocket(object):
       return None
 
   def read_core_ram(self, addr, size):
+    self.send_read_core_ram_command(addr, size)
+    return self.read_read_core_ram_response(addr, size)
+
+  def send_read_core_ram_command(self, addr, size):
     msg = "READ_CORE_RAM %x %d\n" % (addr, size)
     self.send_command(msg)
+
+  def read_read_core_ram_response(self, addr, size):
     while True:
       response = self.read_response()
       if response is None:
@@ -70,3 +76,8 @@ class NetworkCommandSocket(object):
         continue
       vals = [ int(field, 16) for field in words[2:] ]
       return vals
+
+  def read_core_ram_multi(self, addrs):
+    for (addr, size) in addrs:
+      self.send_read_core_ram_command(addr, size)
+    return [ self.read_read_core_ram_response(addr, size) for (addr, size) in addrs ]
