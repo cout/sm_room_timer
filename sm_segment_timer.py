@@ -6,6 +6,7 @@ from doors import Doors, NullDoor
 from route import Route
 from frame_count import FrameCount
 from transition import TransitionTime
+from transition_log import read_transition_log, FileTransitionLog, NullTransitionLog
 from history import Attempts, History
 from segment import Segment
 from table import Cell, Table
@@ -17,6 +18,7 @@ import argparse
 import itertools
 import time
 import sys
+import os
 
 class SegmentTime(TransitionTime):
   pass
@@ -130,11 +132,12 @@ class SegmentAttemptStats(object):
     self.p0_delta = attempt_time - self.p0
 
 class SegmentTimeTracker(RoomTimeTracker):
-  def __init__(self, rooms, doors, route, filename=None,
+  def __init__(self, history, transition_log, route,
       on_new_room_time=lambda *args, **kwargs: None,
       on_new_segment=lambda *args, **kwargs: None):
-    RoomTimeTracker.__init__(self, rooms, doors, route,
-        filename=filename, on_new_room_time=on_new_room_time)
+    RoomTimeTracker.__init__(
+        self, history, transition_log, route,
+        on_new_room_time=on_new_room_time)
 
     self.on_new_segment = on_new_segment
 
@@ -288,13 +291,26 @@ def main():
   frontend = SegmentTimerTerminalFrontend(
       verbose=verbose, debug_log=debug_log)
 
+  if args.filename is not None and os.path.exists(args.filename):
+    history = read_transition_log(args.filename, rooms, doors)
+  else:
+    history = History()
+
+  for tid in history:
+    route.record(tid)
+    if route.complete: break
+
+  print('Route is %s' % ('complete' if route.complete else 'incomplete'))
+
   if args.usb2snes:
     sock = WebsocketClient('sm_room_timer', logger=frontend)
   else:
     sock = NetworkCommandSocket()
 
+  transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
+
   tracker = SegmentTimeTracker(
-      rooms, doors, route, args.filename,
+      history, transition_log, route,
       on_new_room_time=frontend.new_room_time)
 
   timer = SegmentTimer(

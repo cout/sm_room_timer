@@ -14,32 +14,20 @@ from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
 from frame_count import FrameCount
 from transition import TransitionId, TransitionTime, Transition
+from transition_log import read_transition_log, FileTransitionLog, NullTransitionLog
 from history import History
-from transition_log import read_transition_log
 from route import Route, DummyRoute
 from state import State, NullState
 from rebuild_history import need_rebuild, rebuild_history
-from transition_log import FileTransitionLog, NullTransitionLog
 
 class RoomTimeTracker(object):
-  def __init__(self, rooms, doors, route, filename=None,
+  def __init__(self, history, transition_log, route,
       on_new_room_time=lambda *args, **kwargs: None):
-    if filename is not None and os.path.exists(filename):
-      self.history = read_transition_log(filename, rooms, doors)
-    else:
-      self.history = History()
-
+    self.history = history
     self.route = route
+    self.transition_log = transition_log
 
     self.on_new_room_time = on_new_room_time
-
-    for tid in self.history:
-      self.route.record(tid)
-      if route.complete: break
-
-    print('Route is %s' % ('complete' if route.complete else 'incomplete'))
-
-    self.transition_log = FileTransitionLog(filename) if filename is not None else NullTransitionLog()
 
   def transitioned(self, transition):
     if not self.route.complete:
@@ -448,13 +436,26 @@ def main():
   frontend = RoomTimerTerminalFrontend(
       verbose=verbose, debug_log=debug_log)
 
+  if args.filename is not None and os.path.exists(args.filename):
+    history = read_transition_log(args.filename, rooms, doors)
+  else:
+    history = History()
+
+  for tid in history:
+    route.record(tid)
+    if route.complete: break
+
+  print('Route is %s' % ('complete' if route.complete else 'incomplete'))
+
+  transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
+
   if args.usb2snes:
     sock = WebsocketClient('sm_room_timer')
   else:
     sock = NetworkCommandSocket(logger=frontend)
 
   tracker = RoomTimeTracker(
-      rooms, doors, route, args.filename,
+      history, transition_log, route,
       on_new_room_time=frontend.new_room_time)
 
   timer = RoomTimer(
