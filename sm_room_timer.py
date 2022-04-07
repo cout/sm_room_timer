@@ -74,7 +74,7 @@ class StateChange(object):
     self.is_program_start = self.is_room_change and current_room is NullRoom
     self.transition_finished = state.game_state == 'NormalGameplay' and prev_state.game_state == 'DoorTransition'
     self.escaped_ceres = state.game_state == 'StartOfCeresCutscene' and prev_state.game_state == 'NormalGameplay' and state.room.name == 'Ceres Elevator'
-    self.reached_ship = (state.event_flags & 0x40) > 0 and prev_state.ship_ai != state.ship_ai and state.ship_ai == 0xaa4f
+    self.reached_ship = state.reached_ship and not prev_state.reached_ship
     self.is_reset = state.igt < prev_state.igt
     self.is_preset = state.game_state == 'NormalGameplay' and state.last_realtime_room == FrameCount(0) and state.room.name != 'Ceres Elevator'
     self.is_loading_preset = prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0
@@ -147,7 +147,9 @@ class RoomTimer(object):
     self.logger.log_verbose(*args)
 
   def poll(self):
-    state = State.read_from(self.sock, self.rooms, self.doors)
+    at_landing_site = (self.current_room.room_id == 0x91F8)
+    state = State.read_from(self.sock, self.rooms, self.doors,
+        read_ship_state=at_landing_site)
     if state is None:
       return
 

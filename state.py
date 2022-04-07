@@ -43,13 +43,18 @@ class State(object):
       self.__dict__.items() ])
 
   @staticmethod
-  def read_from(sock, rooms, doors):
-    addresses = (
-        (0x0770, 0x3f),
-        (0x0990, 0xef),
+  def read_from(sock, rooms, doors, read_ship_state=False):
+    addresses = [
+      (0x0770, 0xff),
+      (0x0990, 0xef),
+      (0x0FB00, 0x20),
+    ]
+
+    if read_ship_state:
+      addresses.extend([
         (0xD800, 0x8f),
         (0x0F80, 0x4f),
-        (0x0FB00, 0x20))
+      ])
 
     mem = SparseMemory.read_from(sock, *addresses)
     if mem is None:
@@ -67,7 +72,7 @@ class State(object):
     game_state = GameStates.get(game_state_id, hex(game_state_id))
 
     collected_items_bitmask = mem.short(0x9A4)
-    collected_beams_bitmask = mem.short(0x9A8)
+    collected_beams_bitmask = mem.short(0x9A6)
 
     igt_frames = mem.short(0x9DA)
     igt_seconds = mem[0x9DC]
@@ -76,8 +81,12 @@ class State(object):
     fps = 60.0 # TODO
     igt = FrameCount(216000 * igt_hours + 3600 * igt_minutes + 60 * igt_seconds + igt_frames)
 
-    event_flags = mem.short(0xD821)
-    ship_ai = mem.short(0xFB2)
+    if read_ship_state:
+      event_flags = mem[0xD821]
+      ship_ai = mem.short(0xFB2)
+      reached_ship = (event_flags & 0x40) > 0 and ship_ai == 0xaa4f
+    else:
+      reached_ship = False
 
     # Practice hack
     gametime_room = FrameCount(mem.short(0x0FB02))
@@ -100,8 +109,6 @@ class State(object):
         area=area,
         game_state_id=game_state_id,
         game_state=game_state,
-        event_flags=event_flags,
-        ship_ai=ship_ai,
         igt=igt,
         seg_rt=seg_rt,
         gametime_room=gametime_room,
@@ -117,6 +124,7 @@ class State(object):
         beams_bitmask='%x' % collected_beams_bitmask,
         items=items_string(imask=collected_items_bitmask),
         beams=beams_string(imask=collected_items_bitmask, bmask=collected_beams_bitmask),
+        reached_ship=reached_ship,
         )
 
 NullState = State(
@@ -136,6 +144,9 @@ NullState = State(
     transition_counter=None,
     last_room_lag=None,
     ram_load_preset=None,
+    items_bitmask=0,
+    beams_bitmask=0,
     items=None,
     beams=None,
+    reached_ship=False,
     )
