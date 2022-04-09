@@ -2,7 +2,7 @@
 
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
-from route import Route
+from route import Route, DummyRoute
 from rebuild_history import need_rebuild, rebuild_history
 from transition_log import read_transition_log, FileTransitionLog, NullTransitionLog
 from history import History
@@ -300,16 +300,21 @@ def main():
 
     transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
 
-    if args.usb2snes:
-      sock = WebsocketClient('sm_room_timer', logger=json_generator)
-    else:
-      sock = NetworkCommandSocket()
-
     tracker = SegmentTimeTracker(
         history, transition_log, route,
         on_new_room_time=json_generator.new_room_time)
 
-    state_reader = ThreadedStateReader(rooms, doors, sock)
+    # TODO: if an exception is raised here, I get:
+    #
+    #     Event loop stopped before Future completed.
+    #
+    # and:
+    #
+    #     RuntimeWarning: coroutine
+    #     'BaseEventLoop._create_server_getaddrinfo' was never awaited
+    state_reader = ThreadedStateReader(
+        rooms, doors,
+        usb2snes=args.usb2snes, logger=json_generator)
     state_reader.start()
     shutdown.append(state_reader.stop)
 

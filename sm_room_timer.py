@@ -20,6 +20,7 @@ import csv
 import os.path
 import sys
 import tempfile
+import asyncio
 from threading import Thread
 from queue import Queue
 
@@ -347,12 +348,13 @@ def backup_and_rebuild(rooms, doors, filename):
       if unlink: os.unlink(tmp.name)
 
 class ThreadedStateReader(object):
-  def __init__(self, rooms, doors, sock):
+  def __init__(self, rooms, doors, usb2snes, logger):
     self.rooms = rooms
     self.doors = doors
-    self.sock = sock
+    self.usb2snes = usb2snes
+    self.logger = logger
     self.queue = Queue()
-    self.thread = Thread(target=self.run)
+    self.thread = Thread(target=self._run)
     self.prev_state = NullState
 
   def start(self):
@@ -366,15 +368,35 @@ class ThreadedStateReader(object):
   def is_alive(self):
     return self.thread.is_alive()
 
-  def run(self):
-    while not self.done:
-      at_landing_site = (self.prev_state.room.room_id == 0x91F8)
-      state = State.read_from(self.sock, self.rooms, self.doors,
-          read_ship_state=at_landing_site)
-      if state is not None:
-        self.queue.put(state)
-        self.prev_state = state
-      time.sleep(1.0/60)
+  def _run(self):
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    sock = self._create_sock()
+
+    try:
+      while not self.done:
+        at_landing_site = (self.prev_state.room.room_id == 0x91F8)
+        state = State.read_from(sock, self.rooms, self.doors,
+            read_ship_state=at_landing_site)
+        if state is not None:
+          self.queue.put(state)
+          self.prev_state = state
+        time.sleep(1.0/60)
+
+    finally:
+      sock.close()
+      loop.stop()
+
+  def _create_sock(self):
+    if self.usb2snes:
+      return WebsocketClient('sm_room_timer')
+    else:
+      # TODO: since we are running in a thread, we should not use the
+      # main logger, since it is not guaranteed to be thread-safe.
+      # Instead, the socket should issue callbacks for events so we can
+      # correctly capture them.
+      return NetworkCommandSocket(logger=self.logger)
 
   def read_state(self):
     return self.queue.get()
@@ -429,16 +451,13 @@ def main():
 
   transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
 
-  if args.usb2snes:
-    sock = WebsocketClient('sm_room_timer')
-  else:
-    sock = NetworkCommandSocket(logger=frontend)
-
   tracker = RoomTimeTracker(
       history, transition_log, route,
       on_new_room_time=frontend.new_room_time)
 
-  state_reader = ThreadedStateReader(rooms, doors, sock)
+  state_reader = ThreadedStateReader(
+      rooms, doors,
+      usb2snes=args.usb2snes, logger=frontend)
   state_reader.start()
 
   try:

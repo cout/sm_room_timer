@@ -34,6 +34,9 @@ class NetworkCommandSocket(object):
     self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     self.socket.connect((addr, port))
 
+  def close(self):
+    self.socket.close()
+
   def send_command(self, msg):
     self.socket.sendmsg([msg.encode()])
 

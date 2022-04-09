@@ -19,6 +19,9 @@ class WebsocketClient(object):
   def connect(self, name, addr, port):
     asyncio.get_event_loop().run_until_complete(self.connect_async(name, addr, port))
 
+  def close(self):
+    asyncio.get_event_loop().run_until_complete(self.ws.close())
+
   async def send_async(self, op, *args):
     # TODO: flags?
     req = {

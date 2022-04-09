@@ -3,7 +3,7 @@
 from sm_room_timer import RoomTimeTracker, RoomTimer, ThreadedStateReader, backup_and_rebuild, color_for_time
 from rooms import Rooms, NullRoom
 from doors import Doors, NullDoor
-from route import Route
+from route import Route, DummyRoute
 from frame_count import FrameCount
 from transition import TransitionTime
 from transition_log import read_transition_log, FileTransitionLog, NullTransitionLog
@@ -308,18 +308,15 @@ def main():
 
   print('Route is %s' % ('complete' if route.complete else 'incomplete'))
 
-  if args.usb2snes:
-    sock = WebsocketClient('sm_room_timer', logger=frontend)
-  else:
-    sock = NetworkCommandSocket()
-
   transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
 
   tracker = SegmentTimeTracker(
       history, transition_log, route,
       on_new_room_time=frontend.new_room_time)
 
-  state_reader = ThreadedStateReader(rooms, doors, sock)
+  state_reader = ThreadedStateReader(
+      rooms, doors,
+      usb2snes=args.usb2snes, logger=frontend)
   state_reader.start()
 
   try:
