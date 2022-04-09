@@ -45,15 +45,15 @@ class State(object):
   @staticmethod
   def read_from(sock, rooms, doors, read_ship_state=False):
     addresses = [
-      (0x0770, 0xff),
-      (0x0990, 0xef),
-      (0x0FB00, 0x20),
+      (0x078D, 0x15),  # 0x78D to 0x7A0
+      (0x0998, 0x4A),  # 0x998 to 0x9E1
+      (0x0FB00, 0x20), # 0xFB00 to 0xFB19
     ]
 
     if read_ship_state:
       addresses.extend([
-        (0xD800, 0x8f),
-        (0x0F80, 0x4f),
+        (0xD821, 0x01),
+        (0x0FB2, 0x02),
       ])
 
     mem = SparseMemory.read_from(sock, *addresses)
