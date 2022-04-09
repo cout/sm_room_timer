@@ -277,10 +277,13 @@ def main():
     debug_log = None
     verbose = args.verbose
 
-  server = WebsocketServer(port=args.port)
-  server.start()
+  shutdown = [ ]
 
   try:
+    server = WebsocketServer(port=args.port)
+    server.start()
+    shutdown.append(server.stop)
+
     json_generator = JsonEventGenerator(
         verbose=verbose, debug_log=debug_log,
         on_event=server.broadcast)
@@ -308,21 +311,22 @@ def main():
 
     state_reader = ThreadedStateReader(rooms, doors, sock)
     state_reader.start()
+    shutdown.append(state_reader.stop)
 
-    try:
-      timer = SegmentTimer(
-          json_generator, state_reader,
-          on_transitioned=tracker.transitioned,
-          on_state_change=json_generator.state_changed,
-          on_reset=tracker.room_reset)
+    timer = SegmentTimer(
+        json_generator, state_reader,
+        on_transitioned=tracker.transitioned,
+        on_state_change=json_generator.state_changed,
+        on_reset=tracker.room_reset)
 
-      while state_reader.is_alive() and server.is_alive(): timer.poll()
-
-    finally:
-      state_reader.stop()
+    while state_reader.is_alive() and server.is_alive(): timer.poll()
 
   finally:
-    server.stop()
+    for f in shutdown:
+      try:
+        f()
+      except Exception as e:
+        print(e)
 
 if __name__ == '__main__':
   main()
