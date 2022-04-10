@@ -28,6 +28,8 @@ import websockets
 from queue import Queue
 from threading import Thread
 
+from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
+
 def encode_segment(segment):
   return {
     'name': segment.name,
@@ -239,6 +241,74 @@ class WebsocketServer(object):
     finally:
       self.sockets.remove(sock)
 
+class TimerThread(object):
+  def __init__(self, history, rooms, doors, transition_log, route,
+      json_generator, server, usb2snes):
+
+    self.history = history
+    self.transition_log = transition_log
+    self.route = route
+    self.json_generator = json_generator
+    self.server = server
+
+    self.tracker = SegmentTimeTracker(
+        history, transition_log, route,
+        on_new_room_time=self.json_generator.new_room_time)
+
+    self.state_reader = ThreadedStateReader(
+        rooms, doors,
+        usb2snes=usb2snes, logger=json_generator)
+
+    self.timer = SegmentTimer(
+        self.json_generator, self.state_reader,
+        on_transitioned=self.tracker.transitioned,
+        on_state_change=self.json_generator.state_changed,
+        on_reset=self.tracker.room_reset)
+
+    self.thread = Thread(target=self.run)
+
+  def start(self):
+    self.done = False
+    self.thread.start()
+
+  def stop(self):
+    self.done = True
+    self.thread.join()
+
+  def join(self):
+    self.thread.join()
+
+  def is_alive(self):
+    return self.thread.is_alive()
+
+  def run(self):
+    self.state_reader.start()
+
+    try:
+      while not self.done and self.state_reader.is_alive() and self.server.is_alive():
+        self.timer.poll()
+
+    finally:
+      self.state_reader.stop()
+
+class Browser(object):
+  def __init__(self, argv, url):
+    self.app = QtWidgets.QApplication(argv)
+    self.url = url
+    self.window = QtWidgets.QWidget()
+    self.layout = QtWidgets.QVBoxLayout()
+    self.webview = QtWebEngineWidgets.QWebEngineView()
+    self.layout.addWidget(self.webview)
+    self.window.setLayout(self.layout)
+
+  def run(self):
+    self.webview.load(QtCore.QUrl(self.url))
+    self.window.show()
+    return self.app.exec_()
+
+  def stop(self):
+    self.app.quit()
+
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -251,6 +321,7 @@ def main():
   parser.add_argument('--route', action='store_true')
   parser.add_argument('--rebuild', action='store_true')
   parser.add_argument('--port', type=int, default=15000)
+  parser.add_argument('--headless', action='store_true')
   # parser.add_argument('--segment', action='append', required=True)
   args = parser.parse_args()
 
@@ -302,27 +373,20 @@ def main():
         history, transition_log, route,
         on_new_room_time=json_generator.new_room_time)
 
-    # TODO: if an exception is raised here, I get:
-    #
-    #     Event loop stopped before Future completed.
-    #
-    # and:
-    #
-    #     RuntimeWarning: coroutine
-    #     'BaseEventLoop._create_server_getaddrinfo' was never awaited
-    state_reader = ThreadedStateReader(
-        rooms, doors,
-        usb2snes=args.usb2snes, logger=json_generator)
-    state_reader.start()
-    shutdown.append(state_reader.stop)
+    timer_thread = TimerThread(history, rooms, doors, transition_log,
+        route, json_generator, server, usb2snes=args.usb2snes)
+    timer_thread.start()
+    shutdown.append(timer_thread.stop)
 
-    timer = SegmentTimer(
-        json_generator, state_reader,
-        on_transitioned=tracker.transitioned,
-        on_state_change=json_generator.state_changed,
-        on_reset=tracker.room_reset)
+    if args.headless:
+      timer_thread.join()
 
-    while state_reader.is_alive() and server.is_alive(): timer.poll()
+    else:
+      dirname = os.path.dirname(os.path.realpath(__file__))
+      filename = 'sm_web_timer.html'
+      url = 'file://%s/%s' % (dirname, filename)
+      browser = Browser(sys.argv, url)
+      sys.exit(browser.run())
 
   finally:
     for f in reversed(shutdown):
