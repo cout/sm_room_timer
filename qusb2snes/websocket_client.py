@@ -1,6 +1,7 @@
 import websockets
 import asyncio
 import json
+import itertools
 
 class WebsocketClient(object):
   def __init__(self, name, addr='127.0.0.1', port='23074'):
@@ -47,13 +48,17 @@ class WebsocketClient(object):
         self.read_core_ram_async(addr, size))
 
   async def read_core_ram_multi_async(self, addrs):
-    pairs = [ ( '%X' % (0xF50000 + addr), '%X' % size ) for (addr, size) in addrs ]
+    size = sum(size for addr, size in addrs)
+    pairs = [ ( '%X' % (0xF50000 + addr), '%X' % size ) for addr, size in addrs ]
     args = [ arg for pair in pairs for arg in pair ]
     await self.send_async('GetAddress', *args)
-    results = [ ]
-    for p in pairs:
+    received_bytes = [ ]
+    while len(received_bytes) < size:
       res = await self.ws.recv()
-      results.append([ c for c in res ])
+      received_bytes.extend([ c for c in res ])
+    sizes = [ size for addr, size in addrs ]
+    offsets = list(itertools.accumulate([0, *sizes]))[0:-1]
+    results = [ received_bytes[offset:offset+size] for offset, size in zip(offsets, sizes) ]
     return results
 
   def read_core_ram_multi(self, addrs):
