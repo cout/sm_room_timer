@@ -185,24 +185,30 @@ class RoomTimer(object):
     self.last_most_recent_door = self.most_recent_door
     self.most_recent_door = state.door
 
-  def handle_transition(self, state):
+  def validate_transition(self, state):
     if state.seg_rt < self.prev_state.seg_rt:
       self.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
         self.last_room, state.room, self.prev_state.seg_rt, state.seg_rt))
-      return
+      return False
 
     if state.last_door_lag_frames == FrameCount(0):
       self.log("Transition not yet finished? (door time is 0.00)")
-      return
+      return False
 
     if self.last_room is not self.last_most_recent_door.exit_room:
       self.log("Ignoring transition (entry door leads to %s, not %s)" %
           (self.last_most_recent_door.exit_room, self.last_room))
-      return
+      return False
 
     if self.last_room is not self.most_recent_door.entry_room:
       self.log("Ignoring transition (exit door is located in room %s, not %s)" %
           (self.most_recent_door.entry_room, self.last_room))
+      return False
+
+    return True
+
+  def handle_transition(self, state):
+    if not self.validate_transition(state):
       return
 
     ts = datetime.datetime.now()
