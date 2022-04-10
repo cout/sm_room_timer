@@ -325,7 +325,7 @@ def main():
     while state_reader.is_alive() and server.is_alive(): timer.poll()
 
   finally:
-    for f in shutdown:
+    for f in reversed(shutdown):
       try:
         f()
       except Exception as e:
