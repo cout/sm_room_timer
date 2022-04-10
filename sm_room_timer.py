@@ -128,21 +128,28 @@ class RoomTimer(object):
       self.handle_reached_ship(state)
 
     if change.is_loading_preset:
-      # TODO: This does not always detect loading of a preset, and when
-      # it does detect it, we should ignore all transitions until the
-      # next IGT reset is detected
-      self.log("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
+      self.handle_loading_preset(state)
 
+    if change.is_preset:
+      self.handle_loaded_preset(state, change)
+
+    self.prev_state = state
+
+  def handle_loading_preset(self, state):
+    # TODO: This does not always detect loading of a preset, and when
+    # it does detect it, we should ignore all transitions until the
+    # next IGT reset is detected
+    self.log("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
+
+  def handle_loaded_preset(self, state, change):
     if not self.ignore_next_transition:
-      if change.is_playing and change.is_program_start and change.is_preset:
+      if change.is_playing and change.is_program_start:
         self.log("Ignoring next transition due to starting in a room where a preset was loaded")
         self.ignore_next_transition = True
 
-      elif change.is_playing and change.is_reset and change.is_preset:
+      elif change.is_playing and change.is_reset:
         self.log("Ignoring next transition due to loading a preset")
         self.ignore_next_transition = True
-
-    self.prev_state = state
 
   def handle_reset(self, state, change):
     # TODO: Can we differentiate between a reset due to failing the room
