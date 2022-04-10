@@ -1,6 +1,5 @@
 from frame_count import FrameCount
 from memory import MemoryRegion, SparseMemory
-from areas import Areas
 from rooms import NullRoom
 from doors import NullDoor
 from game_states import GameStates
@@ -45,7 +44,7 @@ class State(object):
   @staticmethod
   def read_from(sock, rooms, doors, read_ship_state=False):
     addresses = [
-      (0x078D, 0x14), # 0x78D to 0x7A0
+      (0x078D, 0x10), # 0x78D to 0x79C
       (0x0998, 0x10), # 0x998 to 0x9A7
       (0x09DA, 0x07), # 0x9DA to 0x9E0
       (0xFB00, 0x20), # 0xFB00 to 0xFB19
@@ -65,9 +64,6 @@ class State(object):
     room_id = mem.short(0x79B)
     door = doors.from_id(door_id)
     room = rooms.from_id(room_id)
-
-    region_id = mem.short(0x79F) 
-    area = Areas.get(region_id, hex(region_id))
 
     game_state_id = mem.short(0x998)
     game_state = GameStates.get(game_state_id, hex(game_state_id))
@@ -107,7 +103,6 @@ class State(object):
     return State(
         door=door,
         room=room,
-        area=area,
         game_state_id=game_state_id,
         game_state=game_state,
         igt=igt,
@@ -131,7 +126,6 @@ class State(object):
 NullState = State(
     door=NullDoor,
     room=NullRoom,
-    area='',
     game_state=None,
     event_flags=0,
     ship_ai=0,
