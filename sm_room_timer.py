@@ -113,13 +113,7 @@ class RoomTimer(object):
     # state has the room times.
     elif change.transition_finished:
       if not self.ignore_next_transition:
-        if state.seg_rt < self.prev_state.seg_rt:
-          self.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
-            self.last_room, state.room, self.prev_state.seg_rt, state.seg_rt))
-        elif state.last_door_lag_frames == FrameCount(0):
-          self.log("Transition not yet finished? (door time is 0.00)")
-        else:
-          self.handle_transition(state)
+        self.handle_transition(state)
       self.ignore_next_transition = False
 
     if change.escaped_ceres:
@@ -192,6 +186,15 @@ class RoomTimer(object):
     self.most_recent_door = state.door
 
   def handle_transition(self, state):
+    if state.seg_rt < self.prev_state.seg_rt:
+      self.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
+        self.last_room, state.room, self.prev_state.seg_rt, state.seg_rt))
+      return
+
+    if state.last_door_lag_frames == FrameCount(0):
+      self.log("Transition not yet finished? (door time is 0.00)")
+      return
+
     if self.last_room is not self.last_most_recent_door.exit_room:
       self.log("Ignoring transition (entry door leads to %s, not %s)" %
           (self.last_most_recent_door.exit_room, self.last_room))
