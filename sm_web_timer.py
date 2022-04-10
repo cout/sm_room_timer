@@ -186,6 +186,8 @@ class JsonEventGenerator(object):
     })
 
 class WebsocketServer(object):
+  class SHUTDOWN: pass
+
   def __init__(self, port):
     self.port = port
     self.sockets = set()
@@ -200,7 +202,7 @@ class WebsocketServer(object):
       pass
 
   def stop(self):
-    self.loop.call_soon_threadsafe(self.loop.stop())
+    self.broadcast(WebsocketServer.SHUTDOWN)
     self.thread.join()
 
   def broadcast(self, event):
@@ -213,24 +215,20 @@ class WebsocketServer(object):
 
   def run(self):
     self.loop = asyncio.new_event_loop()
-
     try:
-      self.loop.run_until_complete(self.start_server())
-      self.loop.run_until_complete(self.run_broadcast_loop())
+      self.loop.run_until_complete(self._run())
     finally:
-      pass
-      # broadcast_task.cancel()
+      self.loop.stop()
 
-  async def start_server(self):
+  async def _run(self):
     self.broadcast_queue = asyncio.Queue()
-    await websockets.serve(self.serve, 'localhost', self.port)
-
-  async def run_broadcast_loop(self):
-    while True:
-      msg = await self.broadcast_queue.get()
-      # TODO: a slow socket can slow everyone down
-      for sock in self.sockets:
-        await sock.send(msg)
+    async with websockets.serve(self.serve, 'localhost', self.port):
+      while True:
+        msg = await self.broadcast_queue.get()
+        if msg is WebsocketServer.SHUTDOWN: break
+        # TODO: a slow socket can slow everyone down
+        for sock in self.sockets:
+          await sock.send(msg)
 
   async def serve(self, sock, uri=None):
     self.sockets.add(sock)
