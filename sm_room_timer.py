@@ -112,13 +112,13 @@ class RoomTimer(object):
     # changed, but once the game state has changed, we can be sure the
     # state has the room times.
     elif change.transition_finished:
-      if state.seg_rt < self.prev_state.seg_rt:
-        self.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
-          self.last_room, state.room, self.prev_state.seg_rt, state.seg_rt))
-      elif state.last_door_lag_frames == FrameCount(0):
-        self.log("Transition not yet finished? (door time is 0.00)")
-      else:
-        if not self.ignore_next_transition:
+      if not self.ignore_next_transition:
+        if state.seg_rt < self.prev_state.seg_rt:
+          self.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
+            self.last_room, state.room, self.prev_state.seg_rt, state.seg_rt))
+        elif state.last_door_lag_frames == FrameCount(0):
+          self.log("Transition not yet finished? (door time is 0.00)")
+        else:
           self.handle_transition(state)
       self.ignore_next_transition = False
 
