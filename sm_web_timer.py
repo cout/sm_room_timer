@@ -8,8 +8,6 @@ from transition_log import read_transition_log, FileTransitionLog, NullTransitio
 from history import History
 from sm_room_timer import backup_and_rebuild, ThreadedStateReader
 from sm_segment_timer import SegmentTimerTerminalFrontend, SegmentTimeTracker, SegmentTimer
-from retroarch.network_command_socket import NetworkCommandSocket
-from qusb2snes.websocket_client import WebsocketClient
 
 from segment import Segment
 from transition import TransitionId, TransitionTime

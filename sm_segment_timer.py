@@ -11,8 +11,6 @@ from history import Attempts, History
 from segment import Segment
 from table import Cell, Table
 from rebuild_history import need_rebuild, rebuild_history
-from retroarch.network_command_socket import NetworkCommandSocket
-from qusb2snes.websocket_client import WebsocketClient
 
 import argparse
 import itertools
