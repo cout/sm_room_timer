@@ -3,26 +3,9 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <head>
+  <script src="sm_web_timer.js" defer></script>
 </head>
 <body>
   HELLO WORLD
-
-  <script>
-
-const socket = new WebSocket('ws://localhost:15000')
-
-socket.addEventListener('open', function (event) {
-  console.error('open');
-});
-
-socket.addEventListener('close', function (event) {
-  console.error('close');
-});
-
-socket.addEventListener('message', function (event) {
-  console.error('message', event);
-});
-
-  </script>
 </body>
 </html>
