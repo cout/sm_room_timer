@@ -384,7 +384,8 @@ def main():
     else:
       dirname = os.path.dirname(os.path.realpath(__file__))
       filename = 'sm_web_timer.html'
-      url = 'file://%s/%s' % (dirname, filename)
+      port = args.port
+      url = 'file://%s/%s?port=%s' % (dirname, filename, port)
       browser = Browser(sys.argv, url)
       sys.exit(browser.run())
 
