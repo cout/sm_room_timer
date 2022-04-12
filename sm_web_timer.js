@@ -3,9 +3,9 @@ class Table {
     this.elem = document.createElement('table');
     this.columns = columns
 
-    const header_row = document.createElement('th');
+    const header_row = document.createElement('tr');
     for (const col of this.columns) {
-      const cell = document.createElement('td');
+      const cell = document.createElement('th');
       const text = document.createTextNode(col.label);
       cell.appendChild(text);
       header_row.appendChild(cell);
