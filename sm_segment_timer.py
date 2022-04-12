@@ -97,11 +97,11 @@ class SegmentTransitionAttemptStats(object):
     if attempts is not None:
       self.attempts = attempts
       self.num_attempts = len(attempts)
-      self.time = transition.time.totalrealtimes
+      self.time = transition.time.totalrealtime
       self.p50 = attempts.totalrealtimes.median()
       self.p0 = attempts.totalrealtimes.best()
-      self.p50_delta = time - p50
-      self.p0_delta = time - p0
+      self.p50_delta = self.time - self.p50
+      self.p0_delta = self.time - self.p0
     else:
       self.attempts = Attempts()
       self.num_attempts = 0
