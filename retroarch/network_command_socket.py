@@ -1,5 +1,6 @@
 import socket
 import select
+# import random
 
 class DefaultLogger(object):
   def log(self, x):
@@ -40,8 +41,20 @@ class NetworkCommandSocket(object):
   def send_command(self, msg):
     self.socket.sendmsg([msg.encode()])
 
+  def clear_responses(self):
+    while self._read_response(timeout=0) is not None:
+      pass
+
   def read_response(self):
-    r, w, e = select.select([self.socket], [], [], 1)
+    msg = self._read_response(timeout=1)
+    if msg is not None:
+      return msg
+    else:
+      self.logger.log("connection timed out")
+      return None
+
+  def _read_response(self, timeout=1):
+    r, w, e = select.select([self.socket], [], [], timeout)
     if len(r) > 0:
       try:
         msg, ancdata, flags, addr = self.socket.recvmsg(1024)
@@ -50,7 +63,6 @@ class NetworkCommandSocket(object):
         return None
       return msg
     else:
-      self.logger.log("connection timed out")
       return None
 
   def read_core_ram(self, addr, size):
@@ -72,6 +84,9 @@ class NetworkCommandSocket(object):
   def read_read_core_ram_response(self, addr, size):
     while True:
       response = self.read_response()
+      # Uncomment to simulate packet loss:
+      # if random.random() >= 0.99:
+        # response = self.read_response()
       if response is None:
         return None
       words = response.split()
@@ -89,5 +104,6 @@ class NetworkCommandSocket(object):
       return vals
 
   def read_core_ram_multi(self, addrs):
+    self.clear_responses()
     self.send_read_core_ram_multi_command(addrs)
     return [ self.read_read_core_ram_response(addr, size) for (addr, size) in addrs ]
