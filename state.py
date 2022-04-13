@@ -46,7 +46,7 @@ class State(object):
     addresses = [
       (0x078D, 0x10), # 0x78D to 0x79C
       (0x0998, 0x02), # 0x998 to 0x999
-      (0x09A4, 0x04), # 0x9A4 to 0x9A7
+      (0x09A4, 0x06), # 0x9A4 to 0x9A9
       (0x09DA, 0x07), # 0x9DA to 0x9E0
       (0xFB00, 0x20), # 0xFB00 to 0xFB19
     ]
@@ -70,7 +70,7 @@ class State(object):
     game_state = GameStates.get(game_state_id, hex(game_state_id))
 
     collected_items_bitmask = mem.short(0x9A4)
-    collected_beams_bitmask = mem.short(0x9A6)
+    collected_beams_bitmask = mem.short(0x9A8)
 
     igt_frames = mem.short(0x9DA)
     igt_seconds = mem[0x9DC]
