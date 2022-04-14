@@ -1,3 +1,11 @@
+const get = function(col, obj) {
+  try {
+    return col.get(obj);
+  } catch {
+    return "";
+  }
+}
+
 class Table {
   constructor(columns) {
     this.elem = document.createElement('table');
@@ -12,13 +20,16 @@ class Table {
     }
 
     this.elem.appendChild(header_row);
+    // this.append({room: { room_name: 'foo' }});
+    // this.append({room: { room_name: 'bar' }});
+    // this.append({room: { room_name: 'baz' }});
   }
 
   append(obj) {
     const row = document.createElement('tr');
     for (const col of this.columns) {
       const cell = document.createElement('td');
-      const text = document.createTextNode(col.get(obj));
+      const text = document.createTextNode(get(col, obj));
       cell.appendChild(text);
       row.appendChild(cell);
     }
