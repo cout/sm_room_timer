@@ -1,15 +1,31 @@
 body {
   color: #dddddd;
   background-color: #000000;
-  font-family: sans-serif;
+  font-family: "ITC Avant Garde Gothic", "Century Gothic", Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
   font-size: smaller;
-}
-
-table, th, td {
-  border: 1px solid #555555;
-  border-collapse: collapse;
 }
 
 table {
   width: 100%;
+  border-collapse: collapse;
+  padding: 0;
+}
+
+table tr td, table tr th {
+  border-right: 1px solid #222;
+}
+
+table tr th {
+  border-bottom: 1px solid #777;
+}
+
+table tr td:last-child, table tr th:last-child {
+  border-right: 0;
+}
+
+table tr:nth-child(odd) th, table tr:nth-child(odd) td {
+  background-color: #171717;
+}
+
+table tr:nth-child(even) th, table tr:nth-child(even) td {
 }
