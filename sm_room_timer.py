@@ -77,15 +77,6 @@ class RoomTimer(object):
     self.ignore_next_transition = False
     self.prev_state = NullState
 
-  def log(self, *args):
-    self.logger.log(*args)
-
-  def log_debug(self, *args):
-    self.logger.log_debug(*args)
-
-  def log_verbose(self, *args):
-    self.logger.log_verbose(*args)
-
   def poll(self):
     state = self.state_reader.read_state()
     change = StateChange(self.prev_state, state, self.current_room)
@@ -139,16 +130,16 @@ class RoomTimer(object):
     # TODO: This does not always detect loading of a preset, and when
     # it does detect it, we should ignore all transitions until the
     # next IGT reset is detected
-    self.log("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
+    self.logger.log("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
 
   def handle_loaded_preset(self, state, change):
     if not self.ignore_next_transition:
       if change.is_playing and change.is_program_start:
-        self.log("Ignoring next transition due to starting in a room where a preset was loaded")
+        self.logger.log("Ignoring next transition due to starting in a room where a preset was loaded")
         self.ignore_next_transition = True
 
       elif change.is_playing and change.is_reset:
-        self.log("Ignoring next transition due to loading a preset")
+        self.logger.log("Ignoring next transition due to loading a preset")
         self.ignore_next_transition = True
 
   def handle_reset(self, state, change):
@@ -161,10 +152,10 @@ class RoomTimer(object):
             NullDoor, state.items, state.beams)
         self.on_reset(reset_id)
       except Exception as exc:
-        self.log("Exception handing reset:")
-        self.log("  state=%s" % state)
-        self.log("  change=%s" % change)
-        self.log("  exc=%s" % exc)
+        self.logger.log("Exception handing reset:")
+        self.logger.log("  state=%s" % state)
+        self.logger.log("  change=%s" % change)
+        self.logger.log("  exc=%s" % exc)
 
     # If we reset state to the middle of a door transition, then we
     # don't want to count the next transition, because it has already
@@ -173,7 +164,7 @@ class RoomTimer(object):
       self.ignore_next_transition = True
 
     if change.transition_finished:
-      self.log("Reset detected during door transition")
+      self.logger.log("Reset detected during door transition")
 
     # TODO: I'm not sure if I want to do everything in
     # handle_room_change or just a subset
@@ -183,7 +174,7 @@ class RoomTimer(object):
 
   def handle_room_change(self, state, change):
     if state.door.is_unknown:
-      self.log("Unknown door %04x from %s (%04x) to %s (%04x)" % (
+      self.logger.log("Unknown door %04x from %s (%04x) to %s (%04x)" % (
         state.door.door_id, self.current_room,
         self.current_room.room_id, state.room,
         state.room.room_id))
@@ -194,21 +185,21 @@ class RoomTimer(object):
 
   def validate_transition(self, state):
     if state.seg_rt < self.prev_state.seg_rt:
-      self.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
+      self.logger.log("Ignoring transition from %s to %s (segment timer went backward from %s to %s)" % (
         self.last_room, state.room, self.prev_state.seg_rt, state.seg_rt))
       return False
 
     if state.last_door_lag_frames == FrameCount(0):
-      self.log("Transition not yet finished? (door time is 0.00)")
+      self.logger.logger.log("Transition not yet finished? (door time is 0.00)")
       return False
 
     if self.last_room is not self.last_most_recent_door.exit_room:
-      self.log("Ignoring transition (entry door leads to %s, not %s)" %
+      self.logger.log("Ignoring transition (entry door leads to %s, not %s)" %
           (self.last_most_recent_door.exit_room, self.last_room))
       return False
 
     if self.last_room is not self.most_recent_door.entry_room:
-      self.log("Ignoring transition (exit door is located in room %s, not %s)" %
+      self.logger.log("Ignoring transition (exit door is located in room %s, not %s)" %
           (self.most_recent_door.entry_room, self.last_room))
       return False
 
@@ -224,10 +215,10 @@ class RoomTimer(object):
           self.last_room, self.last_most_recent_door,
           self.most_recent_door, state.items, state.beams)
     except Exception as exc:
-      self.log("Exception constructing transition id:")
-      self.log("  state=%s" % state)
-      self.log("  change=%s" % change)
-      self.log("  exc=%s" % exc)
+      self.logger.log("Exception constructing transition id:")
+      self.logger.log("  state=%s" % state)
+      self.logger.log("  change=%s" % change)
+      self.logger.log("  exc=%s" % exc)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
         state.last_room_lag, state.last_door_lag_frames,
