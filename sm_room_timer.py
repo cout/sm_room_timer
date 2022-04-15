@@ -238,7 +238,7 @@ class RoomTimer(object):
   def handle_escaped_ceres(self, state):
     ts = datetime.datetime.now()
     transition_id = TransitionId(
-        state.room, state.door, self.doors.from_id(0x88FE),
+        state.room, state.door, self.state_reader.ceres_elevator,
         state.items, state.beams)
     transition_time = TransitionTime(
         state.last_gametime_room, state.last_realtime_room,
@@ -372,6 +372,7 @@ class ThreadedStateReader(object):
     self.queue = Queue()
     self.thread = Thread(target=self._run)
     self.prev_state = NullState
+    self.ceres_elevator = self.doors.from_id(0x88FE)
 
   def start(self):
     self.done = False
