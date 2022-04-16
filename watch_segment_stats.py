@@ -7,6 +7,7 @@ from transition_log import read_transition_log_csv_incrementally
 from route import build_route, is_ceres_escape
 from segment_stats import SegmentStats, segment_from_name, transition_from_name, segments_from_splits
 from table import Cell, Table, CompactRenderer
+from frame_count import FrameCount
 
 import sys
 import argparse
@@ -57,7 +58,8 @@ def render_delta_to_best(old_best, new_best, delta, **kwargs):
   if new_best < old_best:
     kwargs['color'] = '38;5;214;7'
 
-  return Cell(delta, **kwargs)
+  pos = '+' if delta > FrameCount(0) else ''
+  return Cell(pos + str(delta), **kwargs)
 
 def render_segment_stats(old_stats, stats):
   table = Table(renderer=CompactRenderer())
