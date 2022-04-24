@@ -84,7 +84,16 @@ def render_segment_stats(old_stats, stats):
     Cell(''),
     render_change(old_stats.total_p50, stats.total_p50, justify='right'),
     render_delta_to_best(old_stats.total_p0, stats.total_p0, stats.total_p50 - stats.total_p0, justify='right'),
-    render_delta_to_best(old_stats.total_sob, stats.total_p50, stats.total_p50 - stats.total_sob, justify='right'),
+    render_delta_to_best(old_stats.total_sob, stats.total_sob, stats.total_p50 - stats.total_sob, justify='right'),
+  ])
+
+  table.append([
+    Cell(''),
+    Cell(''),
+    Cell(''),
+    Cell(''),
+    Cell('%s' % stats.total_p0, justify='right'),
+    Cell('%s' % stats.total_sob, justify='right'),
   ])
 
   return table.render()
@@ -133,7 +142,8 @@ def main():
       rendered_stats = render_segment_stats(old_stats, stats)
       if rendered_stats != old_rendered_stats:
         print()
-        print(rendered_stats)
+        print()
+        print(rendered_stats, end='', flush=True)
         old_rendered_stats = rendered_stats
       old_stats = stats
       history, transition = next(history_reader)
