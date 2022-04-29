@@ -190,7 +190,7 @@ class RoomTimer(object):
       return False
 
     if state.last_door_lag_frames == FrameCount(0):
-      self.logger.logger.log("Transition not yet finished? (door time is 0.00)")
+      self.logger.log("Transition not yet finished? (door time is 0.00)")
       return False
 
     if self.last_room is not self.last_most_recent_door.exit_room:
