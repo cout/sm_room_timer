@@ -12,7 +12,7 @@ class StateChange(object):
     self.reached_ship = state.reached_ship and not prev_state.reached_ship
     self.is_reset = state.igt < prev_state.igt
     self.is_preset = state.game_state == 'NormalGameplay' and state.last_realtime_room == FrameCount(0) and state.room.name != 'Ceres Elevator'
-    self.is_loading_preset = prev_state.ram_load_preset != state.ram_load_preset and state.ram_load_preset != 0
+    self.is_loading_preset = prev_state.loading_preset != state.loading_preset and state.loading_preset != 0
     self.door_changed = prev_state.door != state.door
     self.game_state_changed = prev_state.game_state != state.game_state
     self.is_playing = state.game_state_id >= 0x08 and state.game_state_id <= 0x18

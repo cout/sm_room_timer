@@ -32,6 +32,25 @@ def beams_string(bmask, imask):
 
   return ''.join(a)
 
+# This should match WRAM_START in src/defines.asm
+WRAM_START = 0x7EFD00 - 0x7E0000
+
+# These should also match the corresponding variables in src/defines.asm
+ram_load_preset = WRAM_START + 0x00
+ram_gametime_room = WRAM_START + 0x02
+ram_last_gametime_room = WRAM_START + 0x04
+ram_realtime_room = WRAM_START + 0x06
+ram_last_realtime_room = WRAM_START + 0x08
+ram_last_room_lag = WRAM_START + 0x0A
+ram_last_door_lag_frames = WRAM_START + 0x0C
+ram_transition_counter = WRAM_START + 0x0E
+ram_transition_flag = WRAM_START + 0x10
+ram_last_realtime_door = WRAM_START + 0x12
+ram_seg_rt_frames = WRAM_START + 0x14
+ram_seg_rt_seconds = WRAM_START + 0x16
+ram_seg_rt_minutes = WRAM_START + 0x18
+ram_reset_segment_later = WRAM_START + 0x1A
+
 class State(object):
   def __init__(self, **attrs):
     for name in attrs:
@@ -48,7 +67,7 @@ class State(object):
       (0x0998, 0x02), # 0x998 to 0x999
       (0x09A4, 0x06), # 0x9A4 to 0x9A9
       (0x09DA, 0x07), # 0x9DA to 0x9E0
-      (0xFB00, 0x20), # 0xFB00 to 0xFB19
+      (WRAM_START, 0x20), # 0xFD00 to 0xFD19
     ]
 
     if read_ship_state:
@@ -87,18 +106,18 @@ class State(object):
       reached_ship = False
 
     # Practice hack
-    ram_load_preset = mem.short(0x0FB00)
-    gametime_room = FrameCount(mem.short(0x0FB02))
-    last_gametime_room = FrameCount(mem.short(0x0FB04))
-    realtime_room = FrameCount(mem.short(0x0FB06))
-    last_realtime_room = FrameCount(mem.short(0x0FB08))
-    last_room_lag = FrameCount(mem.short(0x0FB0A))
-    last_door_lag_frames = FrameCount(mem.short(0x0FB0C))
-    transition_counter = FrameCount(mem.short(0x0FB0E))
-    last_realtime_door = FrameCount(mem.short(0x0FB12))
-    seg_rt_frames = mem.short(0x0FB14)
-    seg_rt_seconds = mem.short(0x0FB16)
-    seg_rt_minutes = mem.short(0x0FB18)
+    loading_preset = mem.short(ram_load_preset)
+    gametime_room = FrameCount(mem.short(ram_gametime_room))
+    last_gametime_room = FrameCount(mem.short(ram_last_gametime_room))
+    realtime_room = FrameCount(mem.short(ram_realtime_room))
+    last_realtime_room = FrameCount(mem.short(ram_last_realtime_room))
+    last_room_lag = FrameCount(mem.short(ram_last_room_lag))
+    last_door_lag_frames = FrameCount(mem.short(ram_last_door_lag_frames))
+    transition_counter = FrameCount(mem.short(ram_transition_counter))
+    last_realtime_door = FrameCount(mem.short(ram_last_realtime_door))
+    seg_rt_frames = mem.short(ram_seg_rt_frames)
+    seg_rt_seconds = mem.short(ram_seg_rt_seconds)
+    seg_rt_minutes = mem.short(ram_seg_rt_minutes)
     seg_rt = FrameCount(3600 * seg_rt_minutes + 60 * seg_rt_seconds + seg_rt_frames)
 
     return State(
@@ -116,7 +135,7 @@ class State(object):
         last_room_lag=last_room_lag,
         last_door_lag_frames=last_door_lag_frames,
         transition_counter=transition_counter,
-        ram_load_preset=ram_load_preset,
+        loading_preset=loading_preset,
         items_bitmask='%x' % collected_items_bitmask,
         beams_bitmask='%x' % collected_beams_bitmask,
         items=items_string(imask=collected_items_bitmask),
@@ -139,7 +158,7 @@ NullState = State(
     last_door_lag_frames=None,
     transition_counter=None,
     last_room_lag=None,
-    ram_load_preset=None,
+    loading_preset=None,
     items_bitmask=0,
     beams_bitmask=0,
     items=None,

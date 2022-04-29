@@ -130,7 +130,7 @@ class RoomTimer(object):
     # TODO: This does not always detect loading of a preset, and when
     # it does detect it, we should ignore all transitions until the
     # next IGT reset is detected
-    self.logger.log("Loading preset %04x; next transition may be wrong" % state.ram_load_preset)
+    self.logger.log("Loading preset %04x; next transition may be wrong" % state.loading_preset)
 
   def handle_loaded_preset(self, state, change):
     if not self.ignore_next_transition:
