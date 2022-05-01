@@ -109,12 +109,16 @@ class JSONEncoder(json.JSONEncoder):
 def apply_to_attempts(attempts, func):
   # TODO TODO TODO: Attempts does not store what we need for "last
   # realtime door" in an easy-to-consume form.
+  # TODO TODO TODO: Figure out how to set doortime_is_real here (it
+  # doesn't matter since these values are never written back out to the
+  # csv)
   return TransitionTime(
-      func(attempts.gametimes),
-      func(attempts.realtimes),
-      func(attempts.roomlagtimes),
-      func(attempts.doortimes),
-      func(attempts.doortimes))
+      gametime=func(attempts.gametimes),
+      realtime=func(attempts.realtimes),
+      roomlag=func(attempts.roomlagtimes),
+      door=func(attempts.doortimes),
+      realtime_door=func(attempts.doortimes),
+      doortime_is_real=True)
         # state.last_gametime_room, state.last_realtime_room,
         # state.last_room_lag, state.last_door_lag_frames,
         # state.last_realtime_door)

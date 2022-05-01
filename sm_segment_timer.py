@@ -30,7 +30,8 @@ class SegmentAttempt(object):
         realtime=FrameCount(0),
         roomlag=FrameCount(0),
         door=FrameCount(0),
-        realtime_door=FrameCount(0))
+        realtime_door=FrameCount(0),
+        doortime_is_real=True)
 
   def __repr__(self):
     return 'SegmentAttempt(%s)' % repr(self.transitions)

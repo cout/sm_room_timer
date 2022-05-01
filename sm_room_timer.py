@@ -220,9 +220,12 @@ class RoomTimer(object):
       self.logger.log("  change=%s" % change)
       self.logger.log("  exc=%s" % exc)
     transition_time = TransitionTime(
-        state.last_gametime_room, state.last_realtime_room,
-        state.last_room_lag, state.last_door_lag_frames,
-        state.last_realtime_door)
+        gametime=state.last_gametime_room,
+        realtime=state.last_realtime_room,
+        roomlag=state.last_room_lag,
+        door=state.last_door_lag_frames,
+        realtime_door=state.last_realtime_door,
+        doortime_is_real=True)
     transition = Transition(ts, transition_id, transition_time)
     self.on_transitioned(transition)
 
@@ -232,8 +235,12 @@ class RoomTimer(object):
         state.room, state.door, self.state_reader.ceres_elevator,
         state.items, state.beams)
     transition_time = TransitionTime(
-        state.last_gametime_room, state.last_realtime_room,
-        state.last_room_lag, FrameCount(0), state.last_realtime_door)
+        gametime=state.last_gametime_room,
+        realtime=state.last_realtime_room,
+        roomlag=state.last_room_lag,
+        door=FrameCount(0),
+        realtime_door=state.last_realtime_door,
+        doortime_is_real=True)
     transition = Transition(ts, transition_id, transition_time)
     self.on_transitioned(transition)
 
@@ -243,8 +250,12 @@ class RoomTimer(object):
         state.room, state.door,
         NullDoor, state.items, state.beams)
     transition_time = TransitionTime(
-        state.last_gametime_room, state.last_realtime_room,
-        state.last_room_lag, FrameCount(0), state.last_realtime_door)
+        gametime=state.last_gametime_room,
+        realtime=state.last_realtime_room,
+        roomlag=state.last_room_lag,
+        door=FrameCount(0),
+        realtime_door=state.last_realtime_door,
+        doortime_is_real=True)
     transition = Transition(ts, transition_id, transition_time)
     self.on_transitioned(transition)
 
@@ -333,7 +344,8 @@ class RoomTimerTerminalFrontend(object):
     return "\033[38;5;%sm%s\033[m (%s)" % (color, ttime, stats)
 
 def backup_and_rebuild(rooms, doors, filename):
-  with tempfile.NamedTemporaryFile(prefix='.%s' % filename, delete=False) as tmp:
+  tmp_prefix = '.%s' % (filename.replace('/', '__'))
+  with tempfile.NamedTemporaryFile(prefix=tmp_prefix, delete=False) as tmp:
     unlink = True
 
     try:

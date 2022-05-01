@@ -59,13 +59,19 @@ class TransitionTime(NamedTuple):
   door: FrameCount
   realtime_door: FrameCount
 
+  # Older versions did not save real doortime, so we need to track
+  # whether the value was faked when it was read in to avoid treating a
+  # faked doortime as a real one.
+  doortime_is_real: bool
+
   def __add__(self, t):
     return TransitionTime(
         gametime=(self.gametime + t.gametime),
         realtime=(self.realtime + t.realtime),
         roomlag=(self.roomlag + t.roomlag),
         door=(self.door + t.door),
-        realtime_door=(self.realtime_door + t.realtime_door))
+        realtime_door=(self.realtime_door + t.realtime_door),
+        doortime_is_real=(self.doortime_is_real and t.doortime_is_real))
 
   @property
   def totalrealtime(self):
@@ -87,26 +93,27 @@ class Transition(NamedTuple):
     return [
       'timestamp', 'room_id', 'entry_id', 'exit_id', 'room', 'entry',
       'exit', 'entry_door', 'exit_door', 'items', 'beams', 'gametime',
-      'realtime', 'roomlagtime', 'doortime'
+      'realtime', 'roomlagtime', 'doorrealtime', 'doorlagtime'
     ]
 
   def as_csv_row(self):
-      return (
-        self.ts.isoformat(),
-        '%04x' % self.id.room.room_id,
-        '%04x' % self.id.entry_room.room_id,
-        '%04x' % self.id.exit_room.room_id,
-        self.id.room,
-        self.id.entry_room,
-        self.id.exit_room,
-        '%04x' % self.id.entry_door.door_id,
-        '%04x' % self.id.exit_door.door_id,
-        self.id.items,
-        self.id.beams,
-        round(self.time.gametime.to_seconds(), 3),
-        round(self.time.realtime.to_seconds(), 3),
-        round(self.time.roomlag.to_seconds(), 3),
-        round(self.time.door.to_seconds(), 3))
+    return (
+      self.ts.isoformat(),
+      '%04x' % self.id.room.room_id,
+      '%04x' % self.id.entry_room.room_id,
+      '%04x' % self.id.exit_room.room_id,
+      self.id.room,
+      self.id.entry_room,
+      self.id.exit_room,
+      '%04x' % self.id.entry_door.door_id,
+      '%04x' % self.id.exit_door.door_id,
+      self.id.items,
+      self.id.beams,
+      round(self.time.gametime.to_seconds(), 3),
+      round(self.time.realtime.to_seconds(), 3),
+      round(self.time.roomlag.to_seconds(), 3),
+      round(self.time.realtime_door.to_seconds(), 3) if self.time.doortime_is_real else None,
+      round(self.time.door.to_seconds(), 3))
 
   @classmethod
   def from_csv_row(self, rooms, doors, row):
@@ -132,6 +139,17 @@ class Transition(NamedTuple):
     else:
       ts = datetime.datetime.fromtimestamp(0)
 
+    doorlag_seconds = row.get('doorlagtime', None) or row['doortime']
+    doorlagtime = FrameCount.from_seconds(float(doorlag_seconds))
+
+    doorreal_seconds = row.get('doorrealtime', None)
+    if doorreal_seconds is not None and doorreal_seconds != '':
+      doorrealtime = FrameCount.from_seconds(float(doorreal_seconds))
+      doortime_is_real = True
+    else:
+      doorrealtime = FrameCount(120) + doorlagtime
+      doortime_is_real = False
+
     transition_id = TransitionId(
         room=room,
         entry_door=entry_door,
@@ -141,9 +159,10 @@ class Transition(NamedTuple):
     if 'lagtime' in row and not 'roomlagtime' in row:
       row['roomlagtime'] = row['lagtime']
     transition_time = TransitionTime(
-        FrameCount.from_seconds(float(row['gametime'])),
-        FrameCount.from_seconds(float(row['realtime'])),
-        FrameCount.from_seconds(float(row['roomlagtime'])) if 'roomlagtime' in row else None,
-        FrameCount.from_seconds(float(row['doortime'])),
-        FrameCount(120) + FrameCount.from_seconds(float(row['doortime'])))
+        gametime=FrameCount.from_seconds(float(row['gametime'])),
+        realtime=FrameCount.from_seconds(float(row['realtime'])),
+        roomlag=FrameCount.from_seconds(float(row['roomlagtime'])) if 'roomlagtime' in row else None,
+        door=doorlagtime,
+        realtime_door=doorrealtime,
+        doortime_is_real=doortime_is_real)
     return Transition(ts, transition_id, transition_time)
