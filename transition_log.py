@@ -52,7 +52,8 @@ def read_transition_log_incrementally(filename, rooms, doors):
       yield history, transition
 
 def read_transition_log(filename, rooms, doors):
-  for history, transition in read_transition_log_incrementally(filename, rooms, doors):
-    pass
+  history = History()
+  for h, transition in read_transition_log_incrementally(filename, rooms, doors):
+    history = h
   print("Read history for {} rooms.".format(len(history)))
   return history
