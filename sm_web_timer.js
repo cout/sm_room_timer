@@ -44,38 +44,15 @@ const socket = new WebSocket(`ws://localhost:${port}`)
 // js: ["new_room_time", {"room": {"room_name": "Wrecked Ship Main Shaft", "entry_room_name": "Basement", "exit_room_name": "Wrecked Ship West Super Room", "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8", "entry_door_id": "a294", "exit_door_id": "a210", "items": "sb.h..m..", "beams": "..C.SIW", "attempts": 1, "time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 120, "real": 166, "lag": 46}}, "best_time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 0, "real": 46, "lag": 46}}, "mean_time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 0, "real": 46, "lag": 46}}, "median_time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 0, "real": 46, "lag": 46}}, "p25_time": {"room": {"game": 378.0, "real": 378.0, "lag": 0.0}, "door": {"game": 0.0, "real": 46.0, "lag": 46.0}}, "p75_time": {"room": {"game": 378.0, "real": 378.0, "lag": 0.0}, "door": {"game": 0.0, "real": 46.0, "lag": 46.0}}}, "segment": {"start": {"room_name": "Wrecked Ship Main Shaft", "entry_room_name": "Basement", "exit_room_name": "Wrecked Ship West Super Room", "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8", "entry_door_id": "a294", "exit_door_id": "a210", "items": "sb.h..m..", "beams": "..C.SIW"}, "end": {"room_name": "Wrecked Ship Main Shaft", "entry_room_name": "Basement", "exit_room_name": "Wrecked Ship West Super Room", "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8", "entry_door_id": "a294", "exit_door_id": "a210", "items": "sb.h..m..", "beams": "..C.SIW"}, "time": [378, 378, 0, 46, 166], "median_time": 0, "best_time": 0}, "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
 const room_times_columns = [
-  { label: "Room", get: o => o.room.room_name },
-  { label: "#", get: o => o.room.attempts },
-  // { label: "Game", get: o => o.room.time.room.game },
-  { label: "Real", get: o => o.room.time.room.real },
-  { label: "Lag", get: o => o.room.time.room.lag },
-  // { label: "Door Game", get: o => o.room.time.door.game },
-  { label: "Door Lag", get: o => o.room.time.door.lag },
-  { label: "Door Real", get: o => o.room.time.door.real },
-  // { label: "Median Game", get: o => o.room.median_time.room.game },
-  { label: "Median Real", get: o => o.room.median_time.room.real },
-  { label: "Median Lag", get: o => o.room.median_time.room.lag },
-  // { label: "Median Door Game", get: o => o.room.median_time.door.game },
-  { label: "Median Door Lag", get: o => o.room.median_time.door.lag },
-  { label: "Median Door Real", get: o => o.room.median_time.door.real },
-  // { label: "Best Game", get: o => o.room.best_time.room.game },
-  { label: "Best Real", get: o => o.room.best_time.room.real },
-  { label: "Best Lag", get: o => o.room.best_time.room.lag },
-  // { label: "Best Door Game", get: o => o.room.best_time.door.game },
-  { label: "Best Door Lag", get: o => o.room.best_time.door.lag },
-  { label: "Best Door Real", get: o => o.room.best_time.door.real },
-  // { label: "P25 Game", get: o => o.room.p25_time.room.game },
-  // { label: "P25 Real", get: o => o.room.p25_time.room.real },
-  // { label: "P25 Lag", get: o => o.room.p25_time.room.lag },
-  // { label: "P25 Door Game", get: o => o.room.p25_time.door.game },
-  // { label: "P25 Door Lag", get: o => o.room.p25_time.door.lag },
-  // { label: "P25 Door Real", get: o => o.room.p25_time.door.real },
-  // { label: "P75 Game", get: o => o.room.p75_time.room.game },
-  // { label: "P75 Real", get: o => o.room.p75_time.room.real },
-  // { label: "P75 Lag", get: o => o.room.p75_time.room.lag },
-  // { label: "P75 Door Game", get: o => o.room.p75_time.door.game },
-  // { label: "P75 Door Lag", get: o => o.room.p75_time.door.lag },
-  // { label: "P75 Door Real", get: o => o.room.p75_time.door.real },
+  { label: "Room", get: o => o.room_name },
+  { label: "#", get: o => o.attempts },
+  { label: "Type", get: o => o.type },
+  { label: "Time", get: o => o.time },
+  { label: "Avg", get: o => o.avg },
+  { label: "Median", get: o => o.median },
+  { label: "Best", get: o => o.best },
+  // { label: "P25", get: o => o.p25 },
+  // { label: "P75", get: o => o.p75 },
 ];
 const room_times_table = new Table(room_times_columns);
 
@@ -95,6 +72,60 @@ socket.addEventListener('message', function (event) {
   const type = msg[0];
   const data = msg[1];
   if (type == 'new_room_time') {
-    room_times_table.append(data);
+    room_times_table.append({
+      room_name: data.room.room_name,
+      attempts: data.room.attempts,
+      type: 'Game',
+      time: data.room.time.room.game,
+      avg: data.room.mean_time.room.game,
+      median: data.room.median_time.room.game,
+      best: data.room.best_time.room.game,
+      p25: data.room.p25_time.room.game,
+      p75: data.room.p75_time.room.game,
+    });
+    room_times_table.append({
+      room_name: '',
+      attempts: '',
+      type: 'Real',
+      time: data.room.time.room.real,
+      avg: data.room.mean_time.room.real,
+      median: data.room.median_time.room.real,
+      best: data.room.best_time.room.real,
+      p25: data.room.p25_time.room.real,
+      p75: data.room.p75_time.room.real,
+    });
+    room_times_table.append({
+      room_name: '',
+      attempts: '',
+      type: 'Lag',
+      time: data.room.time.room.lag,
+      avg: data.room.mean_time.room.lag,
+      median: data.room.median_time.room.lag,
+      best: data.room.best_time.room.lag,
+      p25: data.room.p25_time.room.lag,
+      p75: data.room.p75_time.room.lag,
+    });
+    room_times_table.append({
+      room_name: '',
+      attempts: '',
+      type: 'Door Lag',
+      time: data.room.time.door.lag,
+      avg: data.room.mean_time.door.lag,
+      median: data.room.median_time.door.lag,
+      best: data.room.best_time.door.lag,
+      p25: data.room.p25_time.door.lag,
+      p75: data.room.p75_time.door.lag,
+    });
+    room_times_table.append({
+      room_name: '',
+      attempts: '',
+      type: 'Door Real',
+      time: data.room.time.door.real,
+      avg: data.room.mean_time.door.real,
+      median: data.room.median_time.door.real,
+      best: data.room.best_time.door.real,
+      p25: data.room.p25_time.door.real,
+      p75: data.room.p75_time.door.real,
+    });
   }
 });
