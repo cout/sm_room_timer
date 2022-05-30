@@ -301,6 +301,7 @@ class Browser(object):
     self.window = QtWidgets.QWidget()
     self.layout = QtWidgets.QVBoxLayout()
     self.webview = QtWebEngineWidgets.QWebEngineView()
+    self.layout.setContentsMargins(0, 0, 0, 0)
     self.layout.addWidget(self.webview)
     self.window.setLayout(self.layout)
 
