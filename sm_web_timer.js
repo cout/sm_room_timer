@@ -23,6 +23,16 @@ class Table {
     // this.append({room: { room_name: 'foo' }});
     // this.append({room: { room_name: 'bar' }});
     // this.append({room: { room_name: 'baz' }});
+
+    this.hide();
+  }
+
+  show() {
+    this.elem.classList.remove('hidden')
+  }
+
+  hide() {
+    this.elem.classList.add('hidden')
   }
 
   append(obj) {
@@ -41,7 +51,47 @@ const params = new URLSearchParams(location.search);
 const port = params.get('port');
 const socket = new WebSocket(`ws://localhost:${port}`)
 
-// js: ["new_room_time", {"room": {"room_name": "Wrecked Ship Main Shaft", "entry_room_name": "Basement", "exit_room_name": "Wrecked Ship West Super Room", "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8", "entry_door_id": "a294", "exit_door_id": "a210", "items": "sb.h..m..", "beams": "..C.SIW", "attempts": 1, "time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 120, "real": 166, "lag": 46}}, "best_time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 0, "real": 46, "lag": 46}}, "mean_time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 0, "real": 46, "lag": 46}}, "median_time": {"room": {"game": 378, "real": 378, "lag": 0}, "door": {"game": 0, "real": 46, "lag": 46}}, "p25_time": {"room": {"game": 378.0, "real": 378.0, "lag": 0.0}, "door": {"game": 0.0, "real": 46.0, "lag": 46.0}}, "p75_time": {"room": {"game": 378.0, "real": 378.0, "lag": 0.0}, "door": {"game": 0.0, "real": 46.0, "lag": 46.0}}}, "segment": {"start": {"room_name": "Wrecked Ship Main Shaft", "entry_room_name": "Basement", "exit_room_name": "Wrecked Ship West Super Room", "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8", "entry_door_id": "a294", "exit_door_id": "a210", "items": "sb.h..m..", "beams": "..C.SIW"}, "end": {"room_name": "Wrecked Ship Main Shaft", "entry_room_name": "Basement", "exit_room_name": "Wrecked Ship West Super Room", "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8", "entry_door_id": "a294", "exit_door_id": "a210", "items": "sb.h..m..", "beams": "..C.SIW"}, "time": [378, 378, 0, 46, 166], "median_time": 0, "best_time": 0}, "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
+// js: ["new_room_time", {"room": {
+// "room_name": "Wrecked Ship Main Shaft",
+// "entry_room_name": "Basement",
+// "exit_room_name": "Wrecked Ship West Super Room",
+// "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8",
+// "entry_door_id": "a294", "exit_door_id": "a210",
+// "items": "sb.h..m..", "beams": "..C.SIW",
+// "attempts": 1,
+// "time": {"room": {"game": 378, "real": 378, "lag": 0},
+//          "door": {"game": 120, "real": 166, "lag": 46}},
+// "best_time": {"room": {"game": 378, "real": 378, "lag": 0},
+//               "door": {"game": 0, "real": 46, "lag": 46}},
+// "mean_time": {"room": {"game": 378, "real": 378, "lag": 0},
+//               "door": {"game": 0, "real": 46, "lag": 46}},
+// "median_time": {"room": {"game": 378, "real": 378, "lag": 0},
+//                 "door": {"game": 0, "real": 46, "lag": 46}},
+// "p25_time": {"room": {"game": 378.0, "real": 378.0, "lag": 0.0},
+//              "door": {"game": 0.0, "real": 46.0, "lag": 46.0}},
+// "p75_time": {"room": {"game": 378.0, "real": 378.0, "lag": 0.0},
+//              "door": {"game": 0.0, "real": 46.0, "lag": 46.0}}},
+// "segment": {
+//   "start": {
+//     "room_name": "Wrecked Ship Main Shaft",
+//     "entry_room_name": "Basement",
+//     "exit_room_name": "Wrecked Ship West Super Room",
+//     "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8",
+//     "entry_door_id": "a294", "exit_door_id": "a210",
+//     "items": "sb.h..m..", "beams": "..C.SIW"
+//   }, "end": {
+//     "room_name": "Wrecked Ship Main Shaft",
+//     "entry_room_name": "Basement",
+//     "exit_room_name": "Wrecked Ship West Super Room",
+//     "room_id": "caf6", "entry_room_id": "cc6f", "exit_room_id": "cda8",
+//     "entry_door_id": "a294", "exit_door_id": "a210",
+//     "items": "sb.h..m..", "beams": "..C.SIW"
+//   },
+//   "time": [378, 378, 0, 46, 166],
+//   "median_time": 0,
+//   "best_time": 0
+// },
+// "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
 const room_times_columns = [
   { label: "Room", get: o => o.room_name },
@@ -56,7 +106,31 @@ const room_times_columns = [
 ];
 const room_times_table = new Table(room_times_columns);
 
+const segment_times_columns = [
+  { label: "Room", get: o => o.room.room_name },
+  { label: "#", get: o => o.room_in_segment.attempts },
+  { label: "Time", get: o => o.room.time.room.real },
+  { label: "\u00b1Median", get: o => TODO },
+  { label: "\u00b1Best", get: o => TODO },
+];
+const segment_times_table = new Table(segment_times_columns);
+
 document.body.appendChild(room_times_table.elem);
+document.body.appendChild(segment_times_table.elem);
+
+room_times_table.show();
+
+document.addEventListener('keydown', (event) => {
+  if (event.key == 'r' || event.key == 'R') {
+    console.error('room')
+    room_times_table.show()
+    segment_times_table.hide()
+  } else if (event.key == 's' || event.key == 'S') {
+    console.error('segment')
+    segment_times_table.show()
+    room_times_table.hide()
+  }
+});
 
 socket.addEventListener('open', function (event) {
   console.error('open');
@@ -127,5 +201,7 @@ socket.addEventListener('message', function (event) {
       p25: data.room.p25_time.door.real,
       p75: data.room.p75_time.door.real,
     });
+
+    segment_times_table.append(data);
   }
 });

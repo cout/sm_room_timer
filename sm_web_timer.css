@@ -29,3 +29,7 @@ table tr:nth-child(odd) th, table tr:nth-child(odd) td {
 
 table tr:nth-child(even) th, table tr:nth-child(even) td {
 }
+
+.hidden {
+  display: none;
+}
