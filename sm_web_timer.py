@@ -178,7 +178,7 @@ class JsonEventGenerator(object):
       'segment': {
         'start': segment.start,
         'end': segment.end,
-        'time': segment_attempt.time,
+        'time': encode_transition_time(segment_attempt.time),
         'median_time': segment_stats.p50,
         'best_time': segment_stats.p0,
       },

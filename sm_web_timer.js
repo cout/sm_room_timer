@@ -87,7 +87,8 @@ const socket = new WebSocket(`ws://localhost:${port}`)
 //     "entry_door_id": "a294", "exit_door_id": "a210",
 //     "items": "sb.h..m..", "beams": "..C.SIW"
 //   },
-//   "time": [378, 378, 0, 46, 166],
+//   "time": {"room": {"game": 378, "real": 378, "lag": 0},
+//            "door": {"game": 120, "real": 166, "lag": 46}},
 //   "median_time": 0,
 //   "best_time": 0
 // },
@@ -109,9 +110,9 @@ const room_times_table = new Table(room_times_columns);
 const segment_times_columns = [
   { label: "Room", get: o => o.room.room_name },
   { label: "#", get: o => o.room_in_segment.attempts },
-  { label: "Time", get: o => o.room.time.room.real },
-  { label: "\u00b1Median", get: o => TODO },
-  { label: "\u00b1Best", get: o => TODO },
+  { label: "Time", get: o => o.room_in_segment.time },
+  { label: "\u00b1Median", get: o => o.room_in_segment.median_time - o.room_in_segment.time },
+  { label: "\u00b1Best", get: o => o.room_in_segment.best_time - o.room_in_segment.time },
 ];
 const segment_times_table = new Table(segment_times_columns);
 

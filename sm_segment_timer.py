@@ -100,13 +100,13 @@ class SegmentTransitionAttemptStats(object):
 
   def __init__(self, transition, history):
     self.transition = transition
+    self.time = transition.time.totalrealtime
 
     attempts = history.history.get(transition.id, None)
 
     if attempts is not None:
       self.attempts = attempts
       self.num_attempts = len(attempts)
-      self.time = transition.time.totalrealtime
       self.p50 = attempts.totalrealtimes.median()
       self.p0 = attempts.totalrealtimes.best()
       self.p50_delta = self.time - self.p50
@@ -114,7 +114,6 @@ class SegmentTransitionAttemptStats(object):
     else:
       self.attempts = Attempts()
       self.num_attempts = 0
-      self.time = FrameCount(0)
       self.p50 = FrameCount(0)
       self.p0 = FrameCount(0)
       self.p50_delta = FrameCount(0)
