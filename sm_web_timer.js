@@ -4,7 +4,22 @@ const get = function(col, obj) {
   } catch {
     return "";
   }
-}
+};
+
+const fc = function(count) {
+  sign = count < 0 ? '-' : '';
+  count = Math.abs(count);
+  if (count / 60 < 60) {
+    secs = Math.round(count / 60);
+    frames = count % 60;
+    return `${sign}${secs}'${frames.toString().padStart(2, '0')}`;
+  } else {
+    mins = Math.round(count / 3600);
+    secs = Math.round(count / 60);
+    frames = Math.round((count / 60) % 60);
+    return `${sign}${mins}${secs}'${frames.toString().padStart(2, '0')}`;
+  }
+};
 
 class Table {
   constructor(columns) {
@@ -98,10 +113,10 @@ const room_times_columns = [
   { label: "Room", get: o => o.room_name },
   { label: "#", get: o => o.attempts },
   { label: "Type", get: o => o.type },
-  { label: "Time", get: o => o.time },
-  { label: "Avg", get: o => o.avg },
-  { label: "Median", get: o => o.median },
-  { label: "Best", get: o => o.best },
+  { label: "Time", get: o => fc(o.time) },
+  { label: "Avg", get: o => fc(o.avg) },
+  { label: "Median", get: o => fc(o.median) },
+  { label: "Best", get: o => fc(o.best) },
   // { label: "P25", get: o => o.p25 },
   // { label: "P75", get: o => o.p75 },
 ];
@@ -110,9 +125,9 @@ const room_times_table = new Table(room_times_columns);
 const segment_times_columns = [
   { label: "Room", get: o => o.room.room_name },
   { label: "#", get: o => o.room_in_segment.attempts },
-  { label: "Time", get: o => o.room_in_segment.time },
-  { label: "\u00b1Median", get: o => o.room_in_segment.median_time - o.room_in_segment.time },
-  { label: "\u00b1Best", get: o => o.room_in_segment.best_time - o.room_in_segment.time },
+  { label: "Time", get: o => fc(o.room_in_segment.time) },
+  { label: "\u00b1Median", get: o => fc(o.room_in_segment.median_time - o.room_in_segment.time) },
+  { label: "\u00b1Best", get: o => fc(o.room_in_segment.best_time - o.room_in_segment.time) },
 ];
 const segment_times_table = new Table(segment_times_columns);
 
