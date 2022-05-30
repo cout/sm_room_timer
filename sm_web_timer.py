@@ -26,6 +26,7 @@ import websockets
 from queue import Queue
 from threading import Thread
 
+# TODO: Don't bother importing these with --headless
 from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
 
 def encode_segment(segment):
@@ -311,6 +312,25 @@ class Browser(object):
   def stop(self):
     self.app.quit()
 
+def enable_qt_fractional_scaling():
+  # This work with qtwebengine 5.15 to enable fractional scaling (I have
+  # the scale factor set to 1.5 in kde plasma settings).  It will not
+  # work with qtwebengine 5.14; to get that to work I would need to
+  # somehow figure out what the scale factor should be and set
+  # QT_SCALE_FACTOR explicitly.
+  #
+  # Note I am unsure whether QT_ENABLE_HIGHDPI_SCALING uses
+  # QT_SCREEN_SCALE_FACTORS (which is what I want) or whether it
+  # computes the scale factor automatically based on the dpi.
+  del os.environ['QT_AUTO_SCREEN_SCALE_FACTOR']
+  os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+  os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'PassThrough'
+
+def run_qt_browser(url):
+  enable_qt_fractional_scaling()
+  browser = Browser(sys.argv, url)
+  sys.exit(browser.run())
+
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
   parser.add_argument('-f', '--file', dest='filename', default=None)
@@ -366,6 +386,7 @@ def main():
 
     for tid in history:
       route.record(tid)
+
       if route.complete: break 
     print('Route is %s' % ('complete' if route.complete else 'incomplete'))
 
@@ -388,8 +409,7 @@ def main():
       filename = 'sm_web_timer.html'
       port = args.port
       url = 'file://%s/%s?port=%s' % (dirname, filename, port)
-      browser = Browser(sys.argv, url)
-      sys.exit(browser.run())
+      run_qt_browser(url)
 
   finally:
     for f in reversed(shutdown):
