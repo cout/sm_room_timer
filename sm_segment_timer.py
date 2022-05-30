@@ -12,6 +12,7 @@ from segment import Segment
 from table import Cell, Table
 from rebuild_history import need_rebuild, rebuild_history
 
+from dataclasses import dataclass
 import argparse
 import itertools
 import time
@@ -83,10 +84,19 @@ def find_segment_in_history(segment, history):
 
   return attempts
 
+@dataclass
 class SegmentTransitionAttemptStats(object):
   """
   Statistics for a single transition in a segment attempt.
   """
+
+  attempts: object
+  num_attempts: int
+  time: FrameCount
+  p50: FrameCount
+  p0: FrameCount
+  p50_delta: FrameCount
+  p0_delta: FrameCount
 
   def __init__(self, transition, history):
     self.transition = transition
@@ -110,10 +120,15 @@ class SegmentTransitionAttemptStats(object):
       self.p50_delta = FrameCount(0)
       self.p0_delta = FrameCount(0)
 
+@dataclass
 class SegmentAttemptStats(object):
   """
   Statistics for an entire segment attempt.
   """
+
+  history: History
+  transitions: list
+  seg_attempts: list
 
   def __init__(self, history):
     self.history = history
