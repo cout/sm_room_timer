@@ -66,6 +66,7 @@ class Table {
       row.appendChild(cell);
     }
     this.elem.appendChild(row);
+    row.scrollIntoView();
   }
 }
 
