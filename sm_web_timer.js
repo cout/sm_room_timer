@@ -7,6 +7,10 @@ const get = function(col, obj) {
 };
 
 const fc = function(count) {
+  if (count === undefined) {
+    return '';
+  }
+
   sign = count < 0 ? '-' : '';
   count = Math.abs(count);
   if (count / 60 < 60) {
@@ -216,6 +220,17 @@ socket.addEventListener('message', function (event) {
       best: data.room.best_time.door.real,
       p25: data.room.p25_time.door.real,
       p75: data.room.p75_time.door.real,
+    });
+    room_times_table.append({
+      room_name: '\u00a0',
+      attempts: '',
+      type: '',
+      time: undefined,
+      avg: undefined,
+      median: undefined,
+      best: undefined,
+      p25: undefined,
+      p75: undefined,
     });
 
     segment_times_table.append(data);
