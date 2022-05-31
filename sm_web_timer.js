@@ -60,6 +60,9 @@ class Table {
       const cell = document.createElement('td');
       const text = document.createTextNode(get(col, obj));
       cell.appendChild(text);
+      if (col.css_class) {
+        cell.classList.add(col.css_class(obj));
+      }
       row.appendChild(cell);
     }
     this.elem.appendChild(row);
@@ -113,11 +116,25 @@ const socket = new WebSocket(`ws://localhost:${port}`)
 // },
 // "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
+const time_color = function(o) {
+  if (o.time <= o.best) {
+    return 'gold';
+  } else if (o.time <= o.p25) {
+    return 'green';
+  } else if (o.time <= o.median) {
+    return 'lightgreen';
+  } else if (o.time <= o.p75) {
+    return 'lightred';
+  } else {
+    return 'red';
+  }
+}
+
 const room_times_columns = [
   { label: "Room", get: o => o.room_name },
   { label: "#", get: o => o.attempts },
   { label: "Type", get: o => o.type },
-  { label: "Time", get: o => fc(o.time) },
+  { label: "Time", get: o => fc(o.time), css_class: o => time_color(o) },
   { label: "Avg", get: o => fc(o.avg) },
   { label: "Median", get: o => fc(o.median) },
   { label: "Best", get: o => fc(o.best) },
