@@ -30,7 +30,13 @@ class Table {
     this.elem = document.createElement('table');
     this.columns = columns
 
+    this.append_header_row();
+    this.hide();
+  }
+
+  append_header_row() {
     const header_row = document.createElement('tr');
+
     for (const col of this.columns) {
       const cell = document.createElement('th');
       const text = document.createTextNode(col.label);
@@ -39,11 +45,6 @@ class Table {
     }
 
     this.elem.appendChild(header_row);
-    // this.append({room: { room_name: 'foo' }});
-    // this.append({room: { room_name: 'bar' }});
-    // this.append({room: { room_name: 'baz' }});
-
-    this.hide();
   }
 
   show() {
@@ -58,7 +59,7 @@ class Table {
     const row = document.createElement('tr');
     for (const col of this.columns) {
       const cell = document.createElement('td');
-      const text = document.createTextNode(get(col, obj));
+      const text = document.createTextNode(get(col, obj) || '');
       cell.appendChild(text);
       if (col.css_class) {
         cell.classList.add(col.css_class(obj));
@@ -66,6 +67,17 @@ class Table {
       row.appendChild(cell);
     }
     this.elem.appendChild(row);
+    row.scrollIntoView();
+  }
+
+  append_blank_line() {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    const text = document.createTextNode('\u00a0');
+    cell.setAttribute('colspan', this.columns.length);
+    cell.appendChild(text);
+    row.appendChild(cell);
+    this.elem.appendChild(row)
     row.scrollIntoView();
   }
 }
@@ -178,11 +190,14 @@ socket.addEventListener('close', function (event) {
   console.error('close');
 });
 
+var num_segments = 0;
+
 socket.addEventListener('message', function (event) {
   // console.error(event.data);
   const msg = JSON.parse(event.data);
   const type = msg[0];
   const data = msg[1];
+  console.error(`${type}: ${data}`);
   if (type == 'new_room_time') {
     room_times_table.append({
       room_name: data.room.room_name,
@@ -239,18 +254,14 @@ socket.addEventListener('message', function (event) {
       p25: data.room.p25_time.door.real,
       p75: data.room.p75_time.door.real,
     });
-    room_times_table.append({
-      room_name: '\u00a0',
-      attempts: '',
-      type: '',
-      time: undefined,
-      avg: undefined,
-      median: undefined,
-      best: undefined,
-      p25: undefined,
-      p75: undefined,
-    });
+    room_times_table.append_blank_line();
 
     segment_times_table.append(data);
+  } else if (type == 'new_segment') {
+    console.error('new segment')
+    if (num_segments > 0) {
+      segment_times_table.append_blank_line();
+    }
+    num_segments += 1;
   }
 });

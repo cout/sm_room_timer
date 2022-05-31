@@ -190,6 +190,11 @@ class JsonEventGenerator(object):
       },
     })
 
+  def new_segment(self, transition):
+    self.emit('new_segment', {
+      'start': encode_transition_id(transition.id),
+    })
+
 class WebsocketServer(object):
   class SHUTDOWN: pass
 
@@ -256,7 +261,8 @@ class TimerThread(object):
 
     self.tracker = SegmentTimeTracker(
         history, transition_log, route,
-        on_new_room_time=self.json_generator.new_room_time)
+        on_new_room_time=self.json_generator.new_room_time,
+        on_new_segment=self.json_generator.new_segment)
 
     self.state_reader = ThreadedStateReader(
         rooms, doors,
@@ -396,7 +402,8 @@ def main():
 
     tracker = SegmentTimeTracker(
         history, transition_log, route,
-        on_new_room_time=json_generator.new_room_time)
+        on_new_room_time=json_generator.new_room_time,
+        on_new_segment=json_generator.new_segment)
 
     timer_thread = TimerThread(history, rooms, doors, transition_log,
         route, json_generator, server, usb2snes=args.usb2snes)
