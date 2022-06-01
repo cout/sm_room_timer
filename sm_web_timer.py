@@ -160,6 +160,7 @@ class JsonEventGenerator(object):
     segment_attempt = tracker.current_attempt
     segment_stats = tracker.current_attempt_stats
     segment = segment_attempt.segment
+    room_in_segment = segment_attempt.transitions[-1]
     room_in_segment_stats = segment_stats.transitions[-1]
 
     # TODO: I'm too lazy to figure out how to get TransitionTime (which
@@ -187,7 +188,7 @@ class JsonEventGenerator(object):
       },
       'room_in_segment': {
         'attempts': room_in_segment_stats.num_attempts,
-        'time': room_in_segment_stats.time,
+        'time': room_in_segment.time.totalrealtime,
         'prev_median_time': room_in_segment_stats.totalrealtime_p50,
         'prev_best_time': room_in_segment_stats.totalrealtime_p0,
         'prev_p25_time': room_in_segment_stats.totalrealtime_p25,

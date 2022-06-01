@@ -92,7 +92,6 @@ class SegmentTransitionAttemptStats(object):
 
   attempts: object
   num_attempts: int
-  time: FrameCount
   totalrealtime_p75: FrameCount
   totalrealtime_p50: FrameCount
   totalrealtime_p25: FrameCount
@@ -100,7 +99,6 @@ class SegmentTransitionAttemptStats(object):
 
   def __init__(self, transition, history):
     self.transition = transition
-    self.time = transition.time.totalrealtime
 
     attempts = history.history.get(transition.id, None)
 
@@ -149,7 +147,6 @@ class SegmentAttemptStats(object):
     self.seg_attempts = find_segment_in_history(
         current_attempt.segment, self.history)
 
-    attempt_time = current_attempt.time.totalrealtime
     historical_times = self.seg_attempts.totalrealtimes
 
     self.num_attempts = len(self.seg_attempts)
