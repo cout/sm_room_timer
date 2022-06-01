@@ -31,9 +31,23 @@ const fc_delta = function(count, comparison) {
   return `${pos}${fc(delta)}`;
 };
 
-class Table {
+class Widget {
+  constructor(elem) {
+    this.elem = elem;
+  }
+
+  show() {
+    this.elem.classList.remove('hidden')
+  }
+
+  hide() {
+    this.elem.classList.add('hidden')
+  }
+}
+
+class Table extends Widget {
   constructor(columns) {
-    this.elem = document.createElement('table');
+    super(document.createElement('table'));
     this.columns = columns
 
     this.append_header_row();
@@ -51,14 +65,6 @@ class Table {
     }
 
     this.elem.appendChild(header_row);
-  }
-
-  show() {
-    this.elem.classList.remove('hidden')
-  }
-
-  hide() {
-    this.elem.classList.add('hidden')
   }
 
   append(obj) {
@@ -179,6 +185,8 @@ const segment_times_table = new Table(segment_times_columns);
 document.body.appendChild(room_times_table.elem);
 document.body.appendChild(segment_times_table.elem);
 
+const help_box = new Widget(document.getElementById("help"));
+
 room_times_table.show();
 
 document.addEventListener('keydown', (event) => {
@@ -190,6 +198,10 @@ document.addEventListener('keydown', (event) => {
     console.error('segment')
     segment_times_table.show()
     room_times_table.hide()
+  } else if (event.key == '?') {
+    help_box.show();
+  } else if (event.key == ' ') {
+    help_box.hide();
   }
 });
 
@@ -211,6 +223,8 @@ socket.addEventListener('message', function (event) {
   const data = msg[1];
   console.error(`${type}: ${data}`);
   if (type == 'new_room_time') {
+    help_box.hide();
+
     room_times_table.append({
       room_name: data.room.room_name,
       attempts: data.room.attempts,
