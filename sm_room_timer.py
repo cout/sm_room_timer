@@ -260,21 +260,14 @@ class RoomTimer(object):
     self.on_transitioned(transition)
 
 def color_for_time(ttime, atimes):
-  mean = atimes.mean()
-  best = atimes.best()
-  prev_best = atimes.prev_best()
-  p25 = atimes.percentile(25)
-  p50 = atimes.median()
-  p75 = atimes.percentile(75)
-
   color = 8
-  if ttime <= best:
+  if len(atimes.values()) <= 1 or ttime <= atimes.best():
     color = 214
-  elif ttime <= p25:
+  elif ttime <= atimes.percentile(25):
     color = 40
-  elif ttime <= p50:
+  elif ttime <= atimes.median():
     color = 148
-  elif ttime <= p75:
+  elif ttime <= atimes.percentile(75):
     color = 204
   else:
     color = 196
