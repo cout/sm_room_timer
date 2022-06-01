@@ -187,6 +187,8 @@ class JsonEventGenerator(object):
         'time': room_in_segment_stats.time,
         'median_time': room_in_segment_stats.p50,
         'best_time': room_in_segment_stats.p0,
+        'p25_time': room_in_segment_stats.p25,
+        'p75_time': room_in_segment_stats.p75,
       },
     })
 

@@ -93,7 +93,9 @@ class SegmentTransitionAttemptStats(object):
   attempts: object
   num_attempts: int
   time: FrameCount
+  p75: FrameCount
   p50: FrameCount
+  p25: FrameCount
   p0: FrameCount
   p50_delta: FrameCount
   p0_delta: FrameCount
@@ -107,14 +109,18 @@ class SegmentTransitionAttemptStats(object):
     if attempts is not None:
       self.attempts = attempts
       self.num_attempts = len(attempts)
+      self.p75 = attempts.totalrealtimes.percentile(75)
       self.p50 = attempts.totalrealtimes.median()
+      self.p25 = attempts.totalrealtimes.percentile(25)
       self.p0 = attempts.totalrealtimes.best()
       self.p50_delta = self.time - self.p50
       self.p0_delta = self.time - self.p0
     else:
       self.attempts = Attempts()
       self.num_attempts = 0
+      self.p75 = FrameCount(0)
       self.p50 = FrameCount(0)
+      self.p25 = FrameCount(0)
       self.p0 = FrameCount(0)
       self.p50_delta = FrameCount(0)
       self.p0_delta = FrameCount(0)
