@@ -167,9 +167,9 @@ const segment_times_columns = [
   { label: "Room", get: o => o.room_name },
   { label: "#", get: o => o.attempts },
   { label: "Time", get: o => fc(o.time), css_class: o => time_color(o) },
-  // { label: "Median", get: o => fc(o.median_time) },
+  { label: "Median", get: o => fc(o.median_time) },
   { label: "\u00b1Median", get: o => fc_delta(o.time, o.median_time) },
-  // { label: "Best", get: o => fc(o.best_time) },
+  { label: "Best", get: o => fc(o.best_time) },
   { label: "\u00b1Best", get: o => fc_delta(o.time, o.best_time) },
 ];
 const segment_times_table = new Table(segment_times_columns);
@@ -271,11 +271,19 @@ socket.addEventListener('message', function (event) {
     }
     segment_times_table.append({
       room_name: data.room.room_name,
-      ...data.room_in_segment,
+      time: data.room_in_segment.time,
+      median_time: data.room_in_segment.prev_median_time,
+      best_time: data.room_in_segment.prev_best_time,
+      p25_time: data.room_in_segment.prev_p25_time,
+      p75_time: data.room_in_segment.prev_p75_time,
     });
     current_segment_time_node = segment_times_table.append({
       room_name: 'Segment',
-      ...data.segment,
+      time: data.segment.time,
+      median_time: data.segment.prev_median_time,
+      best_time: data.segment.prev_best_time,
+      p25_time: data.segment.prev_p25_time,
+      p75_time: data.segment.prev_p75_time,
     });
   } else if (type == 'new_segment') {
     console.error('new segment')
