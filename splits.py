@@ -41,6 +41,12 @@ def segments_from_splits(route, splits):
       start_split = True
   return segments
 
+def read_split_names_from_file(filename):
+  with open(filename) as f:
+    lines = [ line for line in f.readlines()
+        if not line.startswith('#') and not line.isspace() ]
+    return [ line.strip() for line in lines ]
+
 class Splits(list):
   @classmethod
   def from_segment_and_split_names(cls, segment_names, split_names,

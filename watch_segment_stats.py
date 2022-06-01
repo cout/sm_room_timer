@@ -6,7 +6,7 @@ from history import History
 from transition_log import read_transition_log_csv_incrementally
 from route import build_route, is_ceres_escape
 from segment_stats import SegmentStats
-from splits import Splits
+from splits import Splits, read_split_names_from_file
 from table import Cell, Table, CompactRenderer
 from frame_count import FrameCount
 
@@ -124,10 +124,7 @@ def main():
     split_names = args.splits
 
     if args.splits_filename is not None:
-      with open(args.splits_filename) as f:
-        lines = [ line for line in f.readlines()
-            if not line.startswith('#') and not line.isspace() ]
-        split_names.extend([ line.strip() for line in lines ])
+      split_names.extend(read_split_names_from_file(args.splits_filename))
 
     segments = Splits.from_segment_and_split_names(
         args.segments,
