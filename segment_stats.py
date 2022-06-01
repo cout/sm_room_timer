@@ -8,38 +8,11 @@ from transition_log import read_transition_log
 from route import build_route, is_ceres_escape
 from table import Cell, Table
 from stats import transition_stats
-from segment import Segment
+from splits import Splits
 from sm_segment_timer import find_segment_in_history
 
 import sys
 import argparse
-import re
-
-def transition_from_name(name, rooms, route):
-  if name == 'Alcatraz':
-    name = 'Parlor 3'
-
-  m = re.match('(.*?)\s+Revisited$', name)
-  if m is not None:
-    name = '%s 2' % m.group(1)
-
-  m = re.match('(.*?)\s+(\d+)$', name)
-  if m is None:
-    room_name = name
-    n = 1
-  else:
-    room_name = m.group(1)
-    n = int(m.group(2))
-
-  room = rooms.from_name(room_name)
-
-  return route.find_nth_transition_by_room(room, n)
-
-def segment_from_name(name, rooms, route):
-  start_transition_name, end_transition_name = name.split(' to ')
-  start = transition_from_name(start_transition_name, rooms, route)
-  end = transition_from_name(end_transition_name, rooms, route)
-  return Segment.from_route(route, start, end)
 
 def sum_of_best(segment, history):
   total = FrameCount(0)
@@ -180,19 +153,6 @@ def print_segment_stats(history, segments):
 
   print(table.render())
 
-def segments_from_splits(route, splits):
-  segments = [ ]
-  start_split = False
-  segment_start = route[0]
-  for tid in route:
-    if start_split:
-      segment_start = tid
-      start_split = False
-    if tid in splits:
-      segments.append(Segment.from_route(route, segment_start, tid))
-      start_split = True
-  return segments
-
 def build_segment_history(segments, history):
   segment_history = History()
   for segment in segments:
@@ -228,10 +188,11 @@ def main():
           if not line.startswith('#') and not line.isspace() ]
       split_names.extend([ line.strip() for line in lines ])
 
-  segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
-  splits = [ transition_from_name(name, rooms, route) for name in split_names ]
-
-  segments.extend(segments_from_splits(route, splits))
+  segments = Splits.from_segment_and_split_names(
+      args.segments,
+      split_names,
+      rooms,
+      route)
 
   if not args.brief:
     segment_history = build_segment_history(segments, history)

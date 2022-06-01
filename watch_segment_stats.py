@@ -5,13 +5,13 @@ from doors import Doors, NullDoor
 from history import History
 from transition_log import read_transition_log_csv_incrementally
 from route import build_route, is_ceres_escape
-from segment_stats import SegmentStats, segment_from_name, transition_from_name, segments_from_splits
+from segment_stats import SegmentStats
+from splits import Splits
 from table import Cell, Table, CompactRenderer
 from frame_count import FrameCount
 
 import sys
 import argparse
-import re
 import time
 
 class Tailer(object):
@@ -129,10 +129,11 @@ def main():
             if not line.startswith('#') and not line.isspace() ]
         split_names.extend([ line.strip() for line in lines ])
 
-    segments = [ segment_from_name(name, rooms, route) for name in args.segments ]
-    splits = [ transition_from_name(name, rooms, route) for name in split_names ]
-
-    segments.extend(segments_from_splits(route, splits))
+    segments = Splits.from_segment_and_split_names(
+        args.segments,
+        split_names,
+        rooms,
+        route)
 
     old_stats = SegmentStats(history, segments)
     old_rendered_stats = None
