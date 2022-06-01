@@ -98,8 +98,6 @@ class SegmentTransitionAttemptStats(object):
   totalrealtime_p0: FrameCount
 
   def __init__(self, transition, history):
-    self.transition = transition
-
     attempts = history.history.get(transition.id, None)
 
     if attempts is not None:
@@ -202,11 +200,10 @@ class SegmentTimeTable(object):
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    seg_stats = self.tracker.current_attempt_stats
+    transitions = self.tracker.current_attempt.transitions
+    segment_stats = self.tracker.current_attempt_stats
 
-    for transition_stats in seg_stats.transition_stats:
-      transition = transition_stats.transition
-
+    for transition, transition_stats in zip(transitions, segment_stats.transition_stats):
       time_color = color_for_time(
           transition.time.totalrealtime,
           transition_stats.attempts.totalrealtimes)
@@ -228,15 +225,15 @@ class SegmentTimeTable(object):
       ])
 
     seg_time = self.tracker.current_attempt.time.totalrealtime
-    seg_p50_delta = seg_time - seg_stats.totalrealtime_p50
-    seg_p0_delta = seg_time - seg_stats.totalrealtime_p0
+    seg_p50_delta = seg_time - segment_stats.totalrealtime_p50
+    seg_p0_delta = seg_time - segment_stats.totalrealtime_p0
 
     color = color_for_time(
         self.tracker.current_attempt.time.totalrealtime,
-        seg_stats.seg_attempts.totalrealtimes)
+        segment_stats.seg_attempts.totalrealtimes)
     table.append([
       Cell('Segment'),
-      Cell(seg_stats.num_attempts, justify='right'),
+      Cell(segment_stats.num_attempts, justify='right'),
       Cell(self.tracker.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
       Cell(('+' if seg_p50_delta > FrameCount(0) else '') + str(seg_p50_delta), justify='right'),
       Cell(('+' if seg_p0_delta > FrameCount(0) else '') + str(seg_p0_delta), justify='right'),
