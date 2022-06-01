@@ -271,6 +271,7 @@ socket.addEventListener('message', function (event) {
     }
     segment_times_table.append({
       room_name: data.room.room_name,
+      attempts: data.room_in_segment.attempts,
       time: data.room_in_segment.time,
       median_time: data.room_in_segment.prev_median_time,
       best_time: data.room_in_segment.prev_best_time,
@@ -279,6 +280,7 @@ socket.addEventListener('message', function (event) {
     });
     current_segment_time_node = segment_times_table.append({
       room_name: 'Segment',
+      attempts: data.segment.attempts,
       time: data.segment.time,
       median_time: data.segment.prev_median_time,
       best_time: data.segment.prev_best_time,

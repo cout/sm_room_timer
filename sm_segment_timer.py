@@ -124,6 +124,7 @@ class SegmentAttemptStats(object):
   history: History
   transition_stats: list
   seg_attempts: list
+  num_attempts: int
   totalrealtime_p75: FrameCount
   totalrealtime_p50: FrameCount
   totalrealtime_p25: FrameCount
@@ -133,6 +134,7 @@ class SegmentAttemptStats(object):
     self.history = history
     self.transition_stats = [ ]
     self.seg_attempts = [ ]
+    self.num_attempts = 0
     self.totalrealtime_p75 = None
     self.totalrealtime_p50 = None
     self.totalrealtime_p25 = None
@@ -159,12 +161,14 @@ class SegmentTimeTracker(RoomTimeTracker):
       on_new_segment=lambda *args, **kwargs: None):
     RoomTimeTracker.__init__(
         self, history, transition_log, route,
-        on_new_room_time=on_new_room_time)
+        on_new_room_time=self.new_room_time)
 
     self.on_new_segment = on_new_segment
+    self.on_new_room_in_segment_time = on_new_room_time
 
     self.current_attempt = SegmentAttempt()
-    self.current_attempt_stats = None
+    self.current_attempt_old_stats = None
+    self.current_attempt_new_stats = None
     self.new_segment = True
 
   def transitioned(self, transition):
@@ -172,14 +176,25 @@ class SegmentTimeTracker(RoomTimeTracker):
     if self.new_segment and (not self.route.complete or transition.id in self.route):
       self.on_new_segment(transition)
       self.current_attempt = SegmentAttempt()
-      self.current_attempt_stats = SegmentAttemptStats(self.history)
+      self.current_attempt_old_stats = SegmentAttemptStats(self.history)
+      self.current_attempt_new_stats = SegmentAttemptStats(self.history)
       self.new_segment = False
 
-    if self.current_attempt is not None and self.current_attempt_stats is not None:
+    if self.current_attempt is not None and self.current_attempt_old_stats is not None:
       self.current_attempt.append(transition)
-      self.current_attempt_stats.append(transition, self.current_attempt)
+      self.current_attempt_old_stats.append(transition, self.current_attempt)
+      print("updated old stats")
 
     RoomTimeTracker.transitioned(self, transition)
+
+  def new_room_time(self, transition, attempts, tracker):
+    # TODO: Tracking new/old stats like this means we do double the work
+    # to find the segment in history
+    if self.current_attempt is not None and self.current_attempt_new_stats is not None:
+      self.current_attempt_new_stats.append(transition, self.current_attempt)
+      print("updated new stats")
+
+    self.on_new_room_in_segment_time(transition, attempts, tracker)
 
   def room_reset(self, reset_id):
     self.new_segment = True
@@ -201,22 +216,23 @@ class SegmentTimeTable(object):
     table.append(header)
 
     transitions = self.tracker.current_attempt.transitions
-    segment_stats = self.tracker.current_attempt_stats
+    old_segment_stats = self.tracker.current_attempt_old_stats
+    new_segment_stats = self.tracker.current_attempt_new_stats
 
-    for transition, transition_stats in zip(transitions, segment_stats.transition_stats):
+    for transition, old_transition_stats, new_transition_stats in zip(transitions, old_segment_stats.transition_stats, new_segment_stats.transition_stats):
       time_color = color_for_time(
           transition.time.totalrealtime,
-          transition_stats.attempts.totalrealtimes)
+          old_transition_stats.attempts.totalrealtimes)
 
       time_color = '38;5;%s' % time_color
       cell_color = None
 
-      room_p50_delta = transition.time.totalrealtime - transition_stats.totalrealtime_p50
-      room_p0_delta = transition.time.totalrealtime - transition_stats.totalrealtime_p0
+      room_p50_delta = transition.time.totalrealtime - old_transition_stats.totalrealtime_p50
+      room_p0_delta = transition.time.totalrealtime - old_transition_stats.totalrealtime_p0
 
       table.append([
         Cell(transition.id.room, color=cell_color, max_width=28),
-        Cell(transition_stats.num_attempts, color=cell_color, justify='right'),
+        Cell(new_transition_stats.num_attempts, color=cell_color, justify='right'),
         Cell(transition.time.totalrealtime, color=time_color, justify='right'),
         Cell(('+' if room_p50_delta > FrameCount(0) else '')
           + str(room_p50_delta), color=cell_color, justify='right'),
@@ -225,15 +241,15 @@ class SegmentTimeTable(object):
       ])
 
     seg_time = self.tracker.current_attempt.time.totalrealtime
-    seg_p50_delta = seg_time - segment_stats.totalrealtime_p50
-    seg_p0_delta = seg_time - segment_stats.totalrealtime_p0
+    seg_p50_delta = seg_time - old_segment_stats.totalrealtime_p50
+    seg_p0_delta = seg_time - old_segment_stats.totalrealtime_p0
 
     color = color_for_time(
         self.tracker.current_attempt.time.totalrealtime,
-        segment_stats.seg_attempts.totalrealtimes)
+        old_segment_stats.seg_attempts.totalrealtimes)
     table.append([
       Cell('Segment'),
-      Cell(segment_stats.num_attempts, justify='right'),
+      Cell(new_segment_stats.num_attempts, justify='right'),
       Cell(self.tracker.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
       Cell(('+' if seg_p50_delta > FrameCount(0) else '') + str(seg_p50_delta), justify='right'),
       Cell(('+' if seg_p0_delta > FrameCount(0) else '') + str(seg_p0_delta), justify='right'),
