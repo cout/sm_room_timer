@@ -178,9 +178,12 @@ class JsonEventGenerator(object):
       'segment': {
         'start': segment.start,
         'end': segment.end,
-        'time': encode_transition_time(segment_attempt.time),
+        'attempts': segment_stats.num_attempts,
+        'time': segment_attempt.time.totalrealtime,
         'median_time': segment_stats.p50,
         'best_time': segment_stats.p0,
+        'p25_time': segment_stats.p25,
+        'p75_time': segment_stats.p75,
       },
       'room_in_segment': {
         'attempts': room_in_segment_stats.num_attempts,

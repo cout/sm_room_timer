@@ -68,6 +68,7 @@ class Table {
     }
     this.elem.appendChild(row);
     row.scrollIntoView();
+    return row;
   }
 
   append_blank_line() {
@@ -191,6 +192,7 @@ socket.addEventListener('close', function (event) {
 });
 
 var num_segments = 0;
+var current_segment_time_node = undefined;
 
 socket.addEventListener('message', function (event) {
   console.error(event.data);
@@ -256,9 +258,16 @@ socket.addEventListener('message', function (event) {
     });
     room_times_table.append_blank_line();
 
+    if (current_segment_time_node) {
+      current_segment_time_node.parentNode.removeChild(current_segment_time_node);
+    }
     segment_times_table.append({
       room_name: data.room.room_name,
       ...data.room_in_segment,
+    });
+    current_segment_time_node = segment_times_table.append({
+      room_name: 'Segment',
+      ...data.segment,
     });
   } else if (type == 'new_segment') {
     console.error('new segment')
@@ -266,5 +275,6 @@ socket.addEventListener('message', function (event) {
       segment_times_table.append_blank_line();
     }
     num_segments += 1;
+    current_segment_time_node = undefined;
   }
 });

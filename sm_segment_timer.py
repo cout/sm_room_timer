@@ -151,7 +151,9 @@ class SegmentAttemptStats(object):
     historical_times = self.seg_attempts.totalrealtimes
 
     self.num_attempts = len(self.seg_attempts)
+    self.p75 = historical_times.percentile(75) if len(historical_times.values()) > 0 else FrameCount(0)
     self.p50 = historical_times.median() if len(historical_times.values()) > 0 else FrameCount(0)
+    self.p25 = historical_times.percentile(25) if len(historical_times.values()) > 0 else FrameCount(0)
     self.p0 = historical_times.best() if len(historical_times.values()) > 0 else FrameCount(0)
     self.p50_delta = attempt_time - self.p50
     self.p0_delta = attempt_time - self.p0
