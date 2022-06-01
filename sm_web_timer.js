@@ -67,8 +67,11 @@ class Table {
       const cell = document.createElement('td');
       const text = document.createTextNode(get(col, obj) || '');
       cell.appendChild(text);
-      if (col.css_class) {
-        cell.classList.add(col.css_class(obj));
+      if (col.cls) {
+        col.cls.forEach((cls) => {
+          cls = (typeof cls === 'function') ? cls(obj) : cls;
+          cell.classList.add(cls);
+        });
       }
       row.appendChild(cell);
     }
@@ -136,7 +139,7 @@ const socket = new WebSocket(`ws://localhost:${port}`)
 // },
 // "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
-const time_color = function(o) {
+const tc = function(o) {
   if (o.best_time == 0 || o.time <= o.best_time) {
     return 'gold';
   } else if (o.time <= o.p25_time) {
@@ -151,26 +154,25 @@ const time_color = function(o) {
 };
 
 const room_times_columns = [
-  { label: "Room", get: o => o.room_name },
-  { label: "#", get: o => o.attempts },
-  { label: "Type", get: o => o.type },
-  { label: "Time", get: o => fc(o.time), css_class: o => time_color(o) },
-  { label: "Avg", get: o => fc(o.avg_time) },
-  { label: "Median", get: o => fc(o.median_time) },
-  { label: "Best", get: o => fc(o.best_time) },
-  // { label: "P25", get: o => o.p25_time },
-  // { label: "P75", get: o => o.p75_time },
+  { label: "Room",   get: o => o.room_name                            },
+  { label: "#",      get: o => o.attempts                             },
+  { label: "Type",   get: o => o.type,                                },
+  { label: "Time",   get: o => fc(o.time),        cls: [ 'time', tc ] },
+  { label: "Avg",    get: o => fc(o.avg_time),    cls: [ 'time' ]     },
+  { label: "Median", get: o => fc(o.median_time), cls: [ 'time' ]     },
+  { label: "Best",   get: o => fc(o.best_time),   cls: [ 'time' ]     },
+  // TODO: P25, P75
 ];
 const room_times_table = new Table(room_times_columns);
 
 const segment_times_columns = [
-  { label: "Room", get: o => o.room_name },
-  { label: "#", get: o => o.attempts },
-  { label: "Time", get: o => fc(o.time), css_class: o => time_color(o) },
-  { label: "Median", get: o => fc(o.median_time) },
-  { label: "\u00b1Median", get: o => fc_delta(o.time, o.median_time) },
-  { label: "Best", get: o => fc(o.best_time) },
-  { label: "\u00b1Best", get: o => fc_delta(o.time, o.best_time) },
+  { label: "Room",         get: o => o.room_name                                          },
+  { label: "#",            get: o => o.attempts                                           },
+  { label: "Time",         get: o => fc(o.time),                      cls: [ 'time', tc ] },
+  { label: "Median",       get: o => fc(o.median_time),               cls: [ 'time' ]     },
+  { label: "\u00b1Median", get: o => fc_delta(o.time, o.median_time), cls: [ 'time' ]     },
+  { label: "Best",         get: o => fc(o.best_time),                 cls: [ 'time' ]     },
+  { label: "\u00b1Best",   get: o => fc_delta(o.time, o.best_time),   cls: [ 'time' ]     },
 ];
 const segment_times_table = new Table(segment_times_columns);
 
