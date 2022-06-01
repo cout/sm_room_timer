@@ -93,12 +93,10 @@ class SegmentTransitionAttemptStats(object):
   attempts: object
   num_attempts: int
   time: FrameCount
-  p75: FrameCount
-  p50: FrameCount
-  p25: FrameCount
-  p0: FrameCount
-  p50_delta: FrameCount
-  p0_delta: FrameCount
+  totalrealtime_p75: FrameCount
+  totalrealtime_p50: FrameCount
+  totalrealtime_p25: FrameCount
+  totalrealtime_p0: FrameCount
 
   def __init__(self, transition, history):
     self.transition = transition
@@ -109,21 +107,17 @@ class SegmentTransitionAttemptStats(object):
     if attempts is not None:
       self.attempts = attempts
       self.num_attempts = len(attempts)
-      self.p75 = attempts.totalrealtimes.percentile(75)
-      self.p50 = attempts.totalrealtimes.median()
-      self.p25 = attempts.totalrealtimes.percentile(25)
-      self.p0 = attempts.totalrealtimes.best()
-      self.p50_delta = self.time - self.p50
-      self.p0_delta = self.time - self.p0
+      self.totalrealtime_p75 = attempts.totalrealtimes.percentile(75)
+      self.totalrealtime_p50 = attempts.totalrealtimes.median()
+      self.totalrealtime_p25 = attempts.totalrealtimes.percentile(25)
+      self.totalrealtime_p0 = attempts.totalrealtimes.best()
     else:
       self.attempts = Attempts()
       self.num_attempts = 0
-      self.p75 = FrameCount(0)
-      self.p50 = FrameCount(0)
-      self.p25 = FrameCount(0)
-      self.p0 = FrameCount(0)
-      self.p50_delta = FrameCount(0)
-      self.p0_delta = FrameCount(0)
+      self.totalrealtime_p75 = FrameCount(0)
+      self.totalrealtime_p50 = FrameCount(0)
+      self.totalrealtime_p25 = FrameCount(0)
+      self.totalrealtime_p0 = FrameCount(0)
 
 @dataclass
 class SegmentAttemptStats(object):
@@ -134,11 +128,19 @@ class SegmentAttemptStats(object):
   history: History
   transitions: list
   seg_attempts: list
+  totalrealtime_p75: FrameCount
+  totalrealtime_p50: FrameCount
+  totalrealtime_p25: FrameCount
+  totalrealtime_p0: FrameCount
 
   def __init__(self, history):
     self.history = history
     self.transitions = [ ]
     self.seg_attempts = [ ]
+    self.totalrealtime_p75 = None
+    self.totalrealtime_p50 = None
+    self.totalrealtime_p25 = None
+    self.totalrealtime_p0 = None
 
   def append(self, transition, current_attempt):
     self.transitions.append(
@@ -151,12 +153,10 @@ class SegmentAttemptStats(object):
     historical_times = self.seg_attempts.totalrealtimes
 
     self.num_attempts = len(self.seg_attempts)
-    self.p75 = historical_times.percentile(75) if len(historical_times.values()) > 0 else FrameCount(0)
-    self.p50 = historical_times.median() if len(historical_times.values()) > 0 else FrameCount(0)
-    self.p25 = historical_times.percentile(25) if len(historical_times.values()) > 0 else FrameCount(0)
-    self.p0 = historical_times.best() if len(historical_times.values()) > 0 else FrameCount(0)
-    self.p50_delta = attempt_time - self.p50
-    self.p0_delta = attempt_time - self.p0
+    self.totalrealtime_p75 = historical_times.percentile(75) if len(historical_times.values()) > 0 else FrameCount(0)
+    self.totalrealtime_p50 = historical_times.median() if len(historical_times.values()) > 0 else FrameCount(0)
+    self.totalrealtime_p25 = historical_times.percentile(25) if len(historical_times.values()) > 0 else FrameCount(0)
+    self.totalrealtime_p0 = historical_times.best() if len(historical_times.values()) > 0 else FrameCount(0)
 
 class SegmentTimeTracker(RoomTimeTracker):
   def __init__(self, history, transition_log, route,
@@ -205,9 +205,9 @@ class SegmentTimeTable(object):
     header = [ Cell(s, underline) for s in ( 'Room', '#', 'Time', '±Median', '±Best' ) ]
     table.append(header)
 
-    stats = self.tracker.current_attempt_stats
+    seg_stats = self.tracker.current_attempt_stats
 
-    for transition_stats in stats.transitions:
+    for transition_stats in seg_stats.transitions:
       transition = transition_stats.transition
 
       time_color = color_for_time(
@@ -217,25 +217,32 @@ class SegmentTimeTable(object):
       time_color = '38;5;%s' % time_color
       cell_color = None
 
+      room_p50_delta = transition.time.totalrealtime - transition_stats.totalrealtime_p50
+      room_p0_delta = transition.time.totalrealtime - transition_stats.totalrealtime_p0
+
       table.append([
         Cell(transition.id.room, color=cell_color, max_width=28),
         Cell(transition_stats.num_attempts, color=cell_color, justify='right'),
         Cell(transition.time.totalrealtime, color=time_color, justify='right'),
-        Cell(('+' if transition_stats.p50_delta > FrameCount(0) else '')
-          + str(transition_stats.p50_delta), color=cell_color, justify='right'),
-        Cell(('+' if transition_stats.p0_delta > FrameCount(0) else '')
-          + str(transition_stats.p0_delta), color=cell_color, justify='right'),
+        Cell(('+' if room_p50_delta > FrameCount(0) else '')
+          + str(room_p50_delta), color=cell_color, justify='right'),
+        Cell(('+' if room_p0_delta > FrameCount(0) else '')
+          + str(room_p0_delta), color=cell_color, justify='right'),
       ])
+
+    seg_time = self.tracker.current_attempt.time.totalrealtime
+    seg_p50_delta = seg_time - seg_stats.totalrealtime_p50
+    seg_p0_delta = seg_time - seg_stats.totalrealtime_p0
 
     color = color_for_time(
         self.tracker.current_attempt.time.totalrealtime,
-        stats.seg_attempts.totalrealtimes)
+        seg_stats.seg_attempts.totalrealtimes)
     table.append([
       Cell('Segment'),
-      Cell(stats.num_attempts, justify='right'),
+      Cell(seg_stats.num_attempts, justify='right'),
       Cell(self.tracker.current_attempt.time.totalrealtime, '38;5;%s' % color, justify='right'),
-      Cell(('+' if stats.p50_delta > FrameCount(0) else '') + str(stats.p50_delta), justify='right'),
-      Cell(('+' if stats.p0_delta > FrameCount(0) else '') + str(stats.p0_delta), justify='right'),
+      Cell(('+' if seg_p50_delta > FrameCount(0) else '') + str(seg_p50_delta), justify='right'),
+      Cell(('+' if seg_p0_delta > FrameCount(0) else '') + str(seg_p0_delta), justify='right'),
     ])
 
     return table.render()
