@@ -46,4 +46,7 @@ class FrameCountList(object):
     return self._values
 
   def __repr__(self):
-    return 'avg %s, median %s, best %s' % (self.mean(), self.median(), self.best())
+    mean = self.mean() if len(self.values()) > 0 else "NaN"
+    median = self.median() if len(self.values()) > 0 else "NaN"
+    best = self.best() if len(self.values()) > 0 else "NaN"
+    return 'avg %s, median %s, best %s' % (mean, median, best)
