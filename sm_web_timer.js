@@ -137,7 +137,7 @@ const socket = new WebSocket(`ws://localhost:${port}`)
 // "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
 const time_color = function(o) {
-  if (o.attempts <= 1 || o.time <= o.best_time) {
+  if (o.best_time == 0 || o.time <= o.best_time) {
     return 'gold';
   } else if (o.time <= o.p25_time) {
     return 'green';
@@ -148,7 +148,7 @@ const time_color = function(o) {
   } else {
     return 'red';
   }
-}
+};
 
 const room_times_columns = [
   { label: "Room", get: o => o.room_name },
