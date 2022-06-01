@@ -161,8 +161,10 @@ const segment_times_columns = [
   { label: "Room", get: o => o.room_name },
   { label: "#", get: o => o.attempts },
   { label: "Time", get: o => fc(o.time), css_class: o => time_color(o) },
-  { label: "\u00b1Median", get: o => fc(o.time - o.median_time) },
-  { label: "\u00b1Best", get: o => fc(o.time - o.best_time) },
+  // { label: "Median", get: o => fc(o.median_time) },
+  { label: "\u00b1Median", get: o => fc(o.median_time == 0 ? -o.time : o.time - o.median_time) },
+  // { label: "Best", get: o => fc(o.best_time) },
+  { label: "\u00b1Best", get: o => fc(o.best_time == 0 ? -o.time : o.time - o.best_time) },
 ];
 const segment_times_table = new Table(segment_times_columns);
 
