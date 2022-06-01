@@ -161,7 +161,7 @@ class JsonEventGenerator(object):
     segment_stats = tracker.current_attempt_stats
     segment = segment_attempt.segment
     room_in_segment = segment_attempt.transitions[-1]
-    room_in_segment_stats = segment_stats.transitions[-1]
+    room_in_segment_stats = segment_stats.transition_stats[-1]
 
     # TODO: I'm too lazy to figure out how to get TransitionTime (which
     # is a NamedTuple) correctly encoded without this hack.

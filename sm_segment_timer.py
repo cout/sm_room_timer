@@ -124,7 +124,7 @@ class SegmentAttemptStats(object):
   """
 
   history: History
-  transitions: list
+  transition_stats: list
   seg_attempts: list
   totalrealtime_p75: FrameCount
   totalrealtime_p50: FrameCount
@@ -133,7 +133,7 @@ class SegmentAttemptStats(object):
 
   def __init__(self, history):
     self.history = history
-    self.transitions = [ ]
+    self.transition_stats = [ ]
     self.seg_attempts = [ ]
     self.totalrealtime_p75 = None
     self.totalrealtime_p50 = None
@@ -141,7 +141,7 @@ class SegmentAttemptStats(object):
     self.totalrealtime_p0 = None
 
   def append(self, transition, current_attempt):
-    self.transitions.append(
+    self.transition_stats.append(
         SegmentTransitionAttemptStats(transition, self.history))
 
     self.seg_attempts = find_segment_in_history(
@@ -204,7 +204,7 @@ class SegmentTimeTable(object):
 
     seg_stats = self.tracker.current_attempt_stats
 
-    for transition_stats in seg_stats.transitions:
+    for transition_stats in seg_stats.transition_stats:
       transition = transition_stats.transition
 
       time_color = color_for_time(
