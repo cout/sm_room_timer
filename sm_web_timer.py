@@ -8,22 +8,20 @@ from transition_log import read_transition_log, FileTransitionLog, NullTransitio
 from history import History
 from sm_room_timer import backup_and_rebuild, ThreadedStateReader
 from sm_segment_timer import SegmentTimerTerminalFrontend, SegmentTimeTracker, SegmentTimer
-
 from segment import Segment
 from transition import TransitionId, TransitionTime
 from rooms import Room
 from doors import Door
 from frame_count import FrameCount
 from frame_count_list import FrameCountList
+from websocket_server import WebsocketServer
 
 import argparse
 import time
 import sys
 import json
 import os
-import asyncio
-import websockets
-from queue import Queue
+
 from threading import Thread
 
 # TODO: Don't bother importing these with --headless
@@ -202,66 +200,6 @@ class JsonEventGenerator(object):
     self.emit('new_segment', {
       'start': encode_transition_id(transition.id),
     })
-
-class WebsocketServerSession(object):
-  def __init__(self, sock, server):
-    self.sock = sock
-    self.server = server
-
-class WebsocketServer(object):
-  class SHUTDOWN: pass
-
-  def __init__(self, port):
-    self.port = port
-    self.sessions = set()
-    self.loop = None
-    self.broadcast_queue = None
-    self.thread = Thread(target=self.run)
-
-  def start(self):
-    self.loop = None
-    self.thread.start()
-    while self.loop is None:
-      pass
-
-  def stop(self):
-    self.broadcast(WebsocketServer.SHUTDOWN)
-    self.thread.join()
-
-  def broadcast(self, event):
-    def broadcast():
-      self.broadcast_queue.put_nowait(event)
-    self.loop.call_soon_threadsafe(broadcast)
-
-  def is_alive(self):
-    return self.thread.is_alive()
-
-  def run(self):
-    self.loop = asyncio.new_event_loop()
-    try:
-      self.loop.run_until_complete(self._run())
-    finally:
-      self.loop.stop()
-
-  async def _run(self):
-    self.broadcast_queue = asyncio.Queue()
-    async with websockets.serve(self.serve, 'localhost', self.port):
-      while True:
-        msg = await self.broadcast_queue.get()
-        if msg is WebsocketServer.SHUTDOWN: break
-        # TODO: a slow socket can slow everyone down
-        for session in self.sessions:
-          await session.sock.send(msg)
-
-  async def serve(self, sock, uri=None):
-    session = WebsocketServerSession(sock, self)
-    self.sessions.add(session)
-    try:
-      # async for message in session.sock:
-        # pass
-      await session.sock.wait_closed()
-    finally:
-      self.sessions.remove(session)
 
 class TimerThread(object):
   def __init__(self, history, rooms, doors, transition_log, route,
