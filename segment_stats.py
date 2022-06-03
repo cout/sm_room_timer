@@ -185,16 +185,16 @@ def main():
   if args.splits_filename is not None:
     split_names.extend(read_split_names_from_file(args.splits_filename))
 
-  segments = Splits.from_segment_and_split_names(
+  split_segments = Splits.from_segment_and_split_names(
       args.segments,
       split_names,
       rooms,
       route)
 
   if not args.brief:
-    segment_history = build_segment_history(segments, history)
-    print_room_stats(history, segment_history, segments)
-  print_segment_stats(history, segments)
+    segment_history = build_segment_history(split_segments, history)
+    print_room_stats(history, segment_history, split_segments)
+  print_segment_stats(history, split_segments)
 
 if __name__ == '__main__':
   main()

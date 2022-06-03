@@ -126,17 +126,17 @@ def main():
     if args.splits_filename is not None:
       split_names.extend(read_split_names_from_file(args.splits_filename))
 
-    segments = Splits.from_segment_and_split_names(
+    split_segments = Splits.from_segment_and_split_names(
         args.segments,
         split_names,
         rooms,
         route)
 
-    old_stats = SegmentStats(history, segments)
+    old_stats = SegmentStats(history, split_segments)
     old_rendered_stats = None
 
     while True:
-      stats = SegmentStats(history, segments)
+      stats = SegmentStats(history, split_segments)
       rendered_stats = render_segment_stats(old_stats, stats)
       if rendered_stats != old_rendered_stats:
         print()
