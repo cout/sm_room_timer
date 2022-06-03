@@ -1,6 +1,6 @@
 import asyncio
 import websockets
-from queue import Queue
+import queue
 from threading import Thread
 
 class WebsocketServerSession(object):
@@ -9,13 +9,19 @@ class WebsocketServerSession(object):
     self.server = server
 
 class WebsocketServer(object):
+  # Commands
   class SHUTDOWN: pass
+
+  # Events
+  class CONNECTED: pass
+  class DISCONNECTED: pass
 
   def __init__(self, port):
     self.port = port
     self.sessions = set()
     self.loop = None
     self.broadcast_queue = None
+    self.event_queue = queue.Queue()
     self.thread = Thread(target=self.run)
 
   def start(self):
@@ -32,6 +38,14 @@ class WebsocketServer(object):
     def broadcast():
       self.broadcast_queue.put_nowait(event)
     self.loop.call_soon_threadsafe(broadcast)
+
+  def get_event_nowait(self):
+    try:
+      if self.event_queue.empty():
+        return None
+      return self.event_queue.get_nowait()
+    except queue.Empty:
+      return None
 
   def is_alive(self):
     return self.thread.is_alive()
@@ -56,10 +70,11 @@ class WebsocketServer(object):
   async def serve(self, sock, uri=None):
     session = WebsocketServerSession(sock, self)
     self.sessions.add(session)
+    self.event_queue.put_nowait((WebsocketServer.CONNECTED, session))
     try:
       # async for message in session.sock:
         # pass
       await session.sock.wait_closed()
     finally:
+      self.event_queue.put_nowait((WebsocketServer.DISCONNECTED, session))
       self.sessions.remove(session)
-

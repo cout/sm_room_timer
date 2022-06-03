@@ -132,6 +132,12 @@ class JsonEventGenerator(object):
     s = json.dumps([ type, *args ], cls=JSONEncoder)
     self.on_event(s)
 
+  def handle_connected(self, session):
+    print("connected", session)
+
+  def handle_disconnected(self, session):
+    print("disconnected", session)
+
   def log(self, *args):
     self.emit('log', *args)
     self.log_debug(*args)
@@ -247,10 +253,20 @@ class TimerThread(object):
 
     try:
       while not self.done and self.state_reader.is_alive() and self.server.is_alive():
+        event = self.server.get_event_nowait()
+        if event is not None:
+          self.handle_server_event(event)
         self.timer.poll()
 
     finally:
       self.state_reader.stop()
+
+  def handle_server_event(self, event):
+    what, *payload = event
+    if what == WebsocketServer.CONNECTED:
+      self.json_generator.handle_connected(*payload)
+    elif what == WebsocketServer.DISCONECTED:
+      self.json_generator.handle_disconnected(*payload)
 
 class Browser(object):
   def __init__(self, argv, url):
