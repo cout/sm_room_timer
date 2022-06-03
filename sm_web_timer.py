@@ -344,6 +344,18 @@ def main():
     debug_log = None
     verbose = args.verbose
 
+  if args.filename is not None and os.path.exists(args.filename):
+    history = read_transition_log(args.filename, rooms, doors)
+  else:
+    history = History()
+
+  for tid in history:
+    route.record(tid)
+
+    if route.complete: break
+
+  print('Route is %s' % ('complete' if route.complete else 'incomplete'))
+
   shutdown = [ ]
 
   try:
@@ -354,17 +366,6 @@ def main():
     json_generator = JsonEventGenerator(
         verbose=verbose, debug_log=debug_log,
         on_event=server.broadcast)
-
-    if args.filename is not None and os.path.exists(args.filename):
-      history = read_transition_log(args.filename, rooms, doors)
-    else:
-      history = History()
-
-    for tid in history:
-      route.record(tid)
-
-      if route.complete: break 
-    print('Route is %s' % ('complete' if route.complete else 'incomplete'))
 
     transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
 
