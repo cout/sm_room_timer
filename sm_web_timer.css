@@ -54,7 +54,11 @@ table tr:nth-child(even) th, table tr:nth-child(even) td {
   color: #e80000;
 }
 
-.time {
+td.time {
+  text-align: right;
+}
+
+td.numeric {
   text-align: right;
 }
 

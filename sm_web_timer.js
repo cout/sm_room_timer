@@ -160,8 +160,8 @@ const tc = function(o) {
 };
 
 const room_times_columns = [
-  { label: "Room",   get: o => o.room_name                            },
-  { label: "#",      get: o => o.attempts                             },
+  { label: "Room",   get: o => o.room_name,                           },
+  { label: "#",      get: o => o.attempts,        cls: [ 'numeric' ]  },
   { label: "Type",   get: o => o.type,                                },
   { label: "Time",   get: o => fc(o.time),        cls: [ 'time', tc ] },
   { label: "Avg",    get: o => fc(o.avg_time),    cls: [ 'time' ]     },
@@ -172,8 +172,8 @@ const room_times_columns = [
 const room_times_table = new Table(room_times_columns);
 
 const segment_times_columns = [
-  { label: "Room",         get: o => o.room_name                                          },
-  { label: "#",            get: o => o.attempts                                           },
+  { label: "Room",         get: o => o.room_name,                                         },
+  { label: "#",            get: o => o.attempts,                      cls: [ 'numeric' ]  },
   { label: "Time",         get: o => fc(o.time),                      cls: [ 'time', tc ] },
   { label: "Median",       get: o => fc(o.median_time),               cls: [ 'time' ]     },
   { label: "\u00b1Median", get: o => fc_delta(o.time, o.median_time), cls: [ 'time' ]     },
@@ -183,12 +183,12 @@ const segment_times_columns = [
 const segment_times_table = new Table(segment_times_columns);
 
 const segment_stats_columns = [
-  { label: "Segment",      get: o => o.brief_name                                          },
-  { label: "#",            get: o => o.success_count                                       },
-  { label: "%",            get: o => `${Math.round(o.success_rate * 100)}%`                },
-  { label: "Median",       get: o => fc(o.median_time),                    cls: [ 'time' ] },
-  { label: "\u00b1Best",   get: o => fc_delta(o.median_time, o.best_time), cls: [ 'time' ] },
-  { label: "\u00b1SOB",    get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time' ] },
+  { label: "Segment",    get: o => o.brief_name,                                              },
+  { label: "#",          get: o => o.success_count,                        cls: [ 'numeric' ] },
+  { label: "%",          get: o => `${Math.round(o.success_rate * 100)}%`, cls: [ 'numeric' ] },
+  { label: "Median",     get: o => fc(o.median_time),                      cls: [ 'time' ]    },
+  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time),   cls: [ 'time' ]    },
+  { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time' ] },
 ];
 const segment_stats_table = new Table(segment_stats_columns);
 
