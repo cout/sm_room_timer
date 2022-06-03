@@ -8,6 +8,9 @@ from transition_log import read_transition_log, FileTransitionLog, NullTransitio
 from history import History
 from sm_room_timer import backup_and_rebuild, ThreadedStateReader
 from sm_segment_timer import SegmentTimerTerminalFrontend, SegmentTimeTracker, SegmentTimer
+from segment_stats import SegmentStats
+from splits import Splits, read_split_names_from_file
+
 from segment import Segment
 from transition import TransitionId, TransitionTime
 from rooms import Room
@@ -207,15 +210,35 @@ class JsonEventGenerator(object):
       'start': encode_transition_id(transition.id),
     })
 
+  def send_segment_stats(self, session, history, split_segments):
+    # TODO: This is very slow for a large file, so we don't want
+    # websockets conncting/disconnecting often
+    stats = SegmentStats(history, split_segments)
+
+    segments = [ {
+        'name': seg.segment.name,
+        'brief_name': seg.segment.brief_name,
+        'success_count': seg.segment_success_count,
+        'rate': seg.rate,
+        'median': seg.p50,
+        'best': seg.p0,
+        'sum_of_best': seg.sob,
+    } for seg in stats.segments ]
+
+    self.emit('segment_stats', {
+      'segments': segments,
+    })
+
 class TimerThread(object):
   def __init__(self, history, rooms, doors, transition_log, route,
-      json_generator, server, usb2snes):
+      json_generator, server, usb2snes, split_segments):
 
     self.history = history
     self.transition_log = transition_log
     self.route = route
     self.json_generator = json_generator
     self.server = server
+    self.split_segments = split_segments
 
     self.tracker = SegmentTimeTracker(
         history, transition_log, route,
@@ -264,9 +287,12 @@ class TimerThread(object):
   def handle_server_event(self, event):
     what, *payload = event
     if what == WebsocketServer.CONNECTED:
-      self.json_generator.handle_connected(*payload)
-    elif what == WebsocketServer.DISCONECTED:
-      self.json_generator.handle_disconnected(*payload)
+      session, = payload
+      if self.split_segments is not None and len(self.split_segments) > 0:
+        self.json_generator.send_segment_stats(
+            session,
+            self.history,
+            self.split_segments)
 
 class Browser(object):
   def __init__(self, argv, url):
@@ -312,6 +338,9 @@ def main():
   parser.add_argument('-f', '--file', dest='filename', default=None)
   parser.add_argument('--rooms', dest='rooms_filename', default='rooms.json')
   parser.add_argument('--doors', dest='doors_filename', default='doors.json')
+  parser.add_argument('--segment', dest='segments', action='append', default=[])
+  parser.add_argument('--split', dest='splits', action='append', default=[])
+  parser.add_argument('--splits', dest='splits_filename')
   parser.add_argument('--debug', dest='debug', action='store_true')
   parser.add_argument('--debug-log', dest='debug_log_filename')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
@@ -325,14 +354,6 @@ def main():
 
   rooms = Rooms.read(args.rooms_filename)
   doors = Doors.read(args.doors_filename, rooms)
-  route = Route() if args.route else DummyRoute()
-
-  if args.filename and need_rebuild(args.filename):
-    if not args.rebuild:
-      print("File needs to be rebuilt before it can be used; run rebuild_history.py or pass --rebuild to this script.")
-      sys.exit(1)
-
-    backup_and_rebuild(rooms, doors, args.filename)
 
   if args.debug_log_filename:
     debug_log = open(args.debug_log_filename, 'a')
@@ -349,12 +370,35 @@ def main():
   else:
     history = History()
 
+  if args.route or args.splits_filename or args.splits or args.segments:
+    route = Route()
+  else:
+    route = DummyRoute()
+
   for tid in history:
     route.record(tid)
 
     if route.complete: break
 
   print('Route is %s' % ('complete' if route.complete else 'incomplete'))
+
+  split_names = args.splits
+
+  if args.splits_filename is not None:
+    split_names.extend(read_split_names_from_file(args.splits_filename))
+
+  split_segments = Splits.from_segment_and_split_names(
+      args.segments,
+      split_names,
+      rooms,
+      route)
+
+  if args.filename and need_rebuild(args.filename):
+    if not args.rebuild:
+      print("File needs to be rebuilt before it can be used; run rebuild_history.py or pass --rebuild to this script.")
+      sys.exit(1)
+
+    backup_and_rebuild(rooms, doors, args.filename)
 
   shutdown = [ ]
 
@@ -364,7 +408,8 @@ def main():
     shutdown.append(server.stop)
 
     json_generator = JsonEventGenerator(
-        verbose=verbose, debug_log=debug_log,
+        verbose=verbose,
+        debug_log=debug_log,
         on_event=server.broadcast)
 
     transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
@@ -375,7 +420,8 @@ def main():
         on_new_segment=json_generator.new_segment)
 
     timer_thread = TimerThread(history, rooms, doors, transition_log,
-        route, json_generator, server, usb2snes=args.usb2snes)
+        route, json_generator, server, usb2snes=args.usb2snes,
+        split_segments=split_segments)
     timer_thread.start()
     shutdown.append(timer_thread.stop)
 

@@ -66,6 +66,9 @@ class DummyRoute(object):
   def __init__(self):
     self.complete = False
 
+  def __len__(self):
+    return 0
+
   def record(self, tid):
     pass
 

@@ -30,15 +30,16 @@ def segment_from_name(name, rooms, route):
 
 def segments_from_splits(route, splits):
   segments = [ ]
-  start_split = False
-  segment_start = route[0]
-  for tid in route:
-    if start_split:
-      segment_start = tid
-      start_split = False
-    if tid in splits:
-      segments.append(Segment.from_route(route, segment_start, tid))
-      start_split = True
+  if len(route) > 0:
+    start_split = False
+    segment_start = route[0]
+    for tid in route:
+      if start_split:
+        segment_start = tid
+        start_split = False
+      if tid in splits:
+        segments.append(Segment.from_route(route, segment_start, tid))
+        start_split = True
   return segments
 
 def read_split_names_from_file(filename):
