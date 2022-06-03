@@ -219,10 +219,10 @@ class JsonEventGenerator(object):
         'name': seg.segment.name,
         'brief_name': seg.segment.brief_name,
         'success_count': seg.segment_success_count,
-        'rate': seg.rate,
-        'median': seg.p50,
-        'best': seg.p0,
-        'sum_of_best': seg.sob,
+        'success_rate': seg.rate,
+        'median_time': seg.p50,
+        'best_time': seg.p0,
+        'sum_of_best_times': seg.sob,
     } for seg in stats.segments ]
 
     self.emit('segment_stats', {

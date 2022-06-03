@@ -182,8 +182,19 @@ const segment_times_columns = [
 ];
 const segment_times_table = new Table(segment_times_columns);
 
+const segment_stats_columns = [
+  { label: "Segment",      get: o => o.brief_name                                          },
+  { label: "#",            get: o => o.success_count                                       },
+  { label: "%",            get: o => `${Math.round(o.success_rate * 100)}%`                },
+  { label: "Median",       get: o => fc(o.median_time),                    cls: [ 'time' ] },
+  { label: "\u00b1Best",   get: o => fc_delta(o.median_time, o.best_time), cls: [ 'time' ] },
+  { label: "\u00b1SOB",    get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time' ] },
+];
+const segment_stats_table = new Table(segment_stats_columns);
+
 document.body.appendChild(room_times_table.elem);
 document.body.appendChild(segment_times_table.elem);
+document.body.appendChild(segment_stats_table.elem);
 
 const help_box = new Widget(document.getElementById("help"));
 
@@ -310,5 +321,12 @@ socket.addEventListener('message', function (event) {
     }
     num_segments += 1;
     current_segment_time_node = undefined;
+  } else if (type == 'segment_stats') {
+    console.error(data.segments)
+    data.segments.forEach((segment) => {
+      console.error(segment)
+      segment_stats_table.append(segment)
+    });
+    segment_stats_table.show();
   }
 });
