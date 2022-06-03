@@ -12,16 +12,16 @@ const fc = function(count) {
   }
 
   sign = count < 0 ? '-' : '';
-  count = Math.abs(count);
+  count = Math.round(Math.abs(count));
   if (count / 60 < 60) {
-    secs = Math.round(count / 60);
+    secs = Math.floor(count / 60);
     frames = count % 60;
     return `${sign}${secs}'${frames.toString().padStart(2, '0')}`;
   } else {
-    mins = Math.round(count / 3600);
-    secs = Math.round(count / 60);
-    frames = Math.round((count / 60) % 60);
-    return `${sign}${mins}${secs}'${frames.toString().padStart(2, '0')}`;
+    mins = Math.floor(count / 3600);
+    secs = Math.floor(count / 60) % 60;
+    frames = count % 60;
+    return `${sign}${mins}:${secs}'${frames.toString().padStart(2, '0')}`;
   }
 };
 
