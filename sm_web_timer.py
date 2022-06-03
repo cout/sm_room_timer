@@ -203,12 +203,17 @@ class JsonEventGenerator(object):
       'start': encode_transition_id(transition.id),
     })
 
+class WebsocketServerSession(object):
+  def __init__(self, sock, server):
+    self.sock = sock
+    self.server = server
+
 class WebsocketServer(object):
   class SHUTDOWN: pass
 
   def __init__(self, port):
     self.port = port
-    self.sockets = set()
+    self.sessions = set()
     self.loop = None
     self.broadcast_queue = None
     self.thread = Thread(target=self.run)
@@ -245,17 +250,18 @@ class WebsocketServer(object):
         msg = await self.broadcast_queue.get()
         if msg is WebsocketServer.SHUTDOWN: break
         # TODO: a slow socket can slow everyone down
-        for sock in self.sockets:
-          await sock.send(msg)
+        for session in self.sessions:
+          await session.sock.send(msg)
 
   async def serve(self, sock, uri=None):
-    self.sockets.add(sock)
+    session = WebsocketServerSession(sock, self)
+    self.sessions.add(session)
     try:
-      # async for message in sock:
+      # async for message in session.sock:
         # pass
-      await sock.wait_closed()
+      await session.sock.wait_closed()
     finally:
-      self.sockets.remove(sock)
+      self.sessions.remove(session)
 
 class TimerThread(object):
   def __init__(self, history, rooms, doors, transition_log, route,
