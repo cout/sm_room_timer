@@ -112,6 +112,12 @@ td.numeric {
 }
 
 .hide-scrollbars: {
+  /* TODO:
+   *
+   * This fails to hide scrollbars in firefox; apparently I must set
+   * scrollbar-width on .top-panel and .bottom-panel instead.  I'm not
+   * sure why?
+   */
   scrollbar-width: none;
 }
 
