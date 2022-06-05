@@ -1,3 +1,5 @@
+'use strict';
+
 const get = function(col, obj) {
   try {
     return col.get(obj);
@@ -11,7 +13,7 @@ const fc = function(count) {
     return '';
   }
 
-  sign = count < 0 ? '-' : '';
+  const sign = count < 0 ? '-' : '';
   count = Math.round(Math.abs(count));
   if (count / 60 < 60) {
     secs = Math.floor(count / 60);
