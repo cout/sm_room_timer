@@ -30,6 +30,10 @@ table tr:nth-child(odd) th, table tr:nth-child(odd) td {
 table tr:nth-child(even) th, table tr:nth-child(even) td {
 }
 
+thead th {
+  text-align: left;
+}
+
 .hidden {
   display: none !important;
 }
@@ -52,6 +56,14 @@ table tr:nth-child(even) th, table tr:nth-child(even) td {
 
 .red {
   color: #e80000;
+}
+
+th.time {
+  text-align: right;
+}
+
+th.numeric {
+  text-align: center;
 }
 
 td.time {

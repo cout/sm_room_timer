@@ -54,12 +54,13 @@ class Table extends Widget {
   }
 
   append_header_row() {
-    const header_row = document.createElement('tr');
+    const header_row = document.createElement('thead');
 
     for (const col of this.columns) {
       const cell = document.createElement('th');
       const text = document.createTextNode(col.label);
       cell.appendChild(text);
+      this.add_classes(cell, col.cls, undefined);
       header_row.appendChild(cell);
     }
 
@@ -72,12 +73,7 @@ class Table extends Widget {
       const cell = document.createElement('td');
       const text = document.createTextNode(get(col, obj) || '');
       cell.appendChild(text);
-      if (col.cls) {
-        col.cls.forEach((cls) => {
-          cls = (typeof cls === 'function') ? cls(obj) : cls;
-          cell.classList.add(cls);
-        });
-      }
+      this.add_classes(cell, col.cls, obj);
       row.appendChild(cell);
     }
     this.elem.appendChild(row);
@@ -94,6 +90,15 @@ class Table extends Widget {
     row.appendChild(cell);
     this.elem.appendChild(row)
     row.scrollIntoView();
+  }
+
+  add_classes(cell, cls, obj) {
+    if (cls) {
+      cls.forEach((cls) => {
+        cls = (typeof cls === 'function') ? cls(obj) : cls;
+        cell.classList.add(cls);
+      });
+    }
   }
 }
 
@@ -145,7 +150,9 @@ const socket = new WebSocket(`ws://localhost:${port}`)
 // "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
 const tc = function(o) {
-  if (o.best_time == 0 || o.time <= o.best_time) {
+  if (o === undefined) {
+    return undefined;
+  } if (o.best_time == 0 || o.time <= o.best_time) {
     return 'gold';
   } else if (o.time <= o.p25_time) {
     return 'green';
