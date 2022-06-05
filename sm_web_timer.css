@@ -92,12 +92,6 @@ td.numeric {
   overflow: scroll;
 }
 
-.gutter {
-  flex-grow: 0;
-  flex-shrink: 0;
-  flex-basis: 1em;
-}
-
 .bottom-panel {
   flex-grow: 0;
   flex-shrink: 1;
