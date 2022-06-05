@@ -55,26 +55,61 @@ class Widget {
 }
 
 class TableCell extends Widget {
-  constructor(obj, col) {
+  constructor(data, col) {
     const cell_elem = document.createElement('td');
     super(cell_elem);
 
-    this.text_elem = document.createTextNode(get(col, obj) || '');
+    this.data = data;
+    this.col = col;
+
+    this.text_elem = document.createTextNode(get(col, data) || '');
     this.elem.appendChild(this.text_elem);
-    add_classes(cell_elem, col.cls, obj);
+    add_classes(cell_elem, col.cls, data);
+  }
+
+  update(data) {
+    const old_data = this.text_elem.data;
+    this.data = data;
+    const new_data = get(this.col, data);
+    this.text_elem.data = get(this.col, data);
   }
 };
 
 class TableRow extends Widget {
-  constructor(obj, columns) {
+  constructor(data, columns) {
     const row_elem = document.createElement('tr');
     super(row_elem);
 
+    this.data = data;
     this.columns = columns;
+    this.cells = [ ]
 
     for (const col of this.columns) {
-      const cell = new TableCell(obj, col);
+      const cell = new TableCell(data, col);
+      this.cells.push(cell);
       this.elem.appendChild(cell.elem);
+    }
+  }
+
+  update(data) {
+    // TODO: If the player starts a segment from another room, stats
+    // won't get updated on the screen, even though they changed
+    //
+    // TODO: Success rate does not get updated
+    //
+    // TODO: SOB does not get updated
+    //
+    // TODO: Something is fishy with the attempt count -- it starts off
+    // at 1 for a new file, even though Best and SOB are 0 (which would
+    // indicate we haven't ever completed that segment).  But Median is
+    // not 0 (which would indicate we have completed that segment).
+    // Both cannot be true!
+    for (const [key, value] of Object.entries(data)) {
+      this.data[key] = value;
+    }
+
+    for (const cell of this.cells) {
+      cell.update(this.data);
     }
   }
 }
@@ -105,8 +140,8 @@ class Table extends Widget {
     this.table_elem.appendChild(header_row);
   }
 
-  append(obj) {
-    const row = new TableRow(obj, this.columns);
+  append(data) {
+    const row = new TableRow(data, this.columns);
     this.table_elem.appendChild(row.elem);
     row.elem.scrollIntoView();
     return row;
@@ -254,6 +289,7 @@ socket.addEventListener('close', function (event) {
 
 var num_segments = 0;
 var current_segment_time_node = undefined;
+const segment_stats_rows_by_id = { };
 
 socket.addEventListener('message', function (event) {
   console.error(event.data);
@@ -322,7 +358,9 @@ socket.addEventListener('message', function (event) {
     room_times_table.append_blank_line();
 
     if (current_segment_time_node) {
-      current_segment_time_node.parentNode.removeChild(current_segment_time_node);
+      // TODO: if Table ever remembers its rows (like Row does with its
+      // cells, then this won't work)
+      current_segment_time_node.elem.parentNode.removeChild(current_segment_time_node.elem);
     }
     segment_times_table.append({
       room_name: data.room.room_name,
@@ -342,6 +380,19 @@ socket.addEventListener('message', function (event) {
       p25_time: data.segment.prev_p25_time,
       p75_time: data.segment.prev_p75_time,
     });
+    const segment_stats_row = segment_stats_rows_by_id[data.segment.id];
+    if (segment_stats_row) {
+      segment_stats_row.update({
+        // id: data.segment.id,
+        // name: data.segment.name,
+        // brief_name: data.segment.brief_name,
+        success_count: data.segment.attempts,
+        // TODO: success_rate: ????
+        median_time: data.segment.new_median_time,
+        best_time: data.segment.new_best_time,
+        // TODO: sum_of_best_times: ????
+      })
+    }
   } else if (type == 'new_segment') {
     console.error('new segment')
     if (num_segments > 0) {
@@ -353,7 +404,7 @@ socket.addEventListener('message', function (event) {
     console.error(data.segments)
     data.segments.forEach((segment) => {
       console.error(segment)
-      segment_stats_table.append(segment)
+      segment_stats_rows_by_id[segment.id] = segment_stats_table.append(segment)
     });
     segment_stats_table.show();
   }

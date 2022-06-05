@@ -186,6 +186,7 @@ class JsonEventGenerator(object):
         'p75_time': encode_transition_time(p75),
       },
       'segment': {
+        'id': segment.id,
         'start': segment.start,
         'end': segment.end,
         'attempts': new_segment_stats.num_attempts,
@@ -194,6 +195,10 @@ class JsonEventGenerator(object):
         'prev_best_time': old_segment_stats.totalrealtime_p0,
         'prev_p25_time': old_segment_stats.totalrealtime_p25,
         'prev_p75_time': old_segment_stats.totalrealtime_p75,
+        'new_median_time': new_segment_stats.totalrealtime_p50,
+        'new_best_time': new_segment_stats.totalrealtime_p0,
+        'new_p25_time': new_segment_stats.totalrealtime_p25,
+        'new_p75_time': new_segment_stats.totalrealtime_p75,
       },
       'room_in_segment': {
         'attempts': new_room_in_segment_stats.num_attempts,
@@ -202,6 +207,10 @@ class JsonEventGenerator(object):
         'prev_best_time': old_room_in_segment_stats.totalrealtime_p0,
         'prev_p25_time': old_room_in_segment_stats.totalrealtime_p25,
         'prev_p75_time': old_room_in_segment_stats.totalrealtime_p75,
+        'new_median_time': new_room_in_segment_stats.totalrealtime_p50,
+        'new_best_time': new_room_in_segment_stats.totalrealtime_p0,
+        'new_p25_time': new_room_in_segment_stats.totalrealtime_p25,
+        'new_p75_time': new_room_in_segment_stats.totalrealtime_p75,
       },
     })
 
@@ -216,13 +225,14 @@ class JsonEventGenerator(object):
     stats = SegmentStats(history, split_segments)
 
     segments = [ {
-        'name': seg.segment.name,
-        'brief_name': seg.segment.brief_name,
-        'success_count': seg.segment_success_count,
-        'success_rate': seg.rate,
-        'median_time': seg.p50,
-        'best_time': seg.p0,
-        'sum_of_best_times': seg.sob,
+      'id': seg.segment.id,
+      'name': seg.segment.name,
+      'brief_name': seg.segment.brief_name,
+      'success_count': seg.segment_success_count,
+      'success_rate': seg.rate,
+      'median_time': seg.p50,
+      'best_time': seg.p0,
+      'sum_of_best_times': seg.sob,
     } for seg in stats.segments ]
 
     self.emit('segment_stats', {

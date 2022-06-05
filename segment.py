@@ -21,6 +21,10 @@ class Segment(object):
     return self.tids[-1]
 
   @property
+  def id(self):
+    return '[%s]:[%s]' % (self.start.id, self.end.id)
+
+  @property
   def name(self):
     if self.start.room is self.end.room:
       return "%s" % self.start.room

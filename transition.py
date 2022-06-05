@@ -35,6 +35,12 @@ class TransitionId(object):
   def exit_room(self):
     return self.exit_door.exit_room
 
+  @property
+  def id(self):
+    return '%x|%x|%x|%s|%s' % (self.room.room_id,
+        self.entry_room.room_id, self.exit_room.room_id, self.items,
+        self.beams)
+
   def __hash__(self):
     return hash((self.room, self.entry_room, self.exit_room, self.items, self.beams))
 
