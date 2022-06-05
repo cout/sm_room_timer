@@ -48,9 +48,13 @@ class Widget {
 class Table extends Widget {
   constructor(elem, columns) {
     super(elem);
+
+    this.table_elem = document.createElement('table');
+
     this.columns = columns
 
     this.append_header_row();
+    this.elem.appendChild(this.table_elem);
   }
 
   append_header_row() {
@@ -64,7 +68,7 @@ class Table extends Widget {
       header_row.appendChild(cell);
     }
 
-    this.elem.appendChild(header_row);
+    this.table_elem.appendChild(header_row);
   }
 
   append(obj) {
@@ -76,7 +80,7 @@ class Table extends Widget {
       this.add_classes(cell, col.cls, obj);
       row.appendChild(cell);
     }
-    this.elem.appendChild(row);
+    this.table_elem.appendChild(row);
     row.scrollIntoView();
     return row;
   }
@@ -88,7 +92,7 @@ class Table extends Widget {
     cell.setAttribute('colspan', this.columns.length);
     cell.appendChild(text);
     row.appendChild(cell);
-    this.elem.appendChild(row)
+    this.table_elem.appendChild(row)
     row.scrollIntoView();
   }
 
