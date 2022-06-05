@@ -85,7 +85,7 @@ td.numeric {
   left: 0;
 }
 
-.top_panel {
+.top-panel {
   flex-grow: 1;
   flex-shrink: 0;
   flex-basis: 50%;
@@ -93,7 +93,7 @@ td.numeric {
   scrollbar-width: none;
 }
 
-.top_panel::-webkit-scrollbar {
+.top-panel::-webkit-scrollbar {
   display: none;
 }
 
@@ -103,7 +103,7 @@ td.numeric {
   flex-basis: 1em;
 }
 
-.bottom_panel {
+.bottom-panel {
   flex-grow: 0;
   flex-shrink: 1;
   flex-basis: 50%;
@@ -111,6 +111,6 @@ td.numeric {
   scrollbar-width: none;
 }
 
-.bottom_panel::-webkit-scrollbar {
+.bottom-panel::-webkit-scrollbar {
   display: none;
 }

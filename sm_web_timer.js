@@ -169,7 +169,7 @@ const room_times_columns = [
   // TODO: P25, P75
 ];
 const room_times_table = new Table(
-    document.getElementById('room_times'),
+    document.getElementById('room-times'),
     room_times_columns);
 
 const segment_times_columns = [
@@ -182,7 +182,7 @@ const segment_times_columns = [
   { label: "\u00b1Best",   get: o => fc_delta(o.time, o.best_time),   cls: [ 'time' ]     },
 ];
 const segment_times_table = new Table(
-    document.getElementById('segment_times'),
+    document.getElementById('segment-times'),
     segment_times_columns);
 
 const segment_stats_columns = [
@@ -194,7 +194,7 @@ const segment_stats_columns = [
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time' ] },
 ];
 const segment_stats_table = new Table(
-    document.getElementById('segment_stats'),
+    document.getElementById('segment-stats'),
     segment_stats_columns);
 
 const help_box = new Widget(document.getElementById("help"));
