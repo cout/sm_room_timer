@@ -289,6 +289,8 @@ const segment_stats_table = new Table(
     document.getElementById('segment-stats'),
     segment_stats_columns);
 
+const gutter = new Widget(document.getElementById("gutter"));
+
 const help_box = new Widget(document.getElementById("help"));
 
 document.addEventListener('keydown', (event) => {
@@ -455,5 +457,6 @@ socket.addEventListener('message', function (event) {
       }
     });
     segment_stats_table.show();
+    gutter.show();
   }
 });
