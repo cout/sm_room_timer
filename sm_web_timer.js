@@ -170,13 +170,13 @@ const tc = function(o) {
 };
 
 const room_times_columns = [
-  { label: "Room",   get: o => o.room_name,                           },
-  { label: "#",      get: o => o.attempts,        cls: [ 'numeric' ]  },
-  { label: "Type",   get: o => o.type,                                },
-  { label: "Time",   get: o => fc(o.time),        cls: [ 'time', tc ] },
-  { label: "Avg",    get: o => fc(o.avg_time),    cls: [ 'time' ]     },
-  { label: "Median", get: o => fc(o.median_time), cls: [ 'time' ]     },
-  { label: "Best",   get: o => fc(o.best_time),   cls: [ 'time' ]     },
+  { label: "Room",   get: o => o.room_name,                            },
+  { label: "#",      get: o => o.attempts,        cls: [ 'numeric' ]   },
+  { label: "Type",   get: o => o.type,            cls: [ 'time-type' ] },
+  { label: "Time",   get: o => fc(o.time),        cls: [ 'time', tc ]  },
+  { label: "Avg",    get: o => fc(o.avg_time),    cls: [ 'time' ]      },
+  { label: "Median", get: o => fc(o.median_time), cls: [ 'time' ]      },
+  { label: "Best",   get: o => fc(o.best_time),   cls: [ 'time' ]      },
   // TODO: P25, P75
 ];
 const room_times_table = new Table(

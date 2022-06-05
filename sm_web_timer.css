@@ -65,12 +65,20 @@ th.time {
   text-align: right;
 }
 
+th.time-type {
+  padding-left: 1em;
+}
+
 th.numeric {
-  text-align: center;
+  text-align: right;
 }
 
 td.time {
   text-align: right;
+}
+
+td.time-type {
+  padding-left: 1em;
 }
 
 td.numeric {
