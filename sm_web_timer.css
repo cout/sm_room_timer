@@ -74,3 +74,43 @@ td.numeric {
   padding: 1em;
   z-index: 2;
 }
+
+.split {
+  display: flex;
+  position: absolute;
+  flex-direction: column;
+  width: calc(100vw);
+  height: calc(100vh);
+  top: 0;
+  left: 0;
+}
+
+.top_panel {
+  flex-grow: 1;
+  flex-shrink: 0;
+  flex-basis: 50%;
+  overflow: scroll;
+  scrollbar-width: none;
+}
+
+.top_panel::-webkit-scrollbar {
+  display: none;
+}
+
+.gutter {
+  flex-grow: 0;
+  flex-shrink: 0;
+  flex-basis: 1em;
+}
+
+.bottom_panel {
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: 50%;
+  overflow: scroll;
+  scrollbar-width: none;
+}
+
+.bottom_panel::-webkit-scrollbar {
+  display: none;
+}
