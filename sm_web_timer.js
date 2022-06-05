@@ -31,6 +31,15 @@ const fc_delta = function(count, comparison) {
   return `${pos}${fc(delta)}`;
 };
 
+const add_classes = function(cell, cls, obj) {
+  if (cls) {
+    cls.forEach((cls) => {
+      cls = (typeof cls === 'function') ? cls(obj) : cls;
+      cell.classList.add(cls);
+    });
+  }
+};
+
 class Widget {
   constructor(elem) {
     this.elem = elem;
@@ -42,6 +51,31 @@ class Widget {
 
   hide() {
     this.elem.classList.add('hidden')
+  }
+}
+
+class TableCell extends Widget {
+  constructor(obj, col) {
+    const cell_elem = document.createElement('td');
+    super(cell_elem);
+
+    this.text_elem = document.createTextNode(get(col, obj) || '');
+    this.elem.appendChild(this.text_elem);
+    add_classes(cell_elem, col.cls, obj);
+  }
+};
+
+class TableRow extends Widget {
+  constructor(obj, columns) {
+    const row_elem = document.createElement('tr');
+    super(row_elem);
+
+    this.columns = columns;
+
+    for (const col of this.columns) {
+      const cell = new TableCell(obj, col);
+      this.elem.appendChild(cell.elem);
+    }
   }
 }
 
@@ -64,7 +98,7 @@ class Table extends Widget {
       const cell = document.createElement('th');
       const text = document.createTextNode(col.label);
       cell.appendChild(text);
-      this.add_classes(cell, col.cls, undefined);
+      add_classes(cell, col.cls, undefined);
       header_row.appendChild(cell);
     }
 
@@ -72,16 +106,9 @@ class Table extends Widget {
   }
 
   append(obj) {
-    const row = document.createElement('tr');
-    for (const col of this.columns) {
-      const cell = document.createElement('td');
-      const text = document.createTextNode(get(col, obj) || '');
-      cell.appendChild(text);
-      this.add_classes(cell, col.cls, obj);
-      row.appendChild(cell);
-    }
-    this.table_elem.appendChild(row);
-    row.scrollIntoView();
+    const row = new TableRow(obj, this.columns);
+    this.table_elem.appendChild(row.elem);
+    row.elem.scrollIntoView();
     return row;
   }
 
@@ -94,15 +121,6 @@ class Table extends Widget {
     row.appendChild(cell);
     this.table_elem.appendChild(row)
     row.scrollIntoView();
-  }
-
-  add_classes(cell, cls, obj) {
-    if (cls) {
-      cls.forEach((cls) => {
-        cls = (typeof cls === 'function') ? cls(obj) : cls;
-        cell.classList.add(cls);
-      });
-    }
   }
 }
 
