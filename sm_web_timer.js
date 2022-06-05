@@ -234,9 +234,9 @@ const segment_times_columns = [
   { label: "Room",         get: o => o.room_name,                                         },
   { label: "#",            get: o => o.attempts,                      cls: [ 'numeric' ]  },
   { label: "Time",         get: o => fc(o.time),                      cls: [ 'time', tc ] },
-  { label: "Median",       get: o => fc(o.median_time),               cls: [ 'time' ]     },
+  // { label: "Old Median",       get: o => fc(o.median_time),               cls: [ 'time' ]     },
   { label: "\u00b1Median", get: o => fc_delta(o.time, o.median_time), cls: [ 'time' ]     },
-  { label: "Best",         get: o => fc(o.best_time),                 cls: [ 'time' ]     },
+  // { label: "Old Best",         get: o => fc(o.best_time),                 cls: [ 'time' ]     },
   { label: "\u00b1Best",   get: o => fc_delta(o.time, o.best_time),   cls: [ 'time' ]     },
 ];
 const segment_times_table = new Table(
