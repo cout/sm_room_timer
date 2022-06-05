@@ -61,6 +61,27 @@ thead th {
   color: #e80000;
 }
 
+.median_time_went_down {
+  color: #000000;
+  background-color: #00af00;
+}
+
+.median_time_went_up {
+  color: #000000;
+  background-color: #af0000;
+}
+
+.best_time_went_down {
+  color: #000000;
+  background-color: #ffaf00;
+}
+
+.sum_of_best_times_went_down {
+  color: #000000;
+  background-color: #ffaf00;
+}
+
+
 th.time {
   text-align: right;
 }

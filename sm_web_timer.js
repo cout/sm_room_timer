@@ -35,7 +35,9 @@ const add_classes = function(cell, cls, obj) {
   if (cls) {
     cls.forEach((cls) => {
       cls = (typeof cls === 'function') ? cls(obj) : cls;
-      cell.classList.add(cls);
+      if (cls !== undefined) {
+        cell.classList.add(cls);
+      }
     });
   }
 };
@@ -64,7 +66,7 @@ class TableCell extends Widget {
 
     this.text_elem = document.createTextNode(get(col, data) || '');
     this.elem.appendChild(this.text_elem);
-    add_classes(cell_elem, col.cls, data);
+    add_classes(this.elem, col.cls, data);
   }
 
   update(data) {
@@ -72,6 +74,8 @@ class TableCell extends Widget {
     this.data = data;
     const new_data = get(this.col, data);
     this.text_elem.data = get(this.col, data);
+    this.elem.className = "";
+    add_classes(this.elem, this.col.cls, data);
   }
 };
 
@@ -80,7 +84,7 @@ class TableRow extends Widget {
     const row_elem = document.createElement('tr');
     super(row_elem);
 
-    this.data = data;
+    this.data = { ...data };
     this.columns = columns;
     this.cells = [ ]
 
@@ -95,7 +99,6 @@ class TableRow extends Widget {
     for (const [key, value] of Object.entries(data)) {
       this.data[key] = value;
     }
-
     for (const cell of this.cells) {
       cell.update(this.data);
     }
@@ -210,6 +213,41 @@ const tc = function(o) {
   }
 };
 
+const ssm = function(o) {
+  console.error(`  ssm ${JSON.stringify(o)}`);
+  if (o === undefined) {
+    return undefined;
+  } else if (!o.old_segment) {
+    return undefined;
+  } else if (o.median_time < o.old_segment.median_time) {
+    return 'median_time_went_down';
+  } else if (o.median_time > o.old_segment.median_time) {
+    return 'median_time_went_up';
+  }
+};
+
+const ssb = function(o) {
+  console.error(`  ssb ${JSON.stringify(o)}`);
+  if (o === undefined) {
+    return undefined;
+  } else if (!o.old_segment) {
+    return undefined;
+  } else if (o.best_time < o.old_segment.best_time) {
+    return 'best_time_went_down';
+  }
+};
+
+const sssob = function(o) {
+  console.error(`  ssob ${JSON.stringify(o)}`);
+  if (o === undefined) {
+    return undefined;
+  } else if (!o.old_segment) {
+    return undefined;
+  } else if (o.sum_of_best_times < o.old_segment.sum_of_best_times) {
+    return 'sum_of_best_times_went_down';
+  }
+};
+
 const room_times_columns = [
   { label: "Room",   get: o => o.room_name,                            },
   { label: "#",      get: o => o.attempts,        cls: [ 'numeric' ]   },
@@ -241,9 +279,9 @@ const segment_stats_columns = [
   { label: "Segment",    get: o => o.brief_name,                                              },
   { label: "#",          get: o => o.success_count,                        cls: [ 'numeric' ] },
   { label: "%",          get: o => `${Math.round(o.success_rate * 100)}%`, cls: [ 'numeric' ] },
-  { label: "Median",     get: o => fc(o.median_time),                      cls: [ 'time' ]    },
-  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time),   cls: [ 'time' ]    },
-  { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time' ] },
+  { label: "Median",     get: o => fc(o.median_time),                      cls: [ 'time', ssm ]    },
+  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time),   cls: [ 'time', ssb ]    },
+  { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time', sssob ] },
 ];
 const segment_stats_table = new Table(
     document.getElementById('segment-stats'),
@@ -275,9 +313,15 @@ socket.addEventListener('close', function (event) {
   console.error('close');
 });
 
+// Used for segment timer panel
 var num_segments = 0;
 var current_segment_time_node = undefined;
+
+// Used for segment stats panel
+const segment_stats_by_id = { };
 const segment_stats_rows_by_id = { };
+var last_updated_segment = undefined;
+var last_updated_segment_row = undefined;
 
 socket.addEventListener('message', function (event) {
   console.error(event.data);
@@ -381,11 +425,31 @@ socket.addEventListener('message', function (event) {
     console.error(data.segments)
     data.segments.forEach((segment) => {
       console.error(segment)
-      row = segment_stats_rows_by_id[segment.id];
+      let row = segment_stats_rows_by_id[segment.id];
       if (row) {
-        row.update(segment)
+        // Clear out any colors from the last updated row
+        if (last_updated_segment_row) {
+          last_updated_segment_row.update(last_updated_segment);
+        }
+
+        // Update the row for this segment, with colors indicating any
+        // improvement
+        let old_segment = segment_stats_by_id[segment.id];
+        row.update({
+          old_segment: old_segment,
+          ...segment
+        });
+
+        // Save segment stats for next time this row is updated
+        segment_stats_by_id[segment.id] = segment;
+
+        // Save last updated segment/row so we can clear colors when the
+        // next segment is updated
+        last_updated_segment = segment;
+        last_updated_segment_row = row;
       } else {
         segment_stats_rows_by_id[segment.id] = segment_stats_table.append(segment)
+        segment_stats_by_id[segment.id] = segment;
       }
     });
     segment_stats_table.show();
