@@ -32,6 +32,9 @@ table tr:nth-child(even) th, table tr:nth-child(even) td {
 
 thead th {
   text-align: left;
+  position: sticky;
+  top: 0;
+  background-color: #171717;
 }
 
 .hidden {
