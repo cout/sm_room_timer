@@ -90,11 +90,6 @@ td.numeric {
   flex-shrink: 0;
   flex-basis: 50%;
   overflow: scroll;
-  scrollbar-width: none;
-}
-
-.top-panel::-webkit-scrollbar {
-  display: none;
 }
 
 .gutter {
@@ -108,9 +103,12 @@ td.numeric {
   flex-shrink: 1;
   flex-basis: 50%;
   overflow: scroll;
+}
+
+.hide-scrollbars: {
   scrollbar-width: none;
 }
 
-.bottom-panel::-webkit-scrollbar {
+.hide-scrollbars::-webkit-scrollbar {
   display: none;
 }
