@@ -98,12 +98,6 @@ class TableRow extends Widget {
     // TODO: Success rate does not get updated
     //
     // TODO: SOB does not get updated
-    //
-    // TODO: Something is fishy with the attempt count -- it starts off
-    // at 1 for a new file, even though Best and SOB are 0 (which would
-    // indicate we haven't ever completed that segment).  But Median is
-    // not 0 (which would indicate we have completed that segment).
-    // Both cannot be true!
     for (const [key, value] of Object.entries(data)) {
       this.data[key] = value;
     }
