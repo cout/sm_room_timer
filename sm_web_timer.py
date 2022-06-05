@@ -8,7 +8,7 @@ from transition_log import read_transition_log, FileTransitionLog, NullTransitio
 from history import History
 from sm_room_timer import backup_and_rebuild, ThreadedStateReader
 from sm_segment_timer import SegmentTimerTerminalFrontend, SegmentTimeTracker, SegmentTimer
-from segment_stats import SegmentStats
+from segment_stats import SegmentStats, SingleSegmentStats
 from splits import Splits, read_split_names_from_file
 
 from segment import Segment
@@ -126,8 +126,9 @@ def apply_to_attempts(attempts, func):
         # state.last_realtime_door)
 
 class JsonEventGenerator(object):
-  def __init__(self, on_event, debug_log=None, verbose=False):
+  def __init__(self, on_event, split_segments, debug_log=None, verbose=False):
     self.on_event = on_event
+    self.split_segments = split_segments
     self.debug_log = debug_log
     self.verbose = verbose
 
@@ -214,9 +215,40 @@ class JsonEventGenerator(object):
       },
     })
 
+    for split_segment in self.split_segments:
+      if segment.contains_segment(split_segment):
+        self.send_single_segment_stats(segment, tracker.history)
+
   def new_segment(self, transition):
     self.emit('new_segment', {
       'start': encode_transition_id(transition.id),
+    })
+
+  def send_single_segment_stats(self, segment, history):
+    # TODO: In new_room_time, we have SegmentAttemptStats (both before
+    # and after the transition is processed), which mostly tracks the
+    # same things as SingleSegmentStats.  Consider unifying them.
+    #
+    # (in many cases we will need to build SingleSegmentStats anyway, if
+    # the start/end for SegmentAttemptStats don't line up with one of
+    # the splits)
+    seg = SingleSegmentStats(segment, history)
+
+    # TODO: This is mostly the same as send_segment_stats, below -- is
+    # there a way we can consolidate?
+    segments = [ {
+      'id': seg.segment.id,
+      'name': seg.segment.name,
+      'brief_name': seg.segment.brief_name,
+      'success_count': seg.segment_success_count,
+      'success_rate': seg.rate,
+      'median_time': seg.p50,
+      'best_time': seg.p0,
+      'sum_of_best_times': seg.sob,
+    } ]
+
+    self.emit('segment_stats', {
+      'segments': segments,
     })
 
   def send_segment_stats(self, session, history, split_segments):
@@ -420,7 +452,8 @@ def main():
     json_generator = JsonEventGenerator(
         verbose=verbose,
         debug_log=debug_log,
-        on_event=server.broadcast)
+        on_event=server.broadcast,
+        split_segments=split_segments)
 
     transition_log = FileTransitionLog(args.filename) if args.filename is not None else NullTransitionLog()
 

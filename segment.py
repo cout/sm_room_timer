@@ -56,3 +56,5 @@ class Segment(object):
   def extend_to(self, tid):
     self.tids.append(tid)
 
+  def contains_segment(self, segment):
+    return segment.start in self.tids and segment.end in self.tids

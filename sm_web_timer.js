@@ -92,12 +92,6 @@ class TableRow extends Widget {
   }
 
   update(data) {
-    // TODO: If the player starts a segment from another room, stats
-    // won't get updated on the screen, even though they changed
-    //
-    // TODO: Success rate does not get updated
-    //
-    // TODO: SOB does not get updated
     for (const [key, value] of Object.entries(data)) {
       this.data[key] = value;
     }
@@ -374,19 +368,7 @@ socket.addEventListener('message', function (event) {
       p25_time: data.segment.prev_p25_time,
       p75_time: data.segment.prev_p75_time,
     });
-    const segment_stats_row = segment_stats_rows_by_id[data.segment.id];
-    if (segment_stats_row) {
-      segment_stats_row.update({
-        // id: data.segment.id,
-        // name: data.segment.name,
-        // brief_name: data.segment.brief_name,
-        success_count: data.segment.attempts,
-        // TODO: success_rate: ????
-        median_time: data.segment.new_median_time,
-        best_time: data.segment.new_best_time,
-        // TODO: sum_of_best_times: ????
-      })
-    }
+
   } else if (type == 'new_segment') {
     console.error('new segment')
     if (num_segments > 0) {
@@ -394,11 +376,17 @@ socket.addEventListener('message', function (event) {
     }
     num_segments += 1;
     current_segment_time_node = undefined;
+
   } else if (type == 'segment_stats') {
     console.error(data.segments)
     data.segments.forEach((segment) => {
       console.error(segment)
-      segment_stats_rows_by_id[segment.id] = segment_stats_table.append(segment)
+      row = segment_stats_rows_by_id[segment.id];
+      if (row) {
+        row.update(segment)
+      } else {
+        segment_stats_rows_by_id[segment.id] = segment_stats_table.append(segment)
+      }
     });
     segment_stats_table.show();
   }
