@@ -46,12 +46,11 @@ class Widget {
 }
 
 class Table extends Widget {
-  constructor(columns) {
-    super(document.createElement('table'));
+  constructor(elem, columns) {
+    super(elem);
     this.columns = columns
 
     this.append_header_row();
-    this.hide();
   }
 
   append_header_row() {
@@ -169,7 +168,9 @@ const room_times_columns = [
   { label: "Best",   get: o => fc(o.best_time),   cls: [ 'time' ]     },
   // TODO: P25, P75
 ];
-const room_times_table = new Table(room_times_columns);
+const room_times_table = new Table(
+    document.getElementById('room_times'),
+    room_times_columns);
 
 const segment_times_columns = [
   { label: "Room",         get: o => o.room_name,                                         },
@@ -180,7 +181,9 @@ const segment_times_columns = [
   { label: "Best",         get: o => fc(o.best_time),                 cls: [ 'time' ]     },
   { label: "\u00b1Best",   get: o => fc_delta(o.time, o.best_time),   cls: [ 'time' ]     },
 ];
-const segment_times_table = new Table(segment_times_columns);
+const segment_times_table = new Table(
+    document.getElementById('segment_times'),
+    segment_times_columns);
 
 const segment_stats_columns = [
   { label: "Segment",    get: o => o.brief_name,                                              },
@@ -190,15 +193,11 @@ const segment_stats_columns = [
   { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time),   cls: [ 'time' ]    },
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time' ] },
 ];
-const segment_stats_table = new Table(segment_stats_columns);
-
-document.body.appendChild(room_times_table.elem);
-document.body.appendChild(segment_times_table.elem);
-document.body.appendChild(segment_stats_table.elem);
+const segment_stats_table = new Table(
+    document.getElementById('segment_stats'),
+    segment_stats_columns);
 
 const help_box = new Widget(document.getElementById("help"));
-
-room_times_table.show();
 
 document.addEventListener('keydown', (event) => {
   if (event.key == 'r' || event.key == 'R') {
