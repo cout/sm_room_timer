@@ -98,14 +98,15 @@ td.numeric {
   z-index: 2;
 }
 
-.split {
+.main-view {
   display: flex;
   position: absolute;
   flex-direction: column;
-  width: calc(100vw);
-  height: calc(100vh);
+  width: calc(100vw - 1em);
+  height: calc(100vh - 1em);
   top: 0;
   left: 0;
+  padding: 0.5em;
 }
 
 .top-panel {
