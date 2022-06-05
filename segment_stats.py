@@ -83,6 +83,10 @@ def print_room_stats(history, segment_history, segments):
     print('')
 
 class SingleSegmentStats(object):
+  """
+  Tracks statistics on a single segment within a route.
+  """
+
   def __init__(self, segment, history):
     self.segment = segment
 
@@ -105,6 +109,10 @@ class SingleSegmentStats(object):
       self.sob += FrameCount(2591)
 
 class SegmentStats(object):
+  """
+  A collection that tracks statistics for all the segments in a route.
+  """
+
   def __init__(self, history, segments):
     self.segments = [ ]
     self.total_p50 = FrameCount(0)
