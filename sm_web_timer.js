@@ -436,6 +436,7 @@ socket.addEventListener('message', function (event) {
           old_segment: old_segment,
           ...segment
         });
+        row.elem.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
         // Save segment stats for next time this row is updated
         segment_stats_by_id[segment.id] = segment;
