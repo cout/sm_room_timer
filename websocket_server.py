@@ -11,6 +11,7 @@ class WebsocketServerSession(object):
 class WebsocketServer(object):
   # Commands
   class SHUTDOWN: pass
+  class BROADCAST: pass
 
   # Events
   class CONNECTED: pass
@@ -20,7 +21,7 @@ class WebsocketServer(object):
     self.port = port
     self.sessions = set()
     self.loop = None
-    self.broadcast_queue = None
+    self.command_queue = None
     self.event_queue = queue.Queue()
     self.thread = Thread(target=self.run)
 
@@ -31,13 +32,16 @@ class WebsocketServer(object):
       pass
 
   def stop(self):
-    self.broadcast(WebsocketServer.SHUTDOWN)
+    self.put_command(WebsocketServer.SHUTDOWN, None)
     self.thread.join()
 
   def broadcast(self, event):
-    def broadcast():
-      self.broadcast_queue.put_nowait(event)
-    self.loop.call_soon_threadsafe(broadcast)
+    self.put_command(WebsocketServer.BROADCAST, event)
+
+  def put_command(self, cmd, msg):
+    def put_command():
+      self.command_queue.put_nowait((cmd, msg))
+    self.loop.call_soon_threadsafe(put_command)
 
   def get_event_nowait(self):
     try:
@@ -58,14 +62,16 @@ class WebsocketServer(object):
       self.loop.stop()
 
   async def _run(self):
-    self.broadcast_queue = asyncio.Queue()
+    self.command_queue = asyncio.Queue()
     async with websockets.serve(self.serve, 'localhost', self.port):
       while True:
-        msg = await self.broadcast_queue.get()
-        if msg is WebsocketServer.SHUTDOWN: break
-        # TODO: a slow socket can slow everyone down
-        for session in self.sessions:
-          await session.sock.send(msg)
+        cmd, msg = await self.command_queue.get()
+        if cmd is WebsocketServer.SHUTDOWN:
+          break
+        elif cmd is WebsocketServer.BROADCAST:
+          # TODO: a slow socket can slow everyone down
+          for session in self.sessions:
+            await session.sock.send(msg)
 
   async def serve(self, sock, uri=None):
     session = WebsocketServerSession(sock, self)
