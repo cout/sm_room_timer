@@ -136,6 +136,10 @@ class JsonEventGenerator(object):
     s = json.dumps([ type, *args ], cls=JSONEncoder)
     self.on_event(s)
 
+  def send(self, session, type, *args):
+    s = json.dumps([ type, *args ], cls=JSONEncoder)
+    session.send(s)
+
   def handle_connected(self, session):
     print("connected", session)
 
@@ -256,7 +260,7 @@ class JsonEventGenerator(object):
       'segments': segments,
     })
 
-  def send_segment_stats(self, session, history, split_segments):
+  def send_initial_segment_stats(self, session, history, split_segments):
     # TODO: This is very slow for a large file, so we don't want
     # websockets conncting/disconnecting often
     stats = SegmentStats(history, split_segments)
@@ -272,7 +276,7 @@ class JsonEventGenerator(object):
       'sum_of_best_times': seg.sob,
     } for seg in stats.segments ]
 
-    self.emit('segment_stats', {
+    self.send(session, 'segment_stats', {
       'segments': segments,
     })
 
@@ -336,7 +340,7 @@ class TimerThread(object):
     if what == WebsocketServer.CONNECTED:
       session, = payload
       if self.split_segments is not None and len(self.split_segments) > 0:
-        self.json_generator.send_segment_stats(
+        self.json_generator.send_initial_segment_stats(
             session,
             self.history,
             self.split_segments)

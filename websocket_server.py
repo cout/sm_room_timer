@@ -8,10 +8,14 @@ class WebsocketServerSession(object):
     self.sock = sock
     self.server = server
 
+  def send(self, msg):
+    self.server.put_command(WebsocketServer.SEND, (self, msg))
+
 class WebsocketServer(object):
   # Commands
   class SHUTDOWN: pass
   class BROADCAST: pass
+  class SEND: pass
 
   # Events
   class CONNECTED: pass
@@ -72,6 +76,12 @@ class WebsocketServer(object):
           # TODO: a slow socket can slow everyone down
           for session in self.sessions:
             await session.sock.send(msg)
+        elif cmd is WebsocketServer.SEND:
+          session, msg = msg
+          if session in self.sessions:
+            await session.sock.send(msg)
+        else:
+          raise RuntimeError("Unknown command %s" % cmd)
 
   async def serve(self, sock, uri=None):
     session = WebsocketServerSession(sock, self)
