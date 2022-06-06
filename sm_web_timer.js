@@ -216,7 +216,6 @@ const tc = function(o) {
 };
 
 const ssm = function(o) {
-  console.error(`  ssm ${JSON.stringify(o)}`);
   if (o === undefined) {
     return undefined;
   } else if (!o.old_segment) {
@@ -229,7 +228,6 @@ const ssm = function(o) {
 };
 
 const ssb = function(o) {
-  console.error(`  ssb ${JSON.stringify(o)}`);
   if (o === undefined) {
     return undefined;
   } else if (!o.old_segment) {
@@ -240,7 +238,6 @@ const ssb = function(o) {
 };
 
 const sssob = function(o) {
-  console.error(`  ssob ${JSON.stringify(o)}`);
   if (o === undefined) {
     return undefined;
   } else if (!o.old_segment) {
