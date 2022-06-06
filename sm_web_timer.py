@@ -341,14 +341,23 @@ class TimerThread(object):
             self.history,
             self.split_segments)
 
+class WebenginePage(QtWebEngineWidgets.QWebEnginePage):
+  def javaScriptConsoleMessage(self, level, msg, line, source_id):
+    print(msg)
+
 class Browser(object):
   def __init__(self, argv, url):
     self.app = QtWidgets.QApplication(argv)
     self.url = url
     self.window = QtWidgets.QWidget()
     self.layout = QtWidgets.QVBoxLayout()
+
     self.webview = QtWebEngineWidgets.QWebEngineView()
     self.webview.resize(500, 600)
+
+    self.page = WebenginePage(self.webview)
+    self.webview.setPage(self.page)
+
     self.layout.setContentsMargins(0, 0, 0, 0)
     self.layout.addWidget(self.webview)
     self.window.setLayout(self.layout)

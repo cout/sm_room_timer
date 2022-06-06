@@ -292,11 +292,11 @@ const help_box = new Widget(document.getElementById("help"));
 
 document.addEventListener('keydown', (event) => {
   if (event.key == 'r' || event.key == 'R') {
-    console.error('room')
+    console.log('room')
     room_times_table.show()
     segment_times_table.hide()
   } else if (event.key == 's' || event.key == 'S') {
-    console.error('segment')
+    console.log('segment')
     segment_times_table.show()
     room_times_table.hide()
   } else if (event.key == '?') {
@@ -307,11 +307,11 @@ document.addEventListener('keydown', (event) => {
 });
 
 socket.addEventListener('open', function (event) {
-  console.error('open');
+  console.log('open');
 });
 
 socket.addEventListener('close', function (event) {
-  console.error('close');
+  console.log('close');
 });
 
 // Used for segment timer panel
@@ -325,11 +325,11 @@ var last_updated_segment = undefined;
 var last_updated_segment_row = undefined;
 
 socket.addEventListener('message', function (event) {
-  console.error(event.data);
+  console.log(event.data);
   const msg = JSON.parse(event.data);
   const type = msg[0];
   const data = msg[1];
-  console.error(`${type}: ${data}`);
+  console.log(`${type}: ${data}`);
   if (type == 'new_room_time') {
     help_box.hide();
 
@@ -423,7 +423,7 @@ socket.addEventListener('message', function (event) {
 
   } else if (type == 'segment_stats') {
     data.segments.forEach((segment) => {
-      console.error(segment)
+      console.log(segment)
       const row = segment_stats_rows_by_id[segment.id];
       if (row) {
         // Clear out any colors from the last updated row
