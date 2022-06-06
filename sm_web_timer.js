@@ -16,13 +16,13 @@ const fc = function(count) {
   const sign = count < 0 ? '-' : '';
   count = Math.round(Math.abs(count));
   if (count / 60 < 60) {
-    secs = Math.floor(count / 60);
-    frames = count % 60;
+    const secs = Math.floor(count / 60);
+    const frames = count % 60;
     return `${sign}${secs}'${frames.toString().padStart(2, '0')}`;
   } else {
-    mins = Math.floor(count / 3600);
-    secs = Math.floor(count / 60) % 60;
-    frames = count % 60;
+    const mins = Math.floor(count / 3600);
+    const secs = Math.floor(count / 60) % 60;
+    const frames = count % 60;
     return `${sign}${mins}:${secs}'${frames.toString().padStart(2, '0')}`;
   }
 };
@@ -426,7 +426,7 @@ socket.addEventListener('message', function (event) {
     console.error(data.segments)
     data.segments.forEach((segment) => {
       console.error(segment)
-      let row = segment_stats_rows_by_id[segment.id];
+      const row = segment_stats_rows_by_id[segment.id];
       if (row) {
         // Clear out any colors from the last updated row
         if (last_updated_segment_row) {
@@ -435,7 +435,7 @@ socket.addEventListener('message', function (event) {
 
         // Update the row for this segment, with colors indicating any
         // improvement
-        let old_segment = segment_stats_by_id[segment.id];
+        const old_segment = segment_stats_by_id[segment.id];
         row.update({
           old_segment: old_segment,
           ...segment
