@@ -415,7 +415,6 @@ socket.addEventListener('message', function (event) {
     });
 
   } else if (type == 'new_segment') {
-    console.error('new segment')
     if (num_segments > 0) {
       segment_times_table.append_blank_line();
     }
@@ -423,7 +422,6 @@ socket.addEventListener('message', function (event) {
     current_segment_time_node = undefined;
 
   } else if (type == 'segment_stats') {
-    console.error(data.segments)
     data.segments.forEach((segment) => {
       console.error(segment)
       const row = segment_stats_rows_by_id[segment.id];
