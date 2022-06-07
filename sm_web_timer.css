@@ -188,17 +188,11 @@ td.numeric {
   overflow: scroll;
 }
 
-.hide-scrollbars: {
-  /* TODO:
-   *
-   * This fails to hide scrollbars in firefox; apparently I must set
-   * scrollbar-width on .top-panel and .bottom-panel instead.  I'm not
-   * sure why?
-   */
+.top-panel, .bottom-panel {
   scrollbar-width: none;
 }
 
-.hide-scrollbars::-webkit-scrollbar {
+.top-panel::-webkit-scrollbar, .bottom-panel::-webkit-scrollbar {
   display: none;
 }
 
