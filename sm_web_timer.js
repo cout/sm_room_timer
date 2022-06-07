@@ -158,10 +158,12 @@ class Table extends TableRows {
       header_row.appendChild(cell);
     }
 
-    const header = document.createElement('thead');
-    header.appendChild(header_row);
+    if (!this.header) {
+      this.header = new TableRows(document.createElement('thead'));
+      this.elem.appendChild(this.header.elem);
+    }
 
-    this.elem.appendChild(header);
+    this.header.elem.appendChild(header_row);
   }
 }
 
