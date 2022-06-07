@@ -73,8 +73,17 @@ class TableCell extends Widget {
     this.data = data;
     this.col = col;
 
-    this.text_elem = document.createTextNode(get(col, data) || '');
-    this.elem.appendChild(this.text_elem);
+    const text = String(get(col, data) || '');
+    const lines = text.split('\n');
+    let first_line = true;
+    for (const line of lines) {
+      if (!first_line) {
+        this.elem.appendChild(document.createElement('br'));
+      }
+      this.elem.appendChild(document.createTextNode(line));
+      first_line = false;
+    }
+
     add_classes(this.elem, col.cls, data);
   }
 
@@ -166,8 +175,9 @@ class Table extends TableRows {
     this.header.elem.appendChild(header_row);
   }
 
-  append_footer(data) {
-    const row = new TableRow(data, this.columns);
+  append_footer(data, cols) {
+    cols = cols || this.columns;
+    const row = new TableRow(data, cols);
 
     if (!this.footer) {
       this.footer = new TableRows(document.createElement('tfoot'));
@@ -311,6 +321,15 @@ const segment_stats_columns = [
 const segment_stats_table = new Table(segment_stats_columns);
 const segment_stats_div = new Widget(document.getElementById('segment-stats'));
 segment_stats_div.elem.appendChild(segment_stats_table.elem);
+
+const segment_stats_footer_columns = [
+  { label: "Segment",    get: o => o.brief_name,        },
+  { label: "#",          get: o => '',                  },
+  { label: "%",          get: o => '',                  },
+  { label: "Median",     get: o => fc(o.median_time),   cls: [ 'time', ssm ] },
+  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time) + '\n' + fc(o.best_time), cls: [ 'time', ssb ]    },
+  { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times) + '\n' + fc(o.best_time), cls: [ 'time', sssob ] },
+];
 
 const gutter = new Widget(document.getElementById("gutter"));
 
@@ -500,7 +519,7 @@ socket.addEventListener('message', function (event) {
         median_time: total_median,
         best_time: total_best,
         sum_of_best_times: total_sob,
-    });
+    }, segment_stats_footer_columns);
 
     segment_stats_div.show();
     gutter.show();
