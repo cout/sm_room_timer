@@ -35,6 +35,7 @@ thead th {
   position: sticky;
   top: 0;
   background-color: #171717;
+  border: 0 !important;
 }
 
 tr.totals-row td {

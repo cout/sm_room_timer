@@ -127,7 +127,7 @@ class Table extends Widget {
   }
 
   append_header_row() {
-    const header_row = document.createElement('thead');
+    const header_row = document.createElement('tr');
 
     for (const col of this.columns) {
       const cell = document.createElement('th');
@@ -137,7 +137,10 @@ class Table extends Widget {
       header_row.appendChild(cell);
     }
 
-    this.table_elem.appendChild(header_row);
+    const header = document.createElement('thead');
+    header.appendChild(header_row);
+
+    this.table_elem.appendChild(header);
   }
 
   append(data) {
