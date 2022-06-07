@@ -37,6 +37,12 @@ thead th {
   background-color: #171717;
 }
 
+tr.totals-row td {
+  position: sticky;
+  bottom: 0;
+  background-color: #171717;
+}
+
 .hidden {
   display: none !important;
 }

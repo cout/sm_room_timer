@@ -23,7 +23,7 @@ const fc = function(count) {
     const mins = Math.floor(count / 3600);
     const secs = Math.floor(count / 60) % 60;
     const frames = count % 60;
-    return `${sign}${mins}:${secs}'${frames.toString().padStart(2, '0')}`;
+    return `${sign}${mins}:${secs.toString().padStart(2, '0')}'${frames.toString().padStart(2, '0')}`;
   }
 };
 
@@ -32,6 +32,13 @@ const fc_delta = function(count, comparison) {
   const pos = delta >= 0 ? '+' : ''
   return `${pos}${fc(delta)}`;
 };
+
+const pct = function(rate) {
+  if (rate === undefined) {
+    return undefined;
+  }
+  return `${Math.round(rate) * 100}%`;
+}
 
 const add_classes = function(cell, cls, obj) {
   if (cls) {
@@ -276,10 +283,10 @@ const segment_times_table = new Table(
 
 const segment_stats_columns = [
   { label: "Segment",    get: o => o.brief_name,                                              },
-  { label: "#",          get: o => o.success_count,                        cls: [ 'numeric' ] },
-  { label: "%",          get: o => `${Math.round(o.success_rate * 100)}%`, cls: [ 'numeric' ] },
-  { label: "Median",     get: o => fc(o.median_time),                      cls: [ 'time', ssm ]    },
-  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time),   cls: [ 'time', ssb ]    },
+  { label: "#",          get: o => o.success_count,                      cls: [ 'numeric' ] },
+  { label: "%",          get: o => pct(o.success_rate),                  cls: [ 'numeric' ] },
+  { label: "Median",     get: o => fc(o.median_time),                    cls: [ 'time', ssm ]    },
+  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time), cls: [ 'time', ssb ]    },
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time', sssob ] },
 ];
 const segment_stats_table = new Table(
@@ -450,6 +457,31 @@ socket.addEventListener('message', function (event) {
         segment_stats_by_id[segment.id] = segment;
       }
     });
+
+    let total_median = 0;
+    let total_best = 0;
+    let total_sob = 0;
+    for (const [ id, stats ] of Object.entries(segment_stats_by_id)) {
+      total_median += stats.median_time;
+      total_best += stats.best_time;
+      total_sob += stats.sum_of_best_times;
+    }
+
+    for (const elem of segment_stats_table.elem.getElementsByClassName('totals-row')) {
+      elem.remove();
+    }
+
+    // TODO: Update totals row instead of re-creating it to avoid reflow
+    const row = segment_stats_table.append({
+        brief_name: 'Total',
+        success_count: undefined,
+        success_rate: undefined,
+        median_time: total_median,
+        best_time: total_best,
+        sum_of_best_times: total_sob,
+    });
+    row.elem.classList.add('totals-row');
+
     segment_stats_table.show();
     gutter.show();
   }
