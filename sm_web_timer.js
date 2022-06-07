@@ -335,6 +335,30 @@ const gutter = new Widget(document.getElementById("gutter"));
 
 const help_box = new Widget(document.getElementById("help"));
 
+const scroll_changed = function(elem) {
+  const scroll_top = bottom_panel.elem.scrollTop;
+  const scroll_bot = bottom_panel.elem.scrollHeight - bottom_panel.elem.clientHeight - bottom_panel.elem.scrollTop;
+
+  if (scroll_top > 50) {
+    bottom_panel.elem.classList.add('top-shadow');
+  } else {
+    bottom_panel.elem.classList.remove('top-shadow');
+  }
+
+  if (scroll_bot > 50) {
+    bottom_panel.elem.classList.add('bottom-shadow');
+  } else {
+    bottom_panel.elem.classList.remove('bottom-shadow');
+  }
+}
+
+const bottom_panel = new Widget(document.getElementById('bottom-panel'));
+bottom_panel.elem.addEventListener('scroll', (event) => {
+  scroll_changed(event.target);
+});
+
+scroll_changed(bottom_panel.elem);
+
 document.addEventListener('keydown', (event) => {
   if (event.key == 'r' || event.key == 'R') {
     console.log('- Switched to room timer -')
