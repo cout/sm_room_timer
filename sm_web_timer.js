@@ -353,11 +353,10 @@ const scroll_changed = function(elem) {
 }
 
 const bottom_panel = new Widget(document.getElementById('bottom-panel'));
+
 bottom_panel.elem.addEventListener('scroll', (event) => {
   scroll_changed(event.target);
 });
-
-scroll_changed(bottom_panel.elem);
 
 document.addEventListener('keydown', (event) => {
   if (event.key == 'r' || event.key == 'R') {
@@ -546,6 +545,7 @@ socket.addEventListener('message', function (event) {
     }, segment_stats_footer_columns);
 
     segment_stats_div.show();
+    scroll_changed(bottom_panel.elem);
     gutter.show();
   }
 });
