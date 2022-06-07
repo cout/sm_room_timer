@@ -114,11 +114,35 @@ class TableRow extends Widget {
   }
 }
 
-class Table extends Widget {
-  constructor(columns) {
-    super(document.createElement('table'));
+class TableRows extends Widget {
+  constructor(elem, columns) {
+    super(elem);
 
-    this.columns = columns
+    this.columns = columns;
+  }
+
+  append(data) {
+    const row = new TableRow(data, this.columns);
+    this.elem.appendChild(row.elem);
+    row.elem.scrollIntoView();
+    return row;
+  }
+
+  append_blank_line() {
+    const row = document.createElement('tr');
+    const cell = document.createElement('td');
+    const text = document.createTextNode('\u00a0');
+    cell.setAttribute('colspan', this.columns.length);
+    cell.appendChild(text);
+    row.appendChild(cell);
+    this.elem.appendChild(row)
+    row.scrollIntoView();
+  }
+}
+
+class Table extends TableRows {
+  constructor(columns) {
+    super(document.createElement('table'), columns);
 
     this.append_header_row();
   }
@@ -138,24 +162,6 @@ class Table extends Widget {
     header.appendChild(header_row);
 
     this.elem.appendChild(header);
-  }
-
-  append(data) {
-    const row = new TableRow(data, this.columns);
-    this.elem.appendChild(row.elem);
-    row.elem.scrollIntoView();
-    return row;
-  }
-
-  append_blank_line() {
-    const row = document.createElement('tr');
-    const cell = document.createElement('td');
-    const text = document.createTextNode('\u00a0');
-    cell.setAttribute('colspan', this.columns.length);
-    cell.appendChild(text);
-    row.appendChild(cell);
-    this.elem.appendChild(row)
-    row.scrollIntoView();
   }
 }
 
