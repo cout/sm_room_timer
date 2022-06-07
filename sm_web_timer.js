@@ -115,15 +115,12 @@ class TableRow extends Widget {
 }
 
 class Table extends Widget {
-  constructor(elem, columns) {
-    super(elem);
-
-    this.table_elem = document.createElement('table');
+  constructor(columns) {
+    super(document.createElement('table'));
 
     this.columns = columns
 
     this.append_header_row();
-    this.elem.appendChild(this.table_elem);
   }
 
   append_header_row() {
@@ -140,12 +137,12 @@ class Table extends Widget {
     const header = document.createElement('thead');
     header.appendChild(header_row);
 
-    this.table_elem.appendChild(header);
+    this.elem.appendChild(header);
   }
 
   append(data) {
     const row = new TableRow(data, this.columns);
-    this.table_elem.appendChild(row.elem);
+    this.elem.appendChild(row.elem);
     row.elem.scrollIntoView();
     return row;
   }
@@ -157,7 +154,7 @@ class Table extends Widget {
     cell.setAttribute('colspan', this.columns.length);
     cell.appendChild(text);
     row.appendChild(cell);
-    this.table_elem.appendChild(row)
+    this.elem.appendChild(row)
     row.scrollIntoView();
   }
 }
@@ -267,9 +264,9 @@ const room_times_columns = [
   { label: "Best",   get: o => fc(o.best_time),   cls: [ 'time' ]      },
   // TODO: P25, P75
 ];
-const room_times_table = new Table(
-    document.getElementById('room-times'),
-    room_times_columns);
+const room_times_table = new Table(room_times_columns);
+const room_times_div = new Widget(document.getElementById('room-times'));
+room_times_div.elem.appendChild(room_times_table.elem);
 
 const segment_times_columns = [
   { label: "Room",         get: o => o.room_name,                                         },
@@ -280,9 +277,9 @@ const segment_times_columns = [
   // { label: "Old Best",         get: o => fc(o.best_time),                 cls: [ 'time' ]     },
   { label: "\u00b1Best",   get: o => fc_delta(o.time, o.best_time),   cls: [ 'time' ]     },
 ];
-const segment_times_table = new Table(
-    document.getElementById('segment-times'),
-    segment_times_columns);
+const segment_times_table = new Table(segment_times_columns);
+const segment_times_div = new Widget(document.getElementById('segment-times'));
+segment_times_div.elem.appendChild(segment_times_table.elem);
 
 const segment_stats_columns = [
   { label: "Segment",    get: o => o.brief_name,                                              },
@@ -292,9 +289,9 @@ const segment_stats_columns = [
   { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time), cls: [ 'time', ssb ]    },
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time', sssob ] },
 ];
-const segment_stats_table = new Table(
-    document.getElementById('segment-stats'),
-    segment_stats_columns);
+const segment_stats_table = new Table(segment_stats_columns);
+const segment_stats_div = new Widget(document.getElementById('segment-stats'));
+segment_stats_div.elem.appendChild(segment_stats_table.elem);
 
 const gutter = new Widget(document.getElementById("gutter"));
 
@@ -303,12 +300,12 @@ const help_box = new Widget(document.getElementById("help"));
 document.addEventListener('keydown', (event) => {
   if (event.key == 'r' || event.key == 'R') {
     console.log('- Switched to room timer -')
-    room_times_table.show()
-    segment_times_table.hide()
+    room_times_div.show()
+    segment_times_div.hide()
   } else if (event.key == 's' || event.key == 'S') {
     console.log('- Switched to segment timer -')
-    segment_times_table.show()
-    room_times_table.hide()
+    segment_times_div.show()
+    room_times_div.hide()
   } else if (event.key == '?') {
     help_box.show();
   } else if (event.key == ' ') {
@@ -485,7 +482,7 @@ socket.addEventListener('message', function (event) {
     });
     row.elem.classList.add('totals-row');
 
-    segment_stats_table.show();
+    segment_stats_div.show();
     gutter.show();
   }
 });
