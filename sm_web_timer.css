@@ -195,16 +195,3 @@ td.numeric {
 .top-panel::-webkit-scrollbar, .bottom-panel::-webkit-scrollbar {
   display: none;
 }
-
-/*
-.scrollGradient {
-  background: 
-    linear-gradient(#000000ff 33%, #00000000),
-    linear-gradient(#00000000, #000000ff 66%) bottom,
-    radial-gradient(farthest-side at 50% 0, #ff000080, #00000000),
-    radial-gradient(farthest-side at 50% 100%, #00ff0080, #00000000) bottom;
-  background-repeat: no-repeat;
-  background-attachment: local, local, scroll, scroll;
-  background-size: 100% 150px, 100% 150px, 100% 50px, 100% 50px;
-}
-*/
