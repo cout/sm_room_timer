@@ -165,6 +165,17 @@ class Table extends TableRows {
 
     this.header.elem.appendChild(header_row);
   }
+
+  append_footer(data) {
+    const row = new TableRow(data, this.columns);
+
+    if (!this.footer) {
+      this.footer = new TableRows(document.createElement('tfoot'));
+      this.elem.appendChild(this.footer.elem);
+    }
+
+    this.footer.elem.appendChild(row.elem);
+  }
 }
 
 const params = new URLSearchParams(location.search);
@@ -475,12 +486,14 @@ socket.addEventListener('message', function (event) {
       total_sob += stats.sum_of_best_times;
     }
 
-    for (const elem of segment_stats_table.elem.getElementsByClassName('totals-row')) {
-      elem.remove();
+    if (segment_stats_table.footer) {
+      for (const elem of segment_stats_table.footer.elem.children) {
+        elem.remove();
+      }
     }
 
     // TODO: Update totals row instead of re-creating it to avoid reflow
-    const row = segment_stats_table.append({
+    const row = segment_stats_table.append_footer({
         brief_name: 'Total',
         success_count: undefined,
         success_rate: undefined,
@@ -488,7 +501,6 @@ socket.addEventListener('message', function (event) {
         best_time: total_best,
         sum_of_best_times: total_sob,
     });
-    row.elem.classList.add('totals-row');
 
     segment_stats_div.show();
     gutter.show();

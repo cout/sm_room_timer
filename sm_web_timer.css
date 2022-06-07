@@ -30,6 +30,10 @@ table tr:nth-child(odd) th, table tr:nth-child(odd) td {
 table tr:nth-child(even) th, table tr:nth-child(even) td {
 }
 
+thead, tfoot {
+  position: relative;
+}
+
 thead th {
   text-align: left;
   position: sticky;
@@ -38,7 +42,7 @@ thead th {
   border: 0 !important;
 }
 
-tr.totals-row td {
+tfoot td {
   position: sticky;
   bottom: 0;
   background-color: #171717;
