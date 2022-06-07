@@ -369,7 +369,28 @@ class Browser(object):
   def run(self):
     self.webview.load(QtCore.QUrl(self.url))
     self.window.show()
-    return self.app.exec_()
+
+    self.exc = None
+    sys.excepthook = self.handle_exception
+
+    timer = QtCore.QTimer()
+    timer.timeout.connect(lambda: None)
+    timer.start(1000)
+
+    try:
+      res = self.app.exec_()
+
+      if self.exc is None:
+        return res
+      else:
+        raise self.exc
+
+    finally:
+      sys.excepthook = sys.__excepthook__
+
+  def handle_exception(self, type, value, traceback):
+    self.exc = value
+    self.app.quit()
 
   def stop(self):
     self.app.quit()
