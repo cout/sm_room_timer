@@ -188,10 +188,6 @@ class Table extends TableRows {
   }
 }
 
-const params = new URLSearchParams(location.search);
-const port = params.get('port');
-const socket = new WebSocket(`ws://localhost:${port}`)
-
 // js: ["new_room_time", {"room": {
 // "room_name": "Wrecked Ship Main Shaft",
 // "entry_room_name": "Basement",
@@ -373,6 +369,10 @@ document.addEventListener('keydown', (event) => {
     help_box.hide();
   }
 });
+
+const params = new URLSearchParams(location.search);
+const port = params.get('port');
+const socket = new WebSocket(`ws://localhost:${port}`)
 
 socket.addEventListener('open', function (event) {
   console.log('Opened websocket');
