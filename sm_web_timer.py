@@ -24,8 +24,7 @@ import time
 import sys
 import json
 import os
-
-from threading import Thread
+import threading
 
 # TODO: Don't bother importing these with --headless
 from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
@@ -306,7 +305,7 @@ class TimerThread(object):
         on_state_change=self.json_generator.state_changed,
         on_reset=self.tracker.room_reset)
 
-    self.thread = Thread(target=self.run)
+    self.thread = threading.Thread(target=self.run)
 
   def start(self):
     self.done = False
@@ -370,9 +369,22 @@ class Browser(object):
     self.webview.load(QtCore.QUrl(self.url))
     self.window.show()
 
+    # Capture exceptions from both signals (such as KeyboardInterrupt)
+    # and threads (such as an exception raised by the TimerThread).
+    # This is necessary because we cannot join a thread and run an event
+    # loop at the same time, and GUI event loop must be in the main
+    # thread.
+    #
+    # TODO: It would be better to emit a Qt signal when the TimerThread
+    # exits then catch it here, but that is significantly more
+    # complicated than this.
     self.exc = None
     sys.excepthook = self.handle_exception
+    self.orig_threading_excepthook = threading.excepthook
+    threading.excepthook = self.handle_thread_exception
 
+    # Start a timer so the python interpreter can do work periodically
+    # (such as handle signals)
     timer = QtCore.QTimer()
     timer.timeout.connect(lambda: None)
     timer.start(1000)
@@ -386,11 +398,15 @@ class Browser(object):
         raise self.exc
 
     finally:
+      threading.excepthook = self.orig_threading_excepthook
       sys.excepthook = sys.__excepthook__
 
   def handle_exception(self, type, value, traceback):
     self.exc = value
     self.app.quit()
+
+  def handle_thread_exception(self, type, value, traceback, thread):
+    self.handle_exception(type, value, traceback)
 
   def stop(self):
     self.app.quit()
