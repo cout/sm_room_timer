@@ -367,18 +367,6 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-const params = new URLSearchParams(location.search);
-const port = params.get('port');
-const socket = new WebSocket(`ws://localhost:${port}`)
-
-socket.addEventListener('open', function (event) {
-  console.log('Opened websocket');
-});
-
-socket.addEventListener('close', function (event) {
-  console.log('Websocket closed');
-});
-
 // Used for segment timer panel
 var num_segments = 0;
 var current_segment_time_node = undefined;
@@ -389,160 +377,196 @@ const segment_stats_rows_by_id = { };
 var last_updated_segment = undefined;
 var last_updated_segment_row = undefined;
 
-socket.addEventListener('message', function (event) {
-  console.log(event.data);
-  const msg = JSON.parse(event.data);
-  const type = msg[0];
-  const data = msg[1];
-  if (type == 'new_room_time') {
-    help_box.hide();
+const handle_new_room_time = function(data) {
+  help_box.hide();
 
-    room_times_table.append({
-      room_name: data.room.room_name,
-      attempts: data.room.attempts,
-      type: 'Game',
-      time: data.room.time.room.game,
-      avg_time: data.room.mean_time.room.game,
-      median_time: data.room.median_time.room.game,
-      best_time: data.room.best_time.room.game,
-      p25_time: data.room.p25_time.room.game,
-      p75_time: data.room.p75_time.room.game,
-    });
-    room_times_table.append({
-      room_name: '',
-      attempts: '',
-      type: 'Real',
-      time: data.room.time.room.real,
-      avg_time: data.room.mean_time.room.real,
-      median_time: data.room.median_time.room.real,
-      best_time: data.room.best_time.room.real,
-      p25_time: data.room.p25_time.room.real,
-      p75_time: data.room.p75_time.room.real,
-    });
-    room_times_table.append({
-      room_name: '',
-      attempts: '',
-      type: 'Lag',
-      time: data.room.time.room.lag,
-      avg_time: data.room.mean_time.room.lag,
-      median_time: data.room.median_time.room.lag,
-      best_time: data.room.best_time.room.lag,
-      p25_time: data.room.p25_time.room.lag,
-      p75_time: data.room.p75_time.room.lag,
-    });
-    room_times_table.append({
-      room_name: '',
-      attempts: '',
-      type: 'Door Lag',
-      time: data.room.time.door.lag,
-      avg_time: data.room.mean_time.door.lag,
-      median_time: data.room.median_time.door.lag,
-      best_time: data.room.best_time.door.lag,
-      p25_time: data.room.p25_time.door.lag,
-      p75_time: data.room.p75_time.door.lag,
-    });
-    room_times_table.append({
-      room_name: '',
-      attempts: '',
-      type: 'Door Real',
-      time: data.room.time.door.real,
-      avg_time: data.room.mean_time.door.real,
-      median_time: data.room.median_time.door.real,
-      best_time: data.room.best_time.door.real,
-      p25_time: data.room.p25_time.door.real,
-      p75_time: data.room.p75_time.door.real,
-    });
-    room_times_table.append_blank_line();
+  room_times_table.append({
+    room_name: data.room.room_name,
+    attempts: data.room.attempts,
+    type: 'Game',
+    time: data.room.time.room.game,
+    avg_time: data.room.mean_time.room.game,
+    median_time: data.room.median_time.room.game,
+    best_time: data.room.best_time.room.game,
+    p25_time: data.room.p25_time.room.game,
+    p75_time: data.room.p75_time.room.game,
+  });
+  room_times_table.append({
+    room_name: '',
+    attempts: '',
+    type: 'Real',
+    time: data.room.time.room.real,
+    avg_time: data.room.mean_time.room.real,
+    median_time: data.room.median_time.room.real,
+    best_time: data.room.best_time.room.real,
+    p25_time: data.room.p25_time.room.real,
+    p75_time: data.room.p75_time.room.real,
+  });
+  room_times_table.append({
+    room_name: '',
+    attempts: '',
+    type: 'Lag',
+    time: data.room.time.room.lag,
+    avg_time: data.room.mean_time.room.lag,
+    median_time: data.room.median_time.room.lag,
+    best_time: data.room.best_time.room.lag,
+    p25_time: data.room.p25_time.room.lag,
+    p75_time: data.room.p75_time.room.lag,
+  });
+  room_times_table.append({
+    room_name: '',
+    attempts: '',
+    type: 'Door Lag',
+    time: data.room.time.door.lag,
+    avg_time: data.room.mean_time.door.lag,
+    median_time: data.room.median_time.door.lag,
+    best_time: data.room.best_time.door.lag,
+    p25_time: data.room.p25_time.door.lag,
+    p75_time: data.room.p75_time.door.lag,
+  });
+  room_times_table.append({
+    room_name: '',
+    attempts: '',
+    type: 'Door Real',
+    time: data.room.time.door.real,
+    avg_time: data.room.mean_time.door.real,
+    median_time: data.room.median_time.door.real,
+    best_time: data.room.best_time.door.real,
+    p25_time: data.room.p25_time.door.real,
+    p75_time: data.room.p75_time.door.real,
+  });
+  room_times_table.append_blank_line();
 
-    if (current_segment_time_node) {
-      // TODO: if Table ever remembers its rows (like Row does with its
-      // cells, then this won't work)
-      current_segment_time_node.elem.parentNode.removeChild(current_segment_time_node.elem);
-    }
-    segment_times_table.append({
-      room_name: data.room.room_name,
-      attempts: data.room_in_segment.attempts,
-      time: data.room_in_segment.time,
-      median_time: data.room_in_segment.prev_median_time,
-      best_time: data.room_in_segment.prev_best_time,
-      p25_time: data.room_in_segment.prev_p25_time,
-      p75_time: data.room_in_segment.prev_p75_time,
-    });
-    current_segment_time_node = segment_times_table.append({
-      room_name: 'Segment',
-      attempts: data.segment.attempts,
-      time: data.segment.time,
-      median_time: data.segment.prev_median_time,
-      best_time: data.segment.prev_best_time,
-      p25_time: data.segment.prev_p25_time,
-      p75_time: data.segment.prev_p75_time,
-    });
-
-  } else if (type == 'new_segment') {
-    if (num_segments > 0) {
-      segment_times_table.append_blank_line();
-    }
-    num_segments += 1;
-    current_segment_time_node = undefined;
-
-  } else if (type == 'segment_stats') {
-    data.segments.forEach((segment) => {
-      const row = segment_stats_rows_by_id[segment.id];
-      if (row) {
-        // Clear out any colors from the last updated row
-        if (last_updated_segment_row) {
-          last_updated_segment_row.update(last_updated_segment);
-        }
-
-        // Update the row for this segment, with colors indicating any
-        // improvement
-        const old_segment = segment_stats_by_id[segment.id];
-        row.update({
-          old_segment: old_segment,
-          ...segment
-        });
-        row.elem.scrollIntoView({ behavior: 'smooth', block: 'center' })
-
-        // Save segment stats for next time this row is updated
-        segment_stats_by_id[segment.id] = segment;
-
-        // Save last updated segment/row so we can clear colors when the
-        // next segment is updated
-        last_updated_segment = segment;
-        last_updated_segment_row = row;
-      } else {
-        segment_stats_rows_by_id[segment.id] = segment_stats_table.append(segment)
-        segment_stats_by_id[segment.id] = segment;
-      }
-    });
-
-    let total_median = 0;
-    let total_best = 0;
-    let total_sob = 0;
-    for (const [ id, stats ] of Object.entries(segment_stats_by_id)) {
-      total_median += stats.median_time;
-      total_best += stats.best_time;
-      total_sob += stats.sum_of_best_times;
-    }
-
-    if (segment_stats_table.footer) {
-      for (const elem of segment_stats_table.footer.elem.children) {
-        elem.remove();
-      }
-    }
-
-    // TODO: Update totals row instead of re-creating it to avoid reflow
-    const row = segment_stats_table.append_footer({
-        brief_name: 'Total',
-        success_count: undefined,
-        success_rate: undefined,
-        median_time: total_median,
-        best_time: total_best,
-        sum_of_best_times: total_sob,
-    }, segment_stats_footer_columns);
-
-    segment_stats_div.show();
-    scroll_changed(bottom_panel.elem);
-    gutter.show();
+  if (current_segment_time_node) {
+    // TODO: if Table ever remembers its rows (like Row does with its
+    // cells, then this won't work)
+    current_segment_time_node.elem.parentNode.removeChild(current_segment_time_node.elem);
   }
-});
+  segment_times_table.append({
+    room_name: data.room.room_name,
+    attempts: data.room_in_segment.attempts,
+    time: data.room_in_segment.time,
+    median_time: data.room_in_segment.prev_median_time,
+    best_time: data.room_in_segment.prev_best_time,
+    p25_time: data.room_in_segment.prev_p25_time,
+    p75_time: data.room_in_segment.prev_p75_time,
+  });
+  current_segment_time_node = segment_times_table.append({
+    room_name: 'Segment',
+    attempts: data.segment.attempts,
+    time: data.segment.time,
+    median_time: data.segment.prev_median_time,
+    best_time: data.segment.prev_best_time,
+    p25_time: data.segment.prev_p25_time,
+    p75_time: data.segment.prev_p75_time,
+  });
+};
+
+const handle_new_segment = function(data) {
+  if (num_segments > 0) {
+    segment_times_table.append_blank_line();
+  }
+  num_segments += 1;
+  current_segment_time_node = undefined;
+};
+
+const handle_segment_stats = function(data) {
+  data.segments.forEach((segment) => {
+    const row = segment_stats_rows_by_id[segment.id];
+    if (row) {
+      // Clear out any colors from the last updated row
+      if (last_updated_segment_row) {
+        last_updated_segment_row.update(last_updated_segment);
+      }
+
+      // Update the row for this segment, with colors indicating any
+      // improvement
+      const old_segment = segment_stats_by_id[segment.id];
+      row.update({
+        old_segment: old_segment,
+        ...segment
+      });
+      row.elem.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+      // Save segment stats for next time this row is updated
+      segment_stats_by_id[segment.id] = segment;
+
+      // Save last updated segment/row so we can clear colors when the
+      // next segment is updated
+      last_updated_segment = segment;
+      last_updated_segment_row = row;
+    } else {
+      segment_stats_rows_by_id[segment.id] = segment_stats_table.append(segment)
+      segment_stats_by_id[segment.id] = segment;
+    }
+  });
+
+  let total_median = 0;
+  let total_best = 0;
+  let total_sob = 0;
+  for (const [ id, stats ] of Object.entries(segment_stats_by_id)) {
+    total_median += stats.median_time;
+    total_best += stats.best_time;
+    total_sob += stats.sum_of_best_times;
+  }
+
+  if (segment_stats_table.footer) {
+    for (const elem of segment_stats_table.footer.elem.children) {
+      elem.remove();
+    }
+  }
+
+  // TODO: Update totals row instead of re-creating it to avoid reflow
+  const row = segment_stats_table.append_footer({
+      brief_name: 'Total',
+      success_count: undefined,
+      success_rate: undefined,
+      median_time: total_median,
+      best_time: total_best,
+      sum_of_best_times: total_sob,
+  }, segment_stats_footer_columns);
+
+  segment_stats_div.show();
+  scroll_changed(bottom_panel.elem);
+  gutter.show();
+};
+
+class TimerClient {
+  constructor(url, on_new_room_time, on_new_segment, on_segment_stats) {
+    this.handle_new_room_time = on_new_room_time;
+    this.handle_new_segment = on_new_segment;
+    this.handle_segment_stats = on_segment_stats;
+
+    this.socket = new WebSocket(url)
+    this.socket.addEventListener('open', (e) => this.handle_open(e));
+    this.socket.addEventListener('close', (e) => this.handle_close(e));
+    this.socket.addEventListener('message', (e) => this.handle_message(e));
+  }
+
+  handle_open(event) {
+    console.log('Opened websocket');
+  }
+
+  handle_close(event) {
+    console.log('Websocket closed');
+  }
+
+  handle_message(event) {
+    console.log(event.data);
+    const msg = JSON.parse(event.data);
+    const type = msg[0];
+    const data = msg[1];
+    if (type == 'new_room_time') {
+      this.handle_new_room_time(data);
+    } else if (type == 'new_segment') {
+      this.handle_new_segment(data);
+    } else if (type == 'segment_stats') {
+      this.handle_segment_stats(data);
+    }
+  }
+}
+
+const params = new URLSearchParams(location.search);
+const port = params.get('port');
+const url = `ws://localhost:${port}`;
+const timer_client = new TimerClient(url, handle_new_room_time, handle_new_segment, handle_segment_stats);
