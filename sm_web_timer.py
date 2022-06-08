@@ -225,7 +225,7 @@ class JsonEventGenerator(object):
     # segment is not completed)
     for split_segment in self.split_segments:
       if segment.contains_segment(split_segment):
-        self.send_single_segment_stats(segment, tracker.history)
+        self.send_single_segment_stats(split_segment, tracker.history)
 
   def new_segment(self, transition):
     self.emit('new_segment', {
