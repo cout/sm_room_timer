@@ -67,13 +67,19 @@ class Widget {
 
 class TableCell extends Widget {
   constructor(data, col) {
-    const cell_elem = document.createElement('td');
-    super(cell_elem);
+    super(document.createElement('td'));
 
-    this.data = data;
     this.col = col;
 
-    const text = String(get(col, data) || '');
+    this.update(data);
+  }
+
+  update(data) {
+    this.data = data;
+
+    this.elem.innerHTML = '';
+
+    const text = String(get(this.col, data) || '');
     const lines = text.split('\n');
     let first_line = true;
     for (const line of lines) {
@@ -84,15 +90,6 @@ class TableCell extends Widget {
       first_line = false;
     }
 
-    add_classes(this.elem, col.cls, data);
-  }
-
-  update(data) {
-    const old_data = this.text_elem.data;
-    this.data = data;
-    const new_data = get(this.col, data);
-    this.text_elem.data = get(this.col, data);
-    this.elem.className = "";
     add_classes(this.elem, this.col.cls, data);
   }
 };
