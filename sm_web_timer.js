@@ -532,23 +532,44 @@ const handle_segment_stats = function(data) {
 };
 
 class TimerClient {
-  constructor(url, on_new_room_time, on_new_segment, on_segment_stats) {
+  constructor(url, reconnect_interval, on_new_room_time, on_new_segment, on_segment_stats) {
+    this.url = url;
+    this.reconnect_interval = reconnect_interval;
     this.handle_new_room_time = on_new_room_time;
     this.handle_new_segment = on_new_segment;
     this.handle_segment_stats = on_segment_stats;
 
-    this.socket = new WebSocket(url)
-    this.socket.addEventListener('open', (e) => this.handle_open(e));
-    this.socket.addEventListener('close', (e) => this.handle_close(e));
-    this.socket.addEventListener('message', (e) => this.handle_message(e));
+    this.open_handler = (e) => this.handle_open(e);
+    this.close_handler = (e) => this.handle_close(e);
+    this.message_handler = (e) => this.handle_message(e);
+
+    this.socket = undefined;
+    this.connect();
+  }
+
+  connect() {
+    this.finish();
+
+    this.socket = new WebSocket(url);
+
+    this.socket.addEventListener('open', this.open_handler);
+    this.socket.addEventListener('close', this.close_handler);
+    this.socket.addEventListener('message', this.message_handler);
+  }
+
+  finish() {
+    if (this.socket) {
+      this.socket.removeEventListener('open', this.open_handler);
+      this.socket.removeEventListener('close', this.close_handler);
+      this.socket.removeEventListener('message', this.message_handler);
+    }
   }
 
   handle_open(event) {
-    console.log('Opened websocket');
   }
 
   handle_close(event) {
-    console.log('Websocket closed');
+    setTimeout(() => this.connect(), this.reconnect_interval);
   }
 
   handle_message(event) {
@@ -569,4 +590,4 @@ class TimerClient {
 const params = new URLSearchParams(location.search);
 const port = params.get('port');
 const url = `ws://localhost:${port}`;
-const timer_client = new TimerClient(url, handle_new_room_time, handle_new_segment, handle_segment_stats);
+const timer_client = new TimerClient(url, 10000, handle_new_room_time, handle_new_segment, handle_segment_stats);
