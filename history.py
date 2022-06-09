@@ -38,6 +38,7 @@ class History(object):
   def __init__(self, history=None, reset_rooms=None, completed_rooms=None):
     self.history = history or { }
     self.all_transitions = [ ]
+    self.indexes_by_tid = { }
     self.reset_rooms = reset_rooms or { }
     self.completed_rooms = completed_rooms or { }
 
@@ -48,6 +49,13 @@ class History(object):
       self.history[transition.id] = attempts
 
     attempts.append(transition)
+
+    indexes = self.indexes_by_tid.get(transition.id, None)
+    if indexes is None:
+      indexes = [ ]
+      self.indexes_by_tid[transition.id] = indexes
+    indexes.append(len(self.all_transitions))
+
     self.all_transitions.append(transition)
 
     if not from_file:

@@ -61,26 +61,25 @@ def find_segment_in_history(segment, history):
   segment_iter = None
   next_tid = None
 
-  for transition in history.all_transitions:
-    if transition.id == segment.start:
-      # This is the start
-      attempt = SegmentAttempt()
-      segment_iter = iter(segment)
-      next_tid = next(segment_iter, None)
+  for segment_start_idx in history.indexes_by_tid.get(segment.start, []):
+    attempt = SegmentAttempt()
+    segment_iter = iter(segment)
+    next_tid = next(segment_iter, None)
 
-    if next_tid is not None and transition.id == next_tid:
-      # This is the next transition in the segment
-      attempt.append(transition)
-      next_tid = next(segment_iter, None)
-      if transition.id == segment.end:
-        attempts.append(attempt)
+    for idx in range(segment_start_idx, len(history.all_transitions)):
+      transition = history.all_transitions[idx]
 
-    else:
-      # This is not the next transition in the segment (or the
-      # previous transtition was the end of the segment)
-      attempt = None
-      segment_iter = None
-      next_tid = None
+      if next_tid is not None and transition.id == next_tid:
+        # This is the next transition in the segment
+        attempt.append(transition)
+        next_tid = next(segment_iter, None)
+        if transition.id == segment.end:
+          attempts.append(attempt)
+
+      else:
+        # This is not the next transition in the segment (or the
+        # previous transition was the end of the segment)
+        break
 
   return attempts
 
