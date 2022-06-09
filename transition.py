@@ -46,6 +46,9 @@ class TransitionId(object):
   def __hash__(self):
     return hash((self.room, self.entry_room, self.exit_room, self.items, self.beams))
 
+  def __eq__(self, other):
+    return self.room is other.room and self.entry_room is other.entry_room and self.exit_room is other.exit_room and self.items == other.items and self.beams == other.beams
+
   def __str__(self):
     return '%s (entering from %s via %x, exiting to %s via %x)' % (
         self.room, self.entry_room, self.entry_door.door_id, self.exit_room,
