@@ -5,7 +5,9 @@ from rooms import Room, NullRoom
 from doors import Door, NullDoor
 
 import datetime
+from dataclasses import dataclass
 
+@dataclass
 class TransitionId(object):
   room: Room
   entry_door: Door
@@ -43,10 +45,6 @@ class TransitionId(object):
 
   def __hash__(self):
     return hash((self.room, self.entry_room, self.exit_room, self.items, self.beams))
-
-  def __eq__(self, other):
-    return (self.room, self.entry_room, self.exit_room, self.items, self.beams) == \
-           (other.room, other.entry_room, other.exit_room, other.items, other.beams)
 
   def __str__(self):
     return '%s (entering from %s via %x, exiting to %s via %x)' % (
