@@ -2,7 +2,7 @@ body {
   color: #dddddd;
   background-color: #000000;
   font-family: "ITC Avant Garde Gothic", "Century Gothic", Calibri, Candara, Segoe, "Segoe UI", Optima, Arial, sans-serif;
-  font-size: smaller;
+  font-size: 10pt;
 }
 
 table {
@@ -30,7 +30,7 @@ table tr:nth-child(odd) th, table tr:nth-child(odd) td {
 table tr:nth-child(even) th, table tr:nth-child(even) td {
 }
 
-thead th {
+Thead th {
   text-align: left;
   position: sticky;
   top: 0;

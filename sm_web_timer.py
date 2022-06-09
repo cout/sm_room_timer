@@ -27,7 +27,7 @@ import os
 import threading
 
 # TODO: Don't bother importing these with --headless
-from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
+from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtGui
 
 def encode_segment(segment):
   return {
@@ -349,17 +349,18 @@ class WebenginePage(QtWebEngineWidgets.QWebEnginePage):
     print(msg)
 
 class Browser(object):
-  def __init__(self, argv, url):
+  def __init__(self, argv, url, zoom):
     self.app = QtWidgets.QApplication(argv)
     self.url = url
     self.window = QtWidgets.QWidget()
     self.layout = QtWidgets.QVBoxLayout()
 
     self.webview = QtWebEngineWidgets.QWebEngineView()
-    self.webview.resize(500, 600)
+    self.webview.resize(int(500*zoom), int(600*zoom))
 
     self.page = WebenginePage(self.webview)
     self.webview.setPage(self.page)
+    self.webview.setZoomFactor(zoom)
 
     self.layout.setContentsMargins(0, 0, 0, 0)
     self.layout.addWidget(self.webview)
@@ -411,23 +412,41 @@ class Browser(object):
   def stop(self):
     self.app.quit()
 
-def enable_qt_fractional_scaling():
-  # This work with qtwebengine 5.15 to enable fractional scaling (I have
-  # the scale factor set to 1.5 in kde plasma settings).  It will not
-  # work with qtwebengine 5.14; to get that to work I would need to
-  # somehow figure out what the scale factor should be and set
-  # QT_SCALE_FACTOR explicitly.
-  #
-  # Note I am unsure whether QT_ENABLE_HIGHDPI_SCALING uses
-  # QT_SCREEN_SCALE_FACTORS (which is what I want) or whether it
-  # computes the scale factor automatically based on the dpi.
-  del os.environ['QT_AUTO_SCREEN_SCALE_FACTOR']
-  os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-  os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'PassThrough'
+def qt_scale_factor():
+  # Create a temporary application so we can get access to the screen,
+  # query its device pixel ratio to get the scale factor, then shut down
+  # the application.
+  app = QtWidgets.QApplication(sys.argv)
+  screen = app.primaryScreen()
+  scale_factor = screen.devicePixelRatio()
+  app.quit()
+  return scale_factor
 
-def run_qt_browser(url):
-  enable_qt_fractional_scaling()
-  browser = Browser(sys.argv, url)
+def default_zoom_level():
+  e = dict(os.environ)
+
+  try:
+    # First, get the scale factor without fractional scaling
+    scale_factor = qt_scale_factor()
+
+    # Next, get the scale factor with fractional scaling
+    del os.environ['QT_AUTO_SCREEN_SCALE_FACTOR']
+    os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
+    os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'PassThrough'
+    fractional_scale_factor = qt_scale_factor()
+
+    # The zoom level we want is the ratio between the two scale factors
+    # (it is possible to run the application with fractional scaling,
+    # but this causes blurry fonts, while setting qtwebengine's zoom
+    # factor does not).
+    return fractional_scale_factor / scale_factor
+
+  finally:
+    os.environ.clear()
+    os.environ.update(e)
+
+def run_qt_browser(url, zoom):
+  browser = Browser(sys.argv, url, zoom=zoom)
   sys.exit(browser.run())
 
 def main():
@@ -446,6 +465,7 @@ def main():
   parser.add_argument('--rebuild', action='store_true')
   parser.add_argument('--port', type=int, default=15000)
   parser.add_argument('--headless', action='store_true')
+  parser.add_argument('--zoom', type=float)
   # parser.add_argument('--segment', action='append', required=True)
   args = parser.parse_args()
 
@@ -531,7 +551,9 @@ def main():
       filename = 'sm_web_timer.html'
       port = args.port
       url = 'file://%s/%s?port=%s' % (dirname, filename, port)
-      run_qt_browser(url)
+      run_qt_browser(
+          url,
+          zoom=(args.zoom or default_zoom_level()))
 
   finally:
     for f in reversed(shutdown):
