@@ -118,27 +118,27 @@ div.bottom-shadow tfoot::before {
   background-color: #ffaf00 !important;
 }
 
-th.time {
+th div.time {
   text-align: right;
 }
 
-th.time-type {
+th div.time-type {
   padding-left: 1em;
 }
 
-th.numeric {
+th div.numeric {
   text-align: right;
 }
 
-td.time {
+td div.time {
   text-align: right;
 }
 
-td.time-type {
+td div.time-type {
   padding-left: 1em;
 }
 
-td.numeric {
+td div.numeric {
   text-align: right;
 }
 

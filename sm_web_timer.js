@@ -81,16 +81,12 @@ class TableCell extends Widget {
 
     const text = String(get(this.col, data) || '');
     const lines = text.split('\n');
-    let first_line = true;
     for (const line of lines) {
-      if (!first_line) {
-        this.elem.appendChild(document.createElement('br'));
-      }
-      this.elem.appendChild(document.createTextNode(line));
-      first_line = false;
+      const div = document.createElement('div')
+      div.appendChild(document.createTextNode(line));
+      add_classes(div, this.col.cls, data);
+      this.elem.appendChild(div)
     }
-
-    add_classes(this.elem, this.col.cls, data);
   }
 };
 
