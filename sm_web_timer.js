@@ -123,7 +123,7 @@ class TableRows extends Widget {
     this.columns = columns;
   }
 
-  append(data) {
+  append_row(data) {
     const row = new TableRow(data, this.columns);
     this.elem.appendChild(row.elem);
     row.elem.scrollIntoView();
@@ -142,9 +142,11 @@ class TableRows extends Widget {
   }
 }
 
-class Table extends TableRows {
+class Table extends Widget {
   constructor(columns) {
-    super(document.createElement('table'), columns);
+    super(document.createElement('table'));
+
+    this.columns = columns;
 
     this.append_header_row();
   }
@@ -166,6 +168,24 @@ class Table extends TableRows {
     }
 
     this.header.elem.appendChild(header_row);
+  }
+
+  append_row(data) {
+    if (!this.body) {
+      this.body = new TableRows(document.createElement('tbody'), this.columns);
+      this.elem.appendChild(this.body.elem);
+    }
+
+    return this.body.append_row(data);
+  }
+
+  append_blank_line() {
+    if (!this.body) {
+      this.body = new TableRows(document.createElement('tbody'), this.columns);
+      this.elem.appendChild(this.body.elem);
+    }
+
+    return this.body.append_blank_line();
   }
 
   clear_footer() {
@@ -382,7 +402,7 @@ var last_updated_segment_row = undefined;
 const handle_new_room_time = function(data) {
   help_box.hide();
 
-  room_times_table.append({
+  room_times_table.append_row({
     room_name: data.room.room_name,
     attempts: data.room.attempts,
     type: 'Game',
@@ -393,7 +413,7 @@ const handle_new_room_time = function(data) {
     p25_time: data.room.p25_time.room.game,
     p75_time: data.room.p75_time.room.game,
   });
-  room_times_table.append({
+  room_times_table.append_row({
     room_name: '',
     attempts: '',
     type: 'Real',
@@ -404,7 +424,7 @@ const handle_new_room_time = function(data) {
     p25_time: data.room.p25_time.room.real,
     p75_time: data.room.p75_time.room.real,
   });
-  room_times_table.append({
+  room_times_table.append_row({
     room_name: '',
     attempts: '',
     type: 'Lag',
@@ -415,7 +435,7 @@ const handle_new_room_time = function(data) {
     p25_time: data.room.p25_time.room.lag,
     p75_time: data.room.p75_time.room.lag,
   });
-  room_times_table.append({
+  room_times_table.append_row({
     room_name: '',
     attempts: '',
     type: 'Door Lag',
@@ -426,7 +446,7 @@ const handle_new_room_time = function(data) {
     p25_time: data.room.p25_time.door.lag,
     p75_time: data.room.p75_time.door.lag,
   });
-  room_times_table.append({
+  room_times_table.append_row({
     room_name: '',
     attempts: '',
     type: 'Door Real',
@@ -444,7 +464,7 @@ const handle_new_room_time = function(data) {
     // cells, then this won't work)
     current_segment_time_node.elem.parentNode.removeChild(current_segment_time_node.elem);
   }
-  segment_times_table.append({
+  segment_times_table.append_row({
     room_name: data.room.room_name,
     attempts: data.room_in_segment.attempts,
     time: data.room_in_segment.time,
@@ -453,7 +473,7 @@ const handle_new_room_time = function(data) {
     p25_time: data.room_in_segment.prev_p25_time,
     p75_time: data.room_in_segment.prev_p75_time,
   });
-  current_segment_time_node = segment_times_table.append({
+  current_segment_time_node = segment_times_table.append_row({
     room_name: 'Segment',
     attempts: data.segment.attempts,
     time: data.segment.time,
@@ -500,7 +520,7 @@ const handle_segment_stats = function(data) {
       last_updated_segment = segment;
       last_updated_segment_row = row;
     } else {
-      segment_stats_rows_by_id[segment.id] = segment_stats_table.append(segment)
+      segment_stats_rows_by_id[segment.id] = segment_stats_table.append_row(segment)
       segment_stats_by_id[segment.id] = segment;
     }
   });

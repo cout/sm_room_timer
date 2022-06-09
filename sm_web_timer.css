@@ -24,14 +24,14 @@ table tr td:last-child, table tr th:last-child {
   border-right: 0;
 }
 
-table tr:nth-child(odd) th, table tr:nth-child(odd) td {
-  background-color: #171717;
+table tbody tr:nth-child(odd) th, table tbody tr:nth-child(odd) td {
+  background-color: #0c0c0c;
 }
 
-table tr:nth-child(even) th, table tr:nth-child(even) td {
+table tbody tr:nth-child(even) th, table tbody tr:nth-child(even) td {
 }
 
-Thead th {
+thead th {
   text-align: left;
   position: sticky;
   top: 0;
