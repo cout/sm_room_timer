@@ -401,8 +401,8 @@ class Browser(object):
     self.exc = value
     self.app.quit()
 
-  def handle_thread_exception(self, type, value, traceback, thread):
-    self.handle_exception(type, value, traceback)
+  def handle_thread_exception(self, args, /):
+    self.handle_exception(args.exc_type, args.exc_value, args.exc_traceback)
 
   def stop(self):
     self.app.quit()
