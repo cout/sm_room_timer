@@ -53,6 +53,9 @@ class Segment(object):
     else:
       return self.tids[key]
 
+  def __contains(self, tid):
+    return tid in self.tids
+
   def extend_to(self, tid):
     self.tids.append(tid)
 

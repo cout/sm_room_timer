@@ -218,13 +218,8 @@ class JsonEventGenerator(object):
       },
     })
 
-    # TODO: Instead of checking if the segment contains one of the
-    # split segments, check to see if one of the split segments contains
-    # the room just completed; this will ensure that the sum-of-best is
-    # updated as early as possible (and updated even if the split
-    # segment is not completed)
     for split_segment in self.split_segments:
-      if segment.contains_segment(split_segment):
+      if transition.id in split_segment:
         self.send_single_segment_stats(split_segment, tracker.history)
 
   def new_segment(self, transition):
