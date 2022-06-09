@@ -1,6 +1,18 @@
+from transition import TransitionId
+
+from dataclasses import dataclass
+
+@dataclass
 class Segment(object):
+  tids: list
+  start: TransitionId
+  end: TransitionId
+
   def __init__(self, tids=None):
-    self.tids = tids or []
+    tids = tids or [ ]
+    self.tids = tids
+    self.start = tids[0] if len(tids) > 0 else None
+    self.end = tids[-1] if len(tids) > 0 else None
 
   @classmethod
   def from_route(cls, route, start=None, end=None):
@@ -11,14 +23,6 @@ class Segment(object):
       if in_segment: tids.append(tid)
       if tid == end: break
     return Segment(tids)
-
-  @property
-  def start(self):
-    return self.tids[0]
-
-  @property
-  def end(self):
-    return self.tids[-1]
 
   @property
   def id(self):
@@ -58,6 +62,8 @@ class Segment(object):
 
   def extend_to(self, tid):
     self.tids.append(tid)
+    if self.start is None: self.start = tid
+    self.end = tid
 
   def contains_segment(self, segment):
     return segment.start in self.tids and segment.end in self.tids
