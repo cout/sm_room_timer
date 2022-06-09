@@ -22,8 +22,8 @@ class FrameCount(object):
   def __eq__(self, other):
     return self.count == other.count
 
-  def __lt__(self, other):
-    return self.count < other.count
+  def __le__(self, other):
+    return self.count <= other.count
 
   def __add__(self, other):
     return FrameCount(self.count + other.count)
