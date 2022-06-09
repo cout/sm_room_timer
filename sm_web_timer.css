@@ -13,6 +13,7 @@ table {
 
 table tr td, table tr th {
   border-right: 1px solid #222222;
+  vertical-align: top;
 }
 
 table tr th {
