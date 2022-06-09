@@ -172,7 +172,13 @@ class Table extends TableRows {
     this.header.elem.appendChild(header_row);
   }
 
-  append_footer(data, cols) {
+  clear_footer() {
+    if (this.footer) {
+      this.footer.elem.innerHTML = '';
+    }
+  }
+
+  append_footer_row(data, cols) {
     cols = cols || this.columns;
     const row = new TableRow(data, cols);
 
@@ -247,11 +253,11 @@ const tc = function(o) {
 const ssm = function(o) {
   if (o === undefined) {
     return undefined;
-  } else if (!o.old_segment) {
+  } else if (!o.old) {
     return undefined;
-  } else if (o.median_time < o.old_segment.median_time) {
+  } else if (o.median_time < o.old.median_time) {
     return 'median_time_went_down';
-  } else if (o.median_time > o.old_segment.median_time) {
+  } else if (o.median_time > o.old.median_time) {
     return 'median_time_went_up';
   }
 };
@@ -259,9 +265,9 @@ const ssm = function(o) {
 const ssb = function(o) {
   if (o === undefined) {
     return undefined;
-  } else if (!o.old_segment) {
+  } else if (!o.old) {
     return undefined;
-  } else if (o.best_time < o.old_segment.best_time) {
+  } else if (o.best_time < o.old.best_time) {
     return 'best_time_went_down';
   }
 };
@@ -269,9 +275,9 @@ const ssb = function(o) {
 const sssob = function(o) {
   if (o === undefined) {
     return undefined;
-  } else if (!o.old_segment) {
+  } else if (!o.old) {
     return undefined;
-  } else if (o.sum_of_best_times < o.old_segment.sum_of_best_times) {
+  } else if (o.sum_of_best_times < o.old.sum_of_best_times) {
     return 'sum_of_best_times_went_down';
   }
 };
@@ -470,6 +476,8 @@ const handle_new_segment = function(data) {
   current_segment_time_node = undefined;
 };
 
+var old_segment_totals = { };
+
 const handle_segment_stats = function(data) {
   data.segments.forEach((segment) => {
     const row = segment_stats_rows_by_id[segment.id];
@@ -483,7 +491,7 @@ const handle_segment_stats = function(data) {
       // improvement
       const old_segment = segment_stats_by_id[segment.id];
       row.update({
-        old_segment: old_segment,
+        old: old_segment,
         ...segment
       });
       row.elem.scrollIntoView({ behavior: 'smooth', block: 'center' })
@@ -501,30 +509,30 @@ const handle_segment_stats = function(data) {
     }
   });
 
-  let total_median = 0;
-  let total_best = 0;
-  let total_sob = 0;
-  for (const [ id, stats ] of Object.entries(segment_stats_by_id)) {
-    total_median += stats.median_time;
-    total_best += stats.best_time;
-    total_sob += stats.sum_of_best_times;
+  var segment_totals = {
+    median_time: 0,
+    best_time: 0,
+    sum_of_best_times: 0,
   }
 
-  if (segment_stats_table.footer) {
-    for (const elem of segment_stats_table.footer.elem.children) {
-      elem.remove();
-    }
+  for (const [ id, stats ] of Object.entries(segment_stats_by_id)) {
+    segment_totals.median_time += stats.median_time;
+    segment_totals.best_time += stats.best_time;
+    segment_totals.sum_of_best_times += stats.sum_of_best_times;
   }
+
+  segment_stats_table.clear_footer();
 
   // TODO: Update totals row instead of re-creating it to avoid reflow
-  const row = segment_stats_table.append_footer({
+  const row = segment_stats_table.append_footer_row({
       brief_name: 'Total',
       success_count: undefined,
       success_rate: undefined,
-      median_time: total_median,
-      best_time: total_best,
-      sum_of_best_times: total_sob,
+      old: old_segment_totals,
+      ...segment_totals,
   }, segment_stats_footer_columns);
+
+  old_segment_totals = segment_totals;
 
   segment_stats_div.show();
   scroll_changed(bottom_panel.elem);
