@@ -156,9 +156,11 @@ class Table extends Widget {
 
     for (const col of this.columns) {
       const cell = document.createElement('th');
+      const div = document.createElement('div')
       const text = document.createTextNode(col.label);
-      cell.appendChild(text);
-      add_classes(cell, col.cls, undefined);
+      div.appendChild(text);
+      add_classes(div, col.cls, undefined);
+      cell.appendChild(div);
       header_row.appendChild(cell);
     }
 
