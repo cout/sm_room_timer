@@ -298,7 +298,8 @@ class TimerThread(object):
         self.json_generator, self.state_reader,
         on_transitioned=self.tracker.transitioned,
         on_state_change=self.json_generator.state_changed,
-        on_reset=self.tracker.room_reset)
+        on_reset=self.tracker.room_reset,
+        on_preset_loaded =self.tracker.preset_loaded)
 
     self.thread = threading.Thread(target=self.run)
 

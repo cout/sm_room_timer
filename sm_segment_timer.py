@@ -199,6 +199,10 @@ class SegmentTimeTracker(RoomTimeTracker):
     self.new_segment = True
     return RoomTimeTracker.room_reset(self, reset_id)
 
+  def preset_loaded(self, state, change):
+    self.new_segment = True
+    return RoomTimeTracker.preset_loaded(self, state, change)
+
 class SegmentTimer(RoomTimer):
   pass
 
@@ -361,7 +365,8 @@ def main():
         frontend, state_reader,
         on_transitioned=tracker.transitioned,
         on_state_change=frontend.state_changed,
-        on_reset=tracker.room_reset)
+        on_reset=tracker.room_reset,
+        on_preset_loaded =self.tracker.preset_loaded)
 
     while state_reader.is_alive(): timer.poll()
 

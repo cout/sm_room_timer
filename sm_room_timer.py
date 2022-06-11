@@ -55,6 +55,9 @@ class RoomTimeTracker(object):
 
     # TODO: Write reset to history file
 
+  def preset_loaded(self, state, change):
+    pass
+
   def close(self):
     self.transition_log.close()
 
@@ -62,13 +65,15 @@ class RoomTimer(object):
   def __init__(self, logger, state_reader,
       on_transitioned=lambda *args, **kwargs: None,
       on_state_change=lambda *args, **kwargs: None,
-      on_reset=lambda *args, **kwargs: None):
+      on_reset=lambda *args, **kwargs: None,
+      on_preset_loaded=lambda *args, **kwargs: None):
     self.logger = logger
     self.state_reader = state_reader
 
     self.on_transitioned = on_transitioned
     self.on_state_change = on_state_change
     self.on_reset = on_reset
+    self.on_preset_loaded = on_preset_loaded
 
     self.current_room = NullRoom
     self.last_room = NullRoom
@@ -141,6 +146,8 @@ class RoomTimer(object):
       elif change.is_playing and change.is_reset:
         self.logger.log("Ignoring next transition due to loading a preset")
         self.ignore_next_transition = True
+
+    self.on_preset_loaded(state, change)
 
   def handle_reset(self, state, change):
     # TODO: Can we differentiate between a reset due to failing the room
@@ -478,7 +485,8 @@ def main():
         frontend, state_reader,
         on_transitioned=tracker.transitioned,
         on_state_change=frontend.state_changed,
-        on_reset=tracker.room_reset)
+        on_reset=tracker.room_reset,
+        on_preset_loaded=tracker.preset_loaded)
 
     while state_reader.is_alive(): timer.poll()
 
