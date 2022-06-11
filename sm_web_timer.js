@@ -502,7 +502,10 @@ const handle_segment_stats = function(data) {
     if (row) {
       // Clear out any colors from the last updated row
       if (last_updated_segment_row) {
-        last_updated_segment_row.update(last_updated_segment);
+        last_updated_segment_row.update({
+          old: undefined,
+          last_updated_segment,
+        });
       }
 
       // Update the row for this segment, with colors indicating any
