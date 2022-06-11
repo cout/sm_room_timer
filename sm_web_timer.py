@@ -347,7 +347,12 @@ class Browser(object):
   def __init__(self, argv, url, zoom):
     self.app = QtWidgets.QApplication(argv)
     self.url = url
+
     self.window = QtWidgets.QWidget()
+
+    icon_path = os.path.join(sys.path[0], 'morph_ball_clock.png')
+    self.window.setWindowIcon(QtGui.QIcon(icon_path))
+
     self.layout = QtWidgets.QVBoxLayout()
 
     self.webview = QtWebEngineWidgets.QWebEngineView()
