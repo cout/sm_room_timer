@@ -156,7 +156,8 @@ td div.numeric {
 }
 
 #room-history {
-  display: block;
+  display: flex;
+  flex-direction: column;
   background-color: #262626;
   position: absolute;
   width: 80%;
@@ -166,6 +167,20 @@ td div.numeric {
   transform: translate(-50%, -50%);
   padding: 1em;
   z-index: 100;
+}
+
+#room-history-label {
+  flex-grow: 0;
+  flex-shrink: 1;
+  flex-basis: auto;
+}
+
+#room-history-table {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+  background-color: #000000;
+  overflow: auto;
 }
 
 .room-name {

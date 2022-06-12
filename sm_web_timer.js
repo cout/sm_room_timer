@@ -378,7 +378,7 @@ const room_history_columns = [
 ];
 const room_history_table = new Table(room_history_columns);
 const room_history_div = new Widget(document.getElementById('room-history'));
-room_history_div.elem.appendChild(room_history_table.elem);
+document.getElementById('room-history-table').appendChild(room_history_table.elem);
 
 const gutter = new Widget(document.getElementById("gutter"));
 
