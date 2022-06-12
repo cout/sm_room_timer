@@ -321,7 +321,8 @@ const sssob = function(o) {
 };
 
 const room_times_columns = [
-  { label: "Room",   get: o => o.room_name,       cls: [ rn ], onclick: o => show_room_history(o.room) },
+  { label: "Room",   get: o => o.room_name,       cls: [ rn ],
+                     onclick: o => show_room_history(o.room) },
   { label: "#",      get: o => o.attempts,        cls: [ 'numeric' ]   },
   { label: "Type",   get: o => o.type,            cls: [ 'time-type' ] },
   { label: "Time",   get: o => fc(o.time),        cls: [ 'time', tc ]  },
@@ -335,12 +336,13 @@ const room_times_div = new Widget(document.getElementById('room-times'));
 room_times_div.elem.appendChild(room_times_table.elem);
 
 const segment_times_columns = [
-  { label: "Room",         get: o => o.room_name,                                         },
+  { label: "Room",         get: o => o.room_name,                     cls: [ rn ],
+                           onclick: o => show_room_history(o.room) },
   { label: "#",            get: o => o.attempts,                      cls: [ 'numeric' ]  },
   { label: "Time",         get: o => fc(o.time),                      cls: [ 'time', tc ] },
-  // { label: "Old Median",       get: o => fc(o.median_time),               cls: [ 'time' ]     },
+  // { label: "Old Median",get: o => fc(o.median_time),               cls: [ 'time' ]     },
   { label: "\u00b1Median", get: o => fc_delta(o.time, o.median_time), cls: [ 'time' ]     },
-  // { label: "Old Best",         get: o => fc(o.best_time),                 cls: [ 'time' ]     },
+  // { label: "Old Best",  get: o => fc(o.best_time),                 cls: [ 'time' ]     },
   { label: "\u00b1Best",   get: o => fc_delta(o.time, o.best_time),   cls: [ 'time' ]     },
 ];
 const segment_times_table = new Table(segment_times_columns);
@@ -349,10 +351,10 @@ segment_times_div.elem.appendChild(segment_times_table.elem);
 
 const segment_stats_columns = [
   { label: "Segment",    get: o => o.brief_name,                                              },
-  { label: "#",          get: o => o.success_count,                      cls: [ 'numeric' ] },
-  { label: "%",          get: o => pct(o.success_rate),                  cls: [ 'numeric' ] },
-  { label: "Median",     get: o => fc(o.median_time),                    cls: [ 'time', ssm ]    },
-  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time), cls: [ 'time', ssb ]    },
+  { label: "#",          get: o => o.success_count,                      cls: [ 'numeric' ]   },
+  { label: "%",          get: o => pct(o.success_rate),                  cls: [ 'numeric' ]   },
+  { label: "Median",     get: o => fc(o.median_time),                    cls: [ 'time', ssm ] },
+  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time), cls: [ 'time', ssb ] },
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times), cls: [ 'time', sssob ] },
 ];
 const segment_stats_table = new Table(segment_stats_columns);
@@ -360,11 +362,11 @@ const segment_stats_div = new Widget(document.getElementById('segment-stats'));
 segment_stats_div.elem.appendChild(segment_stats_table.elem);
 
 const segment_stats_footer_columns = [
-  { label: "Segment",    get: o => o.brief_name,        },
-  { label: "#",          get: o => '',                  },
-  { label: "%",          get: o => '',                  },
+  { label: "Segment",    get: o => o.brief_name,                             },
+  { label: "#",          get: o => '',                                       },
+  { label: "%",          get: o => '',                                       },
   { label: "Median",     get: o => fc(o.median_time),   cls: [ 'time', ssm ] },
-  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time) + '\n' + fc(o.best_time), cls: [ 'time', ssb ]    },
+  { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time) + '\n' + fc(o.best_time),         cls: [ 'time', ssb ]   },
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times) + '\n' + fc(o.best_time), cls: [ 'time', sssob ] },
 ];
 
