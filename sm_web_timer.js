@@ -369,12 +369,12 @@ const segment_stats_footer_columns = [
 ];
 
 const room_history_columns = [
-  { label: "Room Game Time",   get: o => fc(o.room.game),   cls: [ 'time', tc ]  },
-  { label: "Room Real Time",   get: o => fc(o.room.real),   cls: [ 'time', tc ]  },
-  { label: "Room Lag Time",    get: o => fc(o.room.lag),    cls: [ 'time', tc ]  },
-  { label: "Door Game Time",   get: o => fc(o.door.game),   cls: [ 'time', tc ]  },
-  { label: "Door Real Time",   get: o => fc(o.door.real),   cls: [ 'time', tc ]  },
-  { label: "Door Lag Time",    get: o => fc(o.door.lag),    cls: [ 'time', tc ]  },
+  { label: "Room Game Time",   get: o => fc(o.room.game),   cls: [ 'time' ]  },
+  { label: "Room Real Time",   get: o => fc(o.room.real),   cls: [ 'time' ]  },
+  { label: "Room Lag Time",    get: o => fc(o.room.lag),    cls: [ 'time' ]  },
+  { label: "Door Game Time",   get: o => fc(o.door.game),   cls: [ 'time' ]  },
+  { label: "Door Real Time",   get: o => fc(o.door.real),   cls: [ 'time' ]  },
+  { label: "Door Lag Time",    get: o => fc(o.door.lag),    cls: [ 'time' ]  },
 ];
 const room_history_table = new Table(room_history_columns);
 const room_history_div = new Widget(document.getElementById('room-history'));
