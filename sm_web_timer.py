@@ -25,6 +25,7 @@ import sys
 import json
 import os
 import threading
+import traceback
 
 # TODO: Don't bother importing these with --headless
 from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets, QtGui
@@ -42,14 +43,22 @@ def encode_transition_id(tid):
     'room_name': tid.room.name,
     'entry_room_name': tid.entry_room.name,
     'exit_room_name': tid.exit_room.name,
-    'room_id': '%04x' % tid.room.room_id,
-    'entry_room_id': '%04x' % tid.entry_room.room_id,
-    'exit_room_id': '%04x' % tid.exit_room.room_id,
-    'entry_door_id': '%04x' % tid.entry_door.door_id,
-    'exit_door_id': '%04x' % tid.exit_door.door_id,
+    'room_id': '%04X' % tid.room.room_id,
+    'entry_room_id': '%04X' % tid.entry_room.room_id,
+    'exit_room_id': '%04X' % tid.exit_room.room_id,
+    'entry_door_id': '%04X' % tid.entry_door.door_id,
+    'exit_door_id': '%04X' % tid.exit_door.door_id,
     'items': tid.items,
     'beams': tid.beams,
   }
+
+def decode_transition_id(d, rooms, doors):
+  return TransitionId(
+      room=rooms.by_id[int(d['room_id'], 16)],
+      entry_door=doors.by_id[int(d['entry_door_id'], 16)],
+      exit_door=doors.by_id[int(d['exit_door_id'], 16)],
+      items=d['items'],
+      beams=d['beams'])
 
 def encode_transition_time(time):
   return {
@@ -138,12 +147,6 @@ class JsonEventGenerator(object):
   def send(self, session, type, *args):
     s = json.dumps([ type, *args ], cls=JSONEncoder)
     session.send(s)
-
-  def handle_connected(self, session):
-    print("connected", session)
-
-  def handle_disconnected(self, session):
-    print("disconnected", session)
 
   def log(self, *args):
     self.emit('log', *args)
@@ -274,11 +277,25 @@ class JsonEventGenerator(object):
       'segments': segments,
     })
 
+  def send_room_history(self, session, tid, history):
+    indexes = history.indexes_by_tid[tid]
+    transitions = [ history.all_transitions[idx] for idx in indexes ]
+
+    times = [ {
+      **encode_transition_time(transition.time)
+    } for transition in transitions ]
+
+    self.send(session, 'room_history', {
+      'times': times,
+    })
+
 class TimerThread(object):
   def __init__(self, history, rooms, doors, transition_log, route,
       json_generator, server, usb2snes, split_segments):
 
     self.history = history
+    self.rooms = rooms
+    self.doors = doors
     self.transition_log = transition_log
     self.route = route
     self.json_generator = json_generator
@@ -334,11 +351,35 @@ class TimerThread(object):
     what, *payload = event
     if what == WebsocketServer.CONNECTED:
       session, = payload
-      if self.split_segments is not None and len(self.split_segments) > 0:
-        self.json_generator.send_initial_segment_stats(
-            session,
-            self.history,
-            self.split_segments)
+      self.handle_connected(session)
+    elif what == WebsocketServer.MESSAGE:
+      session, msg = payload
+      try:
+        self.handle_message(session, msg)
+      except:
+        print('================================================================')
+        print('Exception handling message from client:')
+        traceback.print_exc()
+        print('================================================================')
+
+  def handle_connected(self, session):
+    if self.split_segments is not None and len(self.split_segments) > 0:
+      self.json_generator.send_initial_segment_stats(
+          session,
+          self.history,
+          self.split_segments)
+
+  def handle_message(self, session, msg):
+    msg_type, payload = json.loads(msg)
+    print(msg_type, payload)
+    if msg_type == 'room_history':
+      tid = decode_transition_id(payload, self.rooms, self.doors)
+      self.json_generator.send_room_history(
+          session,
+          tid,
+          self.history)
+    else:
+      print("Unknown message type:", msg_type)
 
 class WebenginePage(QtWebEngineWidgets.QWebEnginePage):
   def javaScriptConsoleMessage(self, level, msg, line, source_id):

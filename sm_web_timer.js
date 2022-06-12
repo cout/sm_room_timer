@@ -40,12 +40,12 @@ const pct = function(rate) {
   return `${Math.round(rate) * 100}%`;
 }
 
-const add_classes = function(cell, cls, obj) {
-  if (cls) {
-    cls.forEach((cls) => {
+const add_classes = function(elem, classes, obj) {
+  if (classes) {
+    classes.forEach((cls) => {
       cls = (typeof cls === 'function') ? cls(obj) : cls;
       if (cls !== undefined) {
-        cell.classList.add(cls);
+        elem.classList.add(cls);
       }
     });
   }
@@ -63,6 +63,10 @@ class Widget {
   hide() {
     this.elem.classList.add('hidden')
   }
+
+  clear() {
+    this.innerHTML = '';
+  }
 }
 
 class TableCell extends Widget {
@@ -77,15 +81,21 @@ class TableCell extends Widget {
   update(data) {
     this.data = data;
 
-    this.elem.innerHTML = '';
+    this.clear();
 
     const text = String(get(this.col, data) || '');
     const lines = text.split('\n');
     for (const line of lines) {
       const div = document.createElement('div')
-      div.appendChild(document.createTextNode(line));
+      // div.appendChild(document.createTextNode(line));
+      div.innerHTML = line // TODO: line might not be sanitized!
       add_classes(div, this.col.cls, data);
       this.elem.appendChild(div)
+    }
+    if (this.col.onclick) {
+      this.elem.onclick = evt => this.col.onclick(data);
+    } else {
+      this.elem.onclick = undefined;
     }
   }
 };
@@ -192,7 +202,7 @@ class Table extends Widget {
 
   clear_footer() {
     if (this.footer) {
-      this.footer.elem.innerHTML = '';
+      this.footer.clear();
     }
   }
 
@@ -252,6 +262,16 @@ class Table extends Widget {
 // },
 // "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
+const rn = function(o) {
+  if (o === undefined) {
+    return undefined;
+  } else if (!o.room_name || o.room_name == '') {
+    return undefined;
+  } else {
+    return 'room-name';
+  }
+}
+
 const tc = function(o) {
   if (o === undefined) {
     return undefined;
@@ -301,7 +321,7 @@ const sssob = function(o) {
 };
 
 const room_times_columns = [
-  { label: "Room",   get: o => o.room_name,                            },
+  { label: "Room",   get: o => o.room_name,       cls: [ rn ], onclick: o => show_room_history(o.room) },
   { label: "#",      get: o => o.attempts,        cls: [ 'numeric' ]   },
   { label: "Type",   get: o => o.type,            cls: [ 'time-type' ] },
   { label: "Time",   get: o => fc(o.time),        cls: [ 'time', tc ]  },
@@ -347,6 +367,18 @@ const segment_stats_footer_columns = [
   { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time) + '\n' + fc(o.best_time), cls: [ 'time', ssb ]    },
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times) + '\n' + fc(o.best_time), cls: [ 'time', sssob ] },
 ];
+
+const room_history_columns = [
+  { label: "Room Game Time",   get: o => fc(o.room.game),   cls: [ 'time', tc ]  },
+  { label: "Room Real Time",   get: o => fc(o.room.real),   cls: [ 'time', tc ]  },
+  { label: "Room Lag Time",    get: o => fc(o.room.lag),    cls: [ 'time', tc ]  },
+  { label: "Door Game Time",   get: o => fc(o.door.game),   cls: [ 'time', tc ]  },
+  { label: "Door Real Time",   get: o => fc(o.door.real),   cls: [ 'time', tc ]  },
+  { label: "Door Lag Time",    get: o => fc(o.door.lag),    cls: [ 'time', tc ]  },
+];
+const room_history_table = new Table(room_history_columns);
+const room_history_div = new Widget(document.getElementById('room-history'));
+room_history_div.elem.appendChild(room_history_table.elem);
 
 const gutter = new Widget(document.getElementById("gutter"));
 
@@ -405,6 +437,7 @@ const handle_new_room_time = function(data) {
   help_box.hide();
 
   room_times_table.append_row({
+    room: data.room,
     room_name: data.room.room_name,
     attempts: data.room.attempts,
     type: 'Game',
@@ -560,13 +593,26 @@ const handle_segment_stats = function(data) {
   gutter.show();
 };
 
+const handle_room_history = function(data) {
+  // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
+  console.log('got room history', data);
+  if (room_history_table.body) {
+    room_history_table.body.clear();
+  }
+  data.times.forEach((times) => {
+    room_history_table.append_row(times);
+  });
+  room_history_div.show();
+}
+
 class TimerClient {
-  constructor(url, reconnect_interval, on_new_room_time, on_new_segment, on_segment_stats) {
+  constructor(url, reconnect_interval, on_new_room_time, on_new_segment, on_segment_stats, on_room_history) {
     this.url = url;
     this.reconnect_interval = reconnect_interval;
     this.handle_new_room_time = on_new_room_time;
     this.handle_new_segment = on_new_segment;
     this.handle_segment_stats = on_segment_stats;
+    this.handle_room_history = on_room_history;
 
     this.open_handler = (e) => this.handle_open(e);
     this.close_handler = (e) => this.handle_close(e);
@@ -612,11 +658,26 @@ class TimerClient {
       this.handle_new_segment(data);
     } else if (type == 'segment_stats') {
       this.handle_segment_stats(data);
+    } else if (type == 'room_history') {
+      this.handle_room_history(data);
     }
+  }
+
+  fetch_room_history(tid) {
+    // TODO: show spinner to indicate data is loading?
+    const msg = JSON.stringify([ 'room_history', tid ]);
+    console.log('fetching room history', tid);
+    this.socket.send(msg);
   }
 }
 
 const params = new URLSearchParams(location.search);
 const port = params.get('port');
 const url = `ws://localhost:${port}`;
-const timer_client = new TimerClient(url, 10000, handle_new_room_time, handle_new_segment, handle_segment_stats);
+const timer_client = new TimerClient(url, 10000, handle_new_room_time, handle_new_segment, handle_segment_stats, handle_room_history);
+
+const show_room_history = function(room) {
+  if (room) {
+    timer_client.fetch_room_history(room);
+  }
+}

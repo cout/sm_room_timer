@@ -20,6 +20,7 @@ class WebsocketServer(object):
   # Events
   class CONNECTED: pass
   class DISCONNECTED: pass
+  class MESSAGE: pass
 
   def __init__(self, port):
     self.port = port
@@ -88,8 +89,8 @@ class WebsocketServer(object):
     self.sessions.add(session)
     self.event_queue.put_nowait((WebsocketServer.CONNECTED, session))
     try:
-      # async for message in session.sock:
-        # pass
+      async for message in session.sock:
+        self.event_queue.put_nowait((WebsocketServer.MESSAGE, session, message))
       await session.sock.wait_closed()
     finally:
       self.event_queue.put_nowait((WebsocketServer.DISCONNECTED, session))
