@@ -268,7 +268,7 @@ const rn = function(o) {
   } else if (!o.room_name || o.room_name == '') {
     return undefined;
   } else {
-    return 'room-name';
+    return 'link';
   }
 }
 
