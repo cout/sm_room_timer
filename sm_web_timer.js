@@ -294,9 +294,9 @@ const ssm = function(o) {
   } else if (!o.old) {
     return undefined;
   } else if (o.median_time < o.old.median_time) {
-    return 'median_time_went_down';
+    return 'median-time-went-down';
   } else if (o.median_time > o.old.median_time) {
-    return 'median_time_went_up';
+    return 'median-time-went-up';
   }
 };
 
@@ -306,7 +306,7 @@ const ssb = function(o) {
   } else if (!o.old) {
     return undefined;
   } else if (o.best_time < o.old.best_time) {
-    return 'best_time_went_down';
+    return 'best-time-went-down';
   }
 };
 
@@ -316,7 +316,7 @@ const sssob = function(o) {
   } else if (!o.old) {
     return undefined;
   } else if (o.sum_of_best_times < o.old.sum_of_best_times) {
-    return 'sum_of_best_times_went_down';
+    return 'sum-of-best-times-went-down';
   }
 };
 

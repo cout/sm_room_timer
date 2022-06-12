@@ -98,22 +98,22 @@ div.bottom-shadow tfoot::before {
   color: #e80000;
 }
 
-.median_time_went_down {
+.median-time-went-down {
   color: #ffffff;
   background-color: #00af00;
 }
 
-.median_time_went_up {
+.median-time-went-up {
   color: #ffffff;
   background-color: #af0000;
 }
 
-.best_time_went_down {
+.best-time-went-down {
   color: #ffffff;
   background-color: #ffaf00;
 }
 
-.sum_of_best_times_went_down {
+.sum-of-best-times-went-down {
   color: #000000;
   background-color: #ffaf00;
 }
