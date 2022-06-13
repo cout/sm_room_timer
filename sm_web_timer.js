@@ -595,12 +595,60 @@ const handle_segment_stats = function(data) {
   gutter.show();
 };
 
+const draw_line_chart = function({points, xlim, ylim}) {
+  const xmin = xlim[0];
+  const xmax = xlim[1];
+  const ymin = ylim[0];
+  const ymax = ylim[1];
+
+  const chart = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  chart.classList.add('line-chart');
+
+  // TODO: I think we're not stretching because we're respecting the
+  // aspect ratio.  Perhaps viewBox isn't the right way to do this (it
+  // might make drawing labels hard).
+  const plot = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  plot.classList.add('plot');
+  plot.setAttribute('viewBox', `${xmin} ${ymin} ${xmax-xmin} ${ymax-ymin}`);
+
+  // TODO: x-axis is not visible since we don't start at zero; should
+  // probably just hide the axes
+  const axes = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  axes.classList.add('axes');
+  const ax_cmds = [
+    'M', xmin, 0, 'L', xmax, 0,
+    'M', 0, ymin, 'L', 0, ymax,
+  ];
+  axes.setAttribute("d", ax_cmds.join(' '));
+  plot.appendChild(axes);
+
+  const coords = points.map((p,i) => [ p[0], p[1] ] );
+
+  const pathData = points.flatMap((p,i) => [ i == 0 ? 'M' : 'L', ...coords[i], ]);
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.classList.add('line');
+  path.setAttribute("d", pathData.join(" "));
+  plot.appendChild(path);
+
+  chart.appendChild(plot);
+
+  return chart;
+};
+
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
   console.log('got room history', data);
   if (room_history_table.body) {
     room_history_table.body.clear();
   }
+
+  const times = data.times.map(t => t.room.real);
+  const points = times.map((t,i) => [ i, t ]);
+  const xlim = [ 0, points.length ];
+  const ylim = [ Math.min(...times), Math.max(...times) ];
+  const elem = draw_line_chart({ points: points, xlim: xlim, ylim: ylim });
+  document.getElementById('room-history-chart').appendChild(elem);
+
   data.times.forEach((times) => {
     room_history_table.append_row(times);
   });

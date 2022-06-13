@@ -227,3 +227,15 @@ td div.numeric {
 .top-panel::-webkit-scrollbar, .bottom-panel::-webkit-scrollbar {
   display: none;
 }
+
+#room-history-chart path.axes {
+  stroke-width: 1.0;
+  stroke: white;
+  fill: none;
+}
+
+#room-history-chart path.line {
+  stroke-width: 2.0;
+  stroke: white;
+  fill: none;
+}
