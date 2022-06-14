@@ -247,9 +247,19 @@ td div.numeric {
   opacity: 1;
 }
 
-#room-history-chart {
-  background-color: black;
+#room-history-charts {
+  display: flex;
+  flex-direction: row;
   margin-bottom: 1em;
+}
+
+#room-history-chart {
+  flex-basis: 50%;
+  background-color: black;
+}
+
+#room-history-chart .chart {
+  width: 100%;
 }
 
 #room-history-chart .axis {
@@ -261,4 +271,19 @@ td div.numeric {
   stroke: white;
   fill: none;
   vector-effect: non-scaling-stroke;
+}
+
+#room-history-charts-gutter {
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: 1em;
+}
+
+#room-histogram-chart {
+  flex-basis: 50%;
+  background-color: black;
+}
+
+#room-histogram-chart .chart {
+  width: 100%;
 }

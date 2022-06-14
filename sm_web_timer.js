@@ -222,6 +222,7 @@ class Table extends Widget {
 class LineChart extends Widget {
   constructor() {
     super(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+    this.elem.classList.add('chart');
     this.elem.classList.add('line-chart');
   }
 
