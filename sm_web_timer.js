@@ -226,23 +226,18 @@ class LineChart extends Widget {
   }
 
   plot({points, xlim, ylim}) {
-    const xmin = xlim[0];
-    const xmax = xlim[1];
-    const ymin = ylim[0];
-    const ymax = ylim[1];
-
     // TODO: I think we're not stretching because we're respecting the
     // aspect ratio.  Perhaps viewBox isn't the right way to do this (it
     // might make drawing labels hard).
     const plot = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     plot.classList.add('plot');
-    plot.setAttribute('viewBox', `${xmin} ${ymin} ${xmax-xmin} ${ymax-ymin}`);
+    plot.setAttribute('viewBox', `${xlim[0]} ${ylim[0]} ${xlim[1]-xlim[0]} ${ylim[1]-ylim[0]}`);
 
     const axes = document.createElementNS("http://www.w3.org/2000/svg", "path");
     axes.classList.add('axis');
     const ax_cmds = [
-      'M', xmin, 0, 'L', xmax, 0,
-      'M', 0, ymin, 'L', 0, ymax,
+      'M', xlim[0], 0, 'L', xlim[1], 0,
+      'M', 0, ylim[0], 'L', 0, ylim[1],
     ];
     axes.setAttribute("d", ax_cmds.join(' '));
     plot.appendChild(axes);
