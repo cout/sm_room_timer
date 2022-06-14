@@ -228,13 +228,11 @@ td div.numeric {
   display: none;
 }
 
-#room-history-chart path.axes {
-  stroke-width: 1.0;
-  stroke: white;
-  fill: none;
+#room-history-chart .axis {
+  display: none;
 }
 
-#room-history-chart path.line {
+#room-history-chart .line {
   stroke-width: 2.0;
   stroke: white;
   fill: none;

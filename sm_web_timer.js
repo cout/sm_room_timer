@@ -611,10 +611,8 @@ const draw_line_chart = function({points, xlim, ylim}) {
   plot.classList.add('plot');
   plot.setAttribute('viewBox', `${xmin} ${ymin} ${xmax-xmin} ${ymax-ymin}`);
 
-  // TODO: x-axis is not visible since we don't start at zero; should
-  // probably just hide the axes
   const axes = document.createElementNS("http://www.w3.org/2000/svg", "path");
-  axes.classList.add('axes');
+  axes.classList.add('axis');
   const ax_cmds = [
     'M', xmin, 0, 'L', xmax, 0,
     'M', 0, ymin, 'L', 0, ymax,
