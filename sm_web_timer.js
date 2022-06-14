@@ -247,13 +247,10 @@ class LineChart extends Widget {
     axes.setAttribute("d", ax_cmds.join(' '));
     plot.appendChild(axes);
 
-    const coords = points.map((p,i) => [ p[0], p[1] ] );
-
-    const pathData = points.flatMap((p,i) => [ i == 0 ? 'M' : 'L', ...coords[i], ]);
-    const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.classList.add('line');
-    path.setAttribute("d", pathData.join(" "));
-    plot.appendChild(path);
+    const lines = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    lines.classList.add('line');
+    lines.setAttribute("points", points);
+    plot.appendChild(lines);
 
     this.elem.appendChild(plot);
   }
