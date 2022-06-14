@@ -228,6 +228,10 @@ td div.numeric {
   display: none;
 }
 
+#room-history-chart {
+  background-color: black;
+}
+
 #room-history-chart .axis {
   display: none;
 }
