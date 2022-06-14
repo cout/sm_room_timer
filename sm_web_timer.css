@@ -260,4 +260,5 @@ td div.numeric {
   stroke-width: 2.0;
   stroke: white;
   fill: none;
+  vector-effect: non-scaling-stroke;
 }

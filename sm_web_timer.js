@@ -232,6 +232,7 @@ class LineChart extends Widget {
     const plot = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     plot.classList.add('plot');
     plot.setAttribute('viewBox', `${xlim[0]} ${ylim[0]} ${xlim[1]-xlim[0]} ${ylim[1]-ylim[0]}`);
+    plot.setAttribute('preserveAspectRatio', 'none');
 
     const axes = document.createElementNS("http://www.w3.org/2000/svg", "path");
     axes.classList.add('axis');
