@@ -382,6 +382,11 @@ const room_history_table = new Table(room_history_columns);
 const room_history_div = new Widget(document.getElementById('room-history'));
 document.getElementById('room-history-table').appendChild(room_history_table.elem);
 
+const room_history_close_button = new Widget(document.getElementById('room-history-close-button'));
+room_history_close_button.elem.addEventListener('click', () => {
+  room_history_div.hide();
+});
+
 const gutter = new Widget(document.getElementById("gutter"));
 
 const help_box = new Widget(document.getElementById("help"));

@@ -228,6 +228,24 @@ td div.numeric {
   display: none;
 }
 
+#room-history-close-button {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+}
+
+#room-history-close-button::before {
+  display: inline-block;
+  color: #ffffff;
+  content: "\2715";
+  cursor: pointer;
+  opacity: 0.3;
+}
+
+#room-history-close-button:hover::Before {
+  opacity: 1;
+}
+
 #room-history-chart {
   background-color: black;
   margin-bottom: 1em;
