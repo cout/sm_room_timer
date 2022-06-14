@@ -230,6 +230,7 @@ td div.numeric {
 
 #room-history-chart {
   background-color: black;
+  margin-bottom: 1em;
 }
 
 #room-history-chart .axis {
