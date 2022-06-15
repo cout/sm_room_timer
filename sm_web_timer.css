@@ -326,6 +326,10 @@ td div.numeric {
   fill: #ffffff;
 }
 
+#room-histogram .bar:hover {
+  fill: #ff0000;
+}
+
 #room-history-title {
   text-align: center;
 }

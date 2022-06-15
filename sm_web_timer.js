@@ -246,7 +246,7 @@ class Chart extends Widget {
     return lines;
   }
 
-  draw_bars(bars, width) {
+  draw_bars(bars, tooltips, width) {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.classList.add('bars');
     group.setAttribute('transform', 'scale(1, -1)');
@@ -260,6 +260,11 @@ class Chart extends Widget {
       rect.setAttribute('y', 0);
       rect.setAttribute('width', width);
       rect.setAttribute('height', height);
+
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = tooltips[i];
+      rect.appendChild(title);
+
       group.appendChild(rect);
     });
 
@@ -304,8 +309,9 @@ class Histogram extends Chart {
     const xlim = [ 0, n ];
     const ylim = [ 0, Math.max(...bins) ];
     const plot = this.create_plot(xlim, ylim);
+    const tooltips = bins.map((bin,i) => `${i*bin_width} to ${(i+1)*bin_width}: ${bin}`);
     plot.appendChild(this.draw_axes(xlim, ylim));
-    plot.appendChild(this.draw_bars(bins, 0.8));
+    plot.appendChild(this.draw_bars(bins, tooltips, 0.8));
 
     this.elem.appendChild(plot);
   }
