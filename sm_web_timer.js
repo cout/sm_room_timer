@@ -608,6 +608,7 @@ const handle_new_room_time = function(data) {
     current_segment_time_node.elem.parentNode.removeChild(current_segment_time_node.elem);
   }
   segment_times_table.append_row({
+    room: data.room,
     room_name: data.room.room_name,
     attempts: data.room_in_segment.attempts,
     time: data.room_in_segment.time,
