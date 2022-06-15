@@ -219,22 +219,16 @@ class Table extends Widget {
   }
 }
 
-class LineChart extends Widget {
-  constructor() {
-    super(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
-    this.elem.classList.add('chart');
-    this.elem.classList.add('line-chart');
-  }
-
-  plot({points, xlim, ylim}) {
-    // TODO: I think we're not stretching because we're respecting the
-    // aspect ratio.  Perhaps viewBox isn't the right way to do this (it
-    // might make drawing labels hard).
+class Chart extends Widget {
+  create_plot(xlim, ylim) {
     const plot = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     plot.classList.add('plot');
     plot.setAttribute('viewBox', `${xlim[0]} ${ylim[0]} ${xlim[1]-xlim[0]} ${ylim[1]-ylim[0]}`);
     plot.setAttribute('preserveAspectRatio', 'none');
+    return plot;
+  }
 
+  draw_axes(xlim, ylim) {
     const axes = document.createElementNS("http://www.w3.org/2000/svg", "path");
     axes.classList.add('axis');
     const ax_cmds = [
@@ -242,16 +236,85 @@ class LineChart extends Widget {
       'M', 0, ylim[0], 'L', 0, ylim[1],
     ];
     axes.setAttribute("d", ax_cmds.join(' '));
-    plot.appendChild(axes);
+    return axes;
+  }
 
+  draw_polyline(points) {
     const lines = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
     lines.classList.add('line');
     lines.setAttribute("points", points);
-    plot.appendChild(lines);
+    return lines;
+  }
+
+  draw_bars(bars, width) {
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.classList.add('bars');
+    group.setAttribute('transform', 'scale(1, -1)');
+
+    const stride = 1 + bars.length * (1 - width) / (bars.length - 1);
+
+    bars.forEach((height, i) => {
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.classList.add('bar');
+      rect.setAttribute('x', i * stride);
+      rect.setAttribute('y', 0);
+      rect.setAttribute('width', width);
+      rect.setAttribute('height', height);
+      group.appendChild(rect);
+    });
+
+    return group;
+  }
+};
+
+class LineChart extends Chart {
+  constructor() {
+    super(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+    this.elem.classList.add('chart');
+    this.elem.classList.add('line-chart');
+  }
+
+  plot({points, xlim, ylim}) {
+    const plot = this.create_plot(xlim, ylim);
+    plot.appendChild(this.draw_axes(xlim, ylim));
+    plot.appendChild(this.draw_polyline(points));
 
     this.elem.appendChild(plot);
   }
 };
+
+class Histogram extends Chart {
+  constructor() {
+    super(document.createElementNS("http://www.w3.org/2000/svg", "svg"));
+    this.elem.classList.add('chart');
+    this.elem.classList.add('histogram');
+  }
+
+  plot({values, n}) {
+    const max = Math.max(...values);
+    const min = Math.min(...values);
+    const bins = new Array(n).fill(0);
+    const bin_width = (max - min) / (n - 1);
+
+    values.forEach((v) => {
+      const idx = Math.floor((v - min) / bin_width);
+      console.log('value', v, 'idx', idx)
+      bins[idx] += 1;
+    });
+
+    console.log('values', values);
+    console.log('bins', bins);
+
+    const xlim = [ 0, n ];
+    const ylim = [ 0, Math.max(...bins) ];
+    const plot = this.create_plot(xlim, ylim);
+    plot.appendChild(this.draw_axes(xlim, ylim));
+    plot.appendChild(this.draw_bars(bins, 0.8));
+
+    this.elem.appendChild(plot);
+  }
+}
+
 
 // js: ["new_room_time", {"room": {
 // "room_name": "Wrecked Ship Main Shaft",
@@ -418,6 +481,9 @@ document.getElementById('room-history-table').appendChild(room_history_table.ele
 
 const room_history_chart = new LineChart();
 document.getElementById('room-history-chart').appendChild(room_history_chart.elem);
+
+const room_histogram = new Histogram();
+document.getElementById('room-histogram').appendChild(room_histogram.elem);
 
 const room_history_close_button = new Widget(document.getElementById('room-history-close-button'));
 room_history_close_button.elem.addEventListener('click', () => {
@@ -639,7 +705,7 @@ const handle_segment_stats = function(data) {
 
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
-  console.log('got room history', data);
+
   if (room_history_table.body) {
     room_history_table.body.clear();
   }
@@ -648,14 +714,17 @@ const handle_room_history = function(data) {
   const points = times.map((t,i) => [ i, t ]);
   const xlim = [ 0, points.length ];
   const ylim = [ Math.min(...times), Math.max(...times) ];
-  // const elem = draw_line_chart({ points: points, xlim: xlim, ylim: ylim });
-  // document.getElementById('room-history-chart').appendChild(elem);
+
   room_history_chart.clear();
   room_history_chart.plot({ points: points, xlim: xlim, ylim: ylim });
+
+  room_histogram.clear();
+  room_histogram.plot({ values: times, n: 27 });
 
   data.times.forEach((times) => {
     room_history_table.append_row(times);
   });
+
   room_history_div.show();
 }
 

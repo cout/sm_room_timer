@@ -279,11 +279,20 @@ td div.numeric {
   width: 1em;
 }
 
-#room-histogram-chart {
+#room-histogram {
   flex-basis: 50%;
   background-color: black;
 }
 
-#room-histogram-chart .chart {
+#room-histogram .chart {
   width: 100%;
+}
+
+#room-histogram .bars {
+  transform: scaleY(-1);
+  transform-origin: 50% 50%;
+}
+
+#room-histogram .bar {
+  fill: #ffffff;
 }
