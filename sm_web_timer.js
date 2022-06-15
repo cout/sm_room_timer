@@ -490,6 +490,8 @@ room_history_close_button.elem.addEventListener('click', () => {
   room_history_div.hide();
 });
 
+const room_history_room_name = new Widget(document.getElementById('room-history-room-name'));
+
 const gutter = new Widget(document.getElementById("gutter"));
 
 const help_box = new Widget(document.getElementById("help"));
@@ -706,6 +708,8 @@ const handle_segment_stats = function(data) {
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
 
+  room_history_room_name.elem.appendChild(document.createTextNode(data.room.room_name));
+
   if (room_history_table.body) {
     room_history_table.body.clear();
   }
@@ -788,7 +792,7 @@ class TimerClient {
 
   fetch_room_history(tid) {
     // TODO: show spinner to indicate data is loading?
-    const msg = JSON.stringify([ 'room_history', tid ]);
+    const msg = JSON.stringify([ 'room_history', { room: tid } ]);
     console.log('fetching room history', tid);
     this.socket.send(msg);
   }

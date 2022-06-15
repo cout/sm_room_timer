@@ -286,6 +286,7 @@ class JsonEventGenerator(object):
     } for transition in transitions ]
 
     self.send(session, 'room_history', {
+      'room': encode_transition_id(tid),
       'times': times,
     })
 
@@ -373,7 +374,7 @@ class TimerThread(object):
     msg_type, payload = json.loads(msg)
     print(msg_type, payload)
     if msg_type == 'room_history':
-      tid = decode_transition_id(payload, self.rooms, self.doors)
+      tid = decode_transition_id(payload['room'], self.rooms, self.doors)
       self.json_generator.send_room_history(
           session,
           tid,

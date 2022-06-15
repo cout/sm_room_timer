@@ -325,3 +325,7 @@ td div.numeric {
 #room-histogram .bar {
   fill: #ffffff;
 }
+
+#room-history-title {
+  text-align: center;
+}
