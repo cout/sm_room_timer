@@ -298,12 +298,8 @@ class Histogram extends Chart {
 
     values.forEach((v) => {
       const idx = Math.floor((v - min) / bin_width);
-      console.log('value', v, 'idx', idx)
       bins[idx] += 1;
     });
-
-    console.log('values', values);
-    console.log('bins', bins);
 
     const xlim = [ 0, n ];
     const ylim = [ 0, Math.max(...bins) ];
@@ -793,7 +789,6 @@ class TimerClient {
   fetch_room_history(tid) {
     // TODO: show spinner to indicate data is loading?
     const msg = JSON.stringify([ 'room_history', { room: tid } ]);
-    console.log('fetching room history', tid);
     this.socket.send(msg);
   }
 }
