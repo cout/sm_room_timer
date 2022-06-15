@@ -705,6 +705,7 @@ const handle_segment_stats = function(data) {
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
 
+  room_history_room_name.clear();
   room_history_room_name.elem.appendChild(document.createTextNode(data.room.room_name));
 
   if (room_history_table.body) {
