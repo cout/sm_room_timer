@@ -295,7 +295,7 @@ class Histogram extends Chart {
     this.elem.classList.add('histogram');
   }
 
-  plot({values, n}) {
+  plot({values, n, format}) {
     const max = Math.max(...values);
     const min = Math.min(...values);
     const bins = new Array(n).fill(0);
@@ -309,7 +309,7 @@ class Histogram extends Chart {
     const xlim = [ 0, n ];
     const ylim = [ 0, Math.max(...bins) ];
     const plot = this.create_plot(xlim, ylim);
-    const tooltips = bins.map((bin,i) => `${i*bin_width} to ${(i+1)*bin_width}: ${bin}`);
+    const tooltips = bins.map((bin,i) => `${format(min + i*bin_width)} to ${format(min + (i+1)*bin_width)}: ${bin}`);
     plot.appendChild(this.draw_axes(xlim, ylim));
     plot.appendChild(this.draw_bars(bins, tooltips, 0.8));
 
@@ -727,7 +727,7 @@ const handle_room_history = function(data) {
   room_history_chart.plot({ points: points, xlim: xlim, ylim: ylim });
 
   room_histogram.clear();
-  room_histogram.plot({ values: times, n: 27 });
+  room_histogram.plot({ values: times, n: 27, format: v => fc(v) });
 
   data.times.forEach((times) => {
     room_history_table.append_row(times);
