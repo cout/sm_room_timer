@@ -229,6 +229,35 @@ td div.numeric {
   display: none;
 }
 
+::-webkit-scrollbar {
+  width: 0.5em;
+  height: 0.5em;
+  background: #2d2d2d;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a4a4a3;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #5a5a59;
+  -webkit-border-radius: 1ex;
+}
+
+::-webkit-scrollbar-thumb:horizontal {
+  height: 0.33em;
+  min-width: 3em;
+}
+
+::-webkit-scrollbar-thumb:vertical {
+  width: 0.33em;
+  min-height: 3em;
+}
+
+::-webkit-scrollbar-corner {
+    background: #000;
+}
+
 #room-history-close-button {
   position: absolute;
   top: 0.5em;
