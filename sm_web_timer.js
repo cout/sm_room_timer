@@ -65,7 +65,7 @@ class Widget {
   }
 
   clear() {
-    this.innerHTML = '';
+    this.elem.innerHTML = '';
   }
 }
 
