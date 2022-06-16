@@ -220,42 +220,73 @@ class Table extends Widget {
 }
 
 class Chart extends Widget {
-  create_plot(xlim, ylim) {
+  create_plot() {
     const plot = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     plot.classList.add('plot');
-    plot.setAttribute('viewBox', `${xlim[0]} ${ylim[0]} ${xlim[1]-xlim[0]} ${ylim[1]-ylim[0]}`);
-    plot.setAttribute('preserveAspectRatio', 'none');
     return plot;
   }
 
   draw_axes(xlim, ylim) {
-    const axes = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    axes.classList.add('axis');
-    const ax_cmds = [
-      'M', xlim[0], 0, 'L', xlim[1], 0,
-      'M', 0, ylim[0], 'L', 0, ylim[1],
-    ];
-    axes.setAttribute("d", ax_cmds.join(' '));
+    const axes = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    axes.classList.add('axes');
+
+    const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
+
+    const xaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    xaxis.classList.add('axis');
+    xaxis.setAttribute('x1', `${100 * t(xlim[0], xlim)}%`);
+    xaxis.setAttribute('y1', `${100 * t(0,       ylim)}%`);
+    xaxis.setAttribute('x2', `${100 * t(xlim[1], xlim)}%`);
+    xaxis.setAttribute('y2', `${100 * t(0,       ylim)}%`);
+    axes.appendChild(xaxis);
+
+    const yaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    yaxis.classList.add('axis');
+    yaxis.setAttribute('x1', `${100 * t(0,       xlim)}%`);
+    yaxis.setAttribute('y1', `${100 * t(ylim[0], ylim)}%`);
+    yaxis.setAttribute('x2', `${100 * t(0,       xlim)}%`);
+    yaxis.setAttribute('y2', `${100 * t(ylim[1], ylim)}%`);
+    axes.appendChild(yaxis);
+
     return axes;
   }
 
-  draw_polyline(points) {
-    const lines = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    lines.classList.add('line');
-    lines.setAttribute("points", points);
-    return lines;
-  }
-
-  draw_points(points) {
+  draw_lines(points, xlim, ylim) {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.classList.add('points');
 
+    var last = undefined;
+
+    const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
+
     points.forEach((point) => {
-      // TODO The circles are not round, because of the viewbox
+      const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.classList.add('line');
+      if (last) {
+        line.setAttribute('x1', `${100 * t(last[0], xlim)}%`);
+        line.setAttribute('y1', `${100 * t(last[1], ylim)}%`);
+        line.setAttribute('x2', `${100 * t(point[0], xlim)}%`);
+        line.setAttribute('y2', `${100 * t(point[1], ylim)}%`);
+      }
+      last = point;
+
+      group.appendChild(line);
+    });
+
+    return group;
+  }
+
+  draw_points(points, xlim, ylim) {
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.classList.add('points');
+
+    const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
+
+    points.forEach((point) => {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.classList.add('point');
-      circle.setAttribute('cx', point[0]);
-      circle.setAttribute('cy', point[1]);
+      circle.setAttribute('cx', `${100 * t(point[0], xlim)}%`);
+      circle.setAttribute('cy', `${100 * t(point[1], ylim)}%`);
       circle.setAttribute('r', 5);
 
       group.appendChild(circle);
@@ -269,15 +300,16 @@ class Chart extends Widget {
     group.classList.add('bars');
     group.setAttribute('transform', 'scale(1, -1)');
 
-    const stride = 1 + bars.length * (1 - width) / (bars.length - 1);
+    const max_height = Math.max(...bars);
+    const stride = (width / bars.length) + (1 - width) / (bars.length - 1);
 
     bars.forEach((height, i) => {
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
       rect.classList.add('bar');
-      rect.setAttribute('x', i * stride);
+      rect.setAttribute('x', `${100 * stride * i}%`);
       rect.setAttribute('y', 0);
-      rect.setAttribute('width', width);
-      rect.setAttribute('height', height);
+      rect.setAttribute('width', `${100 * stride * width}%`);
+      rect.setAttribute('height', `${100 * height / max_height}%`);
 
       const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
       title.textContent = tooltips[i];
@@ -298,10 +330,10 @@ class LineChart extends Chart {
   }
 
   plot({points, xlim, ylim}) {
-    const plot = this.create_plot(xlim, ylim);
+    const plot = this.create_plot();
     plot.appendChild(this.draw_axes(xlim, ylim));
-    plot.appendChild(this.draw_polyline(points));
-    plot.appendChild(this.draw_points(points));
+    plot.appendChild(this.draw_lines(points, xlim, ylim));
+    plot.appendChild(this.draw_points(points, xlim, ylim));
 
     this.elem.appendChild(plot);
   }
@@ -327,7 +359,7 @@ class Histogram extends Chart {
 
     const xlim = [ 0, n ];
     const ylim = [ 0, Math.max(...bins) ];
-    const plot = this.create_plot(xlim, ylim);
+    const plot = this.create_plot();
     const tooltips = bins.map((bin,i) => `${format(min + i*bin_width)} to ${format(min + (i+1)*bin_width)}: ${bin}`);
     plot.appendChild(this.draw_axes(xlim, ylim));
     plot.appendChild(this.draw_bars(bins, tooltips, 0.8));
