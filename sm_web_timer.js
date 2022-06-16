@@ -276,18 +276,22 @@ class Chart extends Widget {
     return group;
   }
 
-  draw_points(points, xlim, ylim) {
+  draw_points(points, tooltips, xlim, ylim) {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.classList.add('points');
 
     const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
 
-    points.forEach((point) => {
+    points.forEach((point, i) => {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       circle.classList.add('point');
       circle.setAttribute('cx', `${100 * t(point[0], xlim)}%`);
       circle.setAttribute('cy', `${100 * t(point[1], ylim)}%`);
       circle.setAttribute('r', 5);
+
+      const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
+      title.textContent = tooltips[i];
+      circle.appendChild(title);
 
       group.appendChild(circle);
     });
@@ -329,11 +333,12 @@ class LineChart extends Chart {
     this.elem.classList.add('line-chart');
   }
 
-  plot({points, xlim, ylim}) {
+  plot({points, xlim, ylim, format}) {
     const plot = this.create_plot();
+    const tooltips = points.map(point => format(point));
     plot.appendChild(this.draw_axes(xlim, ylim));
     plot.appendChild(this.draw_lines(points, xlim, ylim));
-    plot.appendChild(this.draw_points(points, xlim, ylim));
+    plot.appendChild(this.draw_points(points, tooltips, xlim, ylim));
 
     this.elem.appendChild(plot);
   }
@@ -775,7 +780,7 @@ const handle_room_history = function(data) {
   const ylim = [ Math.min(...times), Math.max(...times) ];
 
   room_history_chart.clear();
-  room_history_chart.plot({ points: points, xlim: xlim, ylim: ylim });
+  room_history_chart.plot({ points: points, xlim: xlim, ylim: ylim, format: p => fc(p[1]) });
 
   room_histogram.clear();
   room_histogram.plot({ values: times, n: 27, format: v => fc(v) });
