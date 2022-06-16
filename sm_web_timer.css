@@ -302,6 +302,20 @@ td div.numeric {
   vector-effect: non-scaling-stroke;
 }
 
+#room-history-chart .point {
+  stroke-width: 2.0;
+  stroke: #ff000000;
+  stroke: #
+  vector-effect: non-scaling-stroke;
+  fill: #ff000000;
+}
+
+#room-history-chart .point:hover {
+  /* visibility: visible; */
+  stroke: #ff0000ff;
+  /* fill: #ff0000ff; */
+}
+
 #room-history-charts-gutter {
   flex-grow: 0;
   flex-shrink: 0;

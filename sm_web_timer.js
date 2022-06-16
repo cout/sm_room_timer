@@ -246,6 +246,24 @@ class Chart extends Widget {
     return lines;
   }
 
+  draw_points(points) {
+    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    group.classList.add('points');
+
+    points.forEach((point) => {
+      // TODO The circles are not round, because of the viewbox
+      const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      circle.classList.add('point');
+      circle.setAttribute('cx', point[0]);
+      circle.setAttribute('cy', point[1]);
+      circle.setAttribute('r', 5);
+
+      group.appendChild(circle);
+    });
+
+    return group;
+  }
+
   draw_bars(bars, tooltips, width) {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.classList.add('bars');
@@ -283,6 +301,7 @@ class LineChart extends Chart {
     const plot = this.create_plot(xlim, ylim);
     plot.appendChild(this.draw_axes(xlim, ylim));
     plot.appendChild(this.draw_polyline(points));
+    plot.appendChild(this.draw_points(points));
 
     this.elem.appendChild(plot);
   }
