@@ -295,6 +295,14 @@ td div.numeric {
   display: none;
 }
 
+#room-history-chart .lines {
+  transform-origin: 50% 50%;
+}
+
+#room-history-chart .points {
+  transform-origin: 50% 50%;
+}
+
 #room-history-chart .line {
   stroke-width: 2.0;
   stroke: white;

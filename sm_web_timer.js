@@ -253,7 +253,8 @@ class Chart extends Widget {
 
   draw_lines(points, xlim, ylim) {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    group.classList.add('points');
+    group.classList.add('lines');
+    group.setAttribute('transform', 'scale(1, -1)');
 
     var last = undefined;
 
@@ -279,6 +280,7 @@ class Chart extends Widget {
   draw_points(points, tooltips, xlim, ylim) {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.classList.add('points');
+    group.setAttribute('transform', 'scale(1, -1)');
 
     const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
 
