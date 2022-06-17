@@ -840,11 +840,11 @@ const show_active_attempt_histogram = function() {
   }
 };
 
-const handle_room_history = function(data) {
+const show_attempt_history = function(name, data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
 
   attempt_history_name.clear();
-  attempt_history_name.elem.appendChild(document.createTextNode(data.room.room_name));
+  attempt_history_name.elem.appendChild(document.createTextNode(name));
 
   if (attempt_history_table.body) {
     attempt_history_table.body.clear();
@@ -884,11 +884,6 @@ const handle_room_history = function(data) {
   show_active_attempt_history_chart();
   show_active_attempt_histogram();
 
-  const times = data.times.map(t => t.room.real);
-  const points = times.map((t,i) => [ i, t ]);
-  const xlim = [ 0, points.length ];
-  const ylim = [ Math.min(...times), Math.max(...times) ];
-
   data.times.forEach((times) => {
     attempt_history_table.append_row(times);
   });
@@ -896,9 +891,13 @@ const handle_room_history = function(data) {
   attempt_history_div.show();
 };
 
+const handle_room_history = function(data) {
+  show_attempt_history(data.room.room_name, data);
+}
+
 const handle_segment_history = function(data) {
   console.log('got segment history', data);
-  // TODO
+  show_attempt_history('TODO', data);
 };
 
 class TimerClient {
@@ -957,6 +956,8 @@ class TimerClient {
       this.handle_segment_stats(data);
     } else if (type == 'room_history') {
       this.handle_room_history(data);
+    } else if (type == 'segment_history') {
+      this.handle_segment_history(data);
     }
   }
 
