@@ -557,9 +557,15 @@ document.getElementById('room-history-chart').appendChild(room_history_chart.ele
 const room_histogram = new Histogram();
 document.getElementById('room-histogram').appendChild(room_histogram.elem);
 
-for (const elem of document.querySelectorAll('#room-history-charts input[type="radio"]')) {
+for (const elem of document.querySelectorAll('#room-history-chart-buttons input[type="radio"]')) {
   elem.addEventListener('change', function(event) {
     show_active_room_history_chart();
+  });
+}
+
+for (const elem of document.querySelectorAll('#room-histogram-buttons input[type="radio"]')) {
+  elem.addEventListener('change', function(event) {
+    show_active_room_histogram();
   });
 }
 
@@ -785,6 +791,7 @@ const handle_segment_stats = function(data) {
 };
 
 const room_history_plots = { };
+const room_histogram_plots = { };
 
 const show_active_room_history_chart = function() {
   const active_what_elems = document.querySelectorAll('#room-history-charts input[name="room-history-chart-what"]:checked');
@@ -804,6 +811,24 @@ const show_active_room_history_chart = function() {
   }
 }
 
+const show_active_room_histogram = function() {
+  const active_what_elems = document.querySelectorAll('#room-history-charts input[name="room-histogram-what"]:checked');
+  const active_time_type_elems = document.querySelectorAll('#room-history-charts input[name="room-histogram-time-type"]:checked');
+
+  for (const chart of Object.values(room_histogram_plots)) {
+    chart.hide();
+  }
+
+  for (const active_what_elem of active_what_elems) {
+    for (const active_time_type_elem of active_time_type_elems) {
+      const active_what = active_what_elem.value;
+      const active_time_type = active_time_type_elem.value;
+      const active_plot = room_histogram_plots[`${active_what}-${active_time_type}`];
+      active_plot.show();
+    }
+  }
+}
+
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
 
@@ -815,6 +840,7 @@ const handle_room_history = function(data) {
   }
 
   room_history_chart.clear();
+  room_histogram.clear();
 
   for (const what of [ 'room', 'door' ]) {
     for (const time_type of [ 'real', 'game', 'lag' ]) {
@@ -824,26 +850,33 @@ const handle_room_history = function(data) {
       const ylim = [ Math.min(...times), Math.max(...times) ];
       const name = `${what}-${time_type}`;
 
-      const plot = room_history_chart.plot({
+      const history_plot = room_history_chart.plot({
         points: points,
         xlim: xlim,
         ylim: ylim,
         format: p => fc(p[1]),
-        classes: [ `${name}-time-chart`, 'hidden' ],
+        classes: [ 'hidden' ],
       });
 
-      room_history_plots[name] = plot;
+      const histogram_plot = room_histogram.plot({
+        values: times,
+        n: 27,
+        format: v => fc(v),
+        classes: [ 'hidden' ],
+      });
+
+      room_history_plots[name] = history_plot;
+      room_histogram_plots[name] = histogram_plot;
     }
   }
 
   show_active_room_history_chart();
+  show_active_room_histogram();
 
-  room_histogram.clear();
   const times = data.times.map(t => t.room.real);
   const points = times.map((t,i) => [ i, t ]);
   const xlim = [ 0, points.length ];
   const ylim = [ Math.min(...times), Math.max(...times) ];
-  room_histogram.plot({ values: times, n: 27, format: v => fc(v) });
 
   data.times.forEach((times) => {
     room_history_table.append_row(times);
