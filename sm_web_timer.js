@@ -230,6 +230,10 @@ class Chart extends Widget {
     const axes = document.createElementNS("http://www.w3.org/2000/svg", "g");
     axes.classList.add('axes');
 
+    if (xlim[0] == xlim[1] || ylim[0] == ylim[1]) {
+      return axes;
+    }
+
     const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
 
     const xaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -256,6 +260,10 @@ class Chart extends Widget {
     group.classList.add('lines');
     group.setAttribute('transform', 'scale(1, -1)');
 
+    if (xlim[0] == xlim[1] || ylim[0] == ylim[1]) {
+      return group;
+    }
+
     var last = undefined;
 
     const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
@@ -281,6 +289,10 @@ class Chart extends Widget {
     const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
     group.classList.add('points');
     group.setAttribute('transform', 'scale(1, -1)');
+
+    if (xlim[0] == xlim[1] || ylim[0] == ylim[1]) {
+      return group;
+    }
 
     const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
 
@@ -554,9 +566,8 @@ document.getElementById('room-history-chart').appendChild(room_history_chart.ele
 const room_histogram = new Histogram();
 document.getElementById('room-histogram').appendChild(room_histogram.elem);
 
-for (const elem of document.querySelectorAll('#room-history-charts input[name="room-history-chart-what"]')) {
+for (const elem of document.querySelectorAll('#room-history-charts input[type="radio"]')) {
   elem.addEventListener('change', function(event) {
-    console.log(event);
     show_active_room_history_chart();
   });
 }
@@ -786,15 +797,19 @@ const room_history_plots = { };
 
 const show_active_room_history_chart = function() {
   const active_what_elems = document.querySelectorAll('#room-history-charts input[name="room-history-chart-what"]:checked');
-  const active_type = 'real';
+  const active_time_type_elems = document.querySelectorAll('#room-history-charts input[name="room-history-chart-time-type"]:checked');
+
   for (const chart of Object.values(room_history_plots)) {
     chart.hide();
   }
+
   for (const active_what_elem of active_what_elems) {
-    const active_what = active_what_elem.value;
-    const active_plot = room_history_plots[`${active_what}-${active_type}`];
-    console.log(active_plot);
-    active_plot.show();
+    for (const active_time_type_elem of active_time_type_elems) {
+      const active_what = active_what_elem.value;
+      const active_time_type = active_time_type_elem.value;
+      const active_plot = room_history_plots[`${active_what}-${active_time_type}`];
+      active_plot.show();
+    }
   }
 }
 
@@ -810,13 +825,16 @@ const handle_room_history = function(data) {
 
   room_history_chart.clear();
 
+  console.log('### times ###', data.times);
+
   for (const what of [ 'room', 'door' ]) {
-    for (const type of [ 'real', 'game', 'lag' ]) {
-      const times = data.times.map(t => t[what][type]);
+    for (const time_type of [ 'real', 'game', 'lag' ]) {
+      const times = data.times.map(t => t[what][time_type]);
+      console.log(what, time_type, times);
       const points = times.map((t,i) => [ i, t ]);
       const xlim = [ 0, points.length ];
       const ylim = [ Math.min(...times), Math.max(...times) ];
-      const name = `${what}-${type}`;
+      const name = `${what}-${time_type}`;
 
       const plot = room_history_chart.plot({
         points: points,

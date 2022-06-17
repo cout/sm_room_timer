@@ -364,11 +364,15 @@ td div.numeric {
 .chart-container .chart-buttons {
   flex-grow: 0;
   flex-shrink: 0;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
 }
 
 .box-radio {
   display: flex;
-	flex-direction: row;
+  flex-direction: row;
 }
 
 .box-radio input[type=radio] {
