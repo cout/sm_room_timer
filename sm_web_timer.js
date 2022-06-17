@@ -816,12 +816,9 @@ const handle_room_history = function(data) {
 
   room_history_chart.clear();
 
-  console.log('### times ###', data.times);
-
   for (const what of [ 'room', 'door' ]) {
     for (const time_type of [ 'real', 'game', 'lag' ]) {
       const times = data.times.map(t => t[what][time_type]);
-      console.log(what, time_type, times);
       const points = times.map((t,i) => [ i, t ]);
       const xlim = [ 0, points.length ];
       const ylim = [ Math.min(...times), Math.max(...times) ];
