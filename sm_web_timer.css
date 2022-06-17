@@ -370,24 +370,42 @@ td div.numeric {
   justify-content: space-between;
 }
 
-.box-radio {
+.small {
+  font-size: small;
+}
+
+.x-small {
+  font-size: x-small;
+}
+
+.xx-small {
+  font-size: xx-small;
+}
+
+.h-radio {
   display: flex;
   flex-direction: row;
 }
 
-.box-radio input[type=radio] {
+.h-radio input[type=radio] {
   display: none;
+}
+
+.h-radio input[type=radio] + span {
+  cursor: pointer;
+  text-align: center;
+  color: #ffffff;
+  margin: 0.125em;
+}
+
+.h-radio input[type=radio]:checked + span {
+  font-weight: bold;
 }
 
 .box-radio input[type=radio] + span {
   display: block;
-  cursor: pointer;
-  text-align: center;
-	color: #ffffff;
   background-color: #000000;
-  font-size: xx-small;
   width: 2em;
-  margin: 0.125em;
   border-radius: 22.5%;
   font-weight: bold;
   padding-top: 0.25em; /* TODO: this is to offset baseline in whatever font I'm using, but the default font doesn't have this problem */
@@ -396,4 +414,8 @@ td div.numeric {
 
 .box-radio input[type=radio]:checked + span {
   border: 1px solid #ffffffff;
+}
+
+.slash-separated > label:not(:first-child)::before {
+  content: '/';
 }
