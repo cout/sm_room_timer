@@ -230,11 +230,8 @@ class Chart extends Widget {
     const axes = document.createElementNS("http://www.w3.org/2000/svg", "g");
     axes.classList.add('axes');
 
-    if (xlim[0] == xlim[1] || ylim[0] == ylim[1]) {
-      return axes;
-    }
-
-    const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
+    const range = (lim) => lim[1] == lim[0] ? 1 : lim[1] - lim[0];
+    const t = (v, lim) => (v - lim[0]) / range(lim);
 
     const xaxis = document.createElementNS("http://www.w3.org/2000/svg", "line");
     xaxis.classList.add('axis');
@@ -260,13 +257,10 @@ class Chart extends Widget {
     group.classList.add('lines');
     group.setAttribute('transform', 'scale(1, -1)');
 
-    if (xlim[0] == xlim[1] || ylim[0] == ylim[1]) {
-      return group;
-    }
-
     var last = undefined;
 
-    const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
+    const range = (lim) => lim[1] == lim[0] ? 1 : lim[1] - lim[0];
+    const t = (v, lim) => (v - lim[0]) / range(lim);
 
     points.forEach((point) => {
       const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -290,11 +284,8 @@ class Chart extends Widget {
     group.classList.add('points');
     group.setAttribute('transform', 'scale(1, -1)');
 
-    if (xlim[0] == xlim[1] || ylim[0] == ylim[1]) {
-      return group;
-    }
-
-    const t = (v, lim) => (v - lim[0]) / (lim[1] - lim[0]);
+    const range = (lim) => lim[1] == lim[0] ? 1 : lim[1] - lim[0];
+    const t = (v, lim) => (v - lim[0]) / range(lim);
 
     points.forEach((point, i) => {
       const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
