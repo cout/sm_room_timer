@@ -379,7 +379,7 @@ td div.numeric {
   display: none;
 }
 
-.box-radio input[type=radio] + label {
+.box-radio input[type=radio] + span {
   display: block;
   cursor: pointer;
   /* border: 2px solid #000000; */
@@ -396,7 +396,7 @@ td div.numeric {
   padding-top: 0.125em; /* TODO: this is to offset baseline in whatever font I'm using, but the default font doesn't have this problem */
 }
 
-.box-radio input[type=radio]:checked + label {
+.box-radio input[type=radio]:checked + span {
 	color: #000000;
 	background-color: #ffffff;
 }
