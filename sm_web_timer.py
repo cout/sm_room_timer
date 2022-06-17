@@ -7,7 +7,7 @@ from rebuild_history import need_rebuild, rebuild_history
 from transition_log import read_transition_log, FileTransitionLog, NullTransitionLog
 from history import History
 from sm_room_timer import backup_and_rebuild, ThreadedStateReader
-from sm_segment_timer import SegmentTimerTerminalFrontend, SegmentTimeTracker, SegmentTimer
+from sm_segment_timer import SegmentTimerTerminalFrontend, SegmentTimeTracker, SegmentTimer, find_segment_in_history
 from segment_stats import SegmentStats, SingleSegmentStats
 from splits import Splits, read_split_names_from_file
 
@@ -290,6 +290,20 @@ class JsonEventGenerator(object):
       'times': times,
     })
 
+  def send_segment_history(self, session, segment_id, history, route, rooms, doors):
+    if route is None: return
+    segment = Segment.from_id(segment_id, route=route, rooms=rooms, doors=doors)
+    attempts = find_segment_in_history(segment, history)
+
+    times = [ {
+      **encode_transition_time(attempt.time)
+    } for attempt in attempts ]
+
+    self.send(session, 'segment_history', {
+      'segment': segment_id,
+      'times': times,
+    })
+
 class TimerThread(object):
   def __init__(self, history, rooms, doors, transition_log, route,
       json_generator, server, usb2snes, split_segments):
@@ -379,6 +393,15 @@ class TimerThread(object):
           session,
           tid,
           self.history)
+    elif msg_type == 'segment_history':
+      segment_id = payload['segment']
+      self.json_generator.send_segment_history(
+          session,
+          segment_id=segment_id,
+          history=self.history,
+          route=self.route,
+          rooms=self.rooms,
+          doors=self.doors)
     else:
       print("Unknown message type:", msg_type)
 

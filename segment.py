@@ -1,6 +1,7 @@
 from transition import TransitionId
 
 from dataclasses import dataclass
+import re
 
 @dataclass
 class Segment(object):
@@ -27,6 +28,16 @@ class Segment(object):
   @property
   def id(self):
     return '[%s]:[%s]' % (self.start.id, self.end.id)
+
+  @classmethod
+  def from_id(cls, id, route, rooms, doors):
+    m = re.match(r'\[(.*?)\]:\[(.*?)\]', id)
+    if m:
+      start = TransitionId.from_id(m.group(1), rooms=rooms, doors=doors)
+      end = TransitionId.from_id(m.group(1), rooms=rooms, doors=doors)
+      return cls.from_route(route, start, end)
+    else:
+      return None
 
   @property
   def name(self):

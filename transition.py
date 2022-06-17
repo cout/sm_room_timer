@@ -6,6 +6,7 @@ from doors import Door, NullDoor
 
 import datetime
 from dataclasses import dataclass
+import re
 
 @dataclass
 class TransitionId(object):
@@ -40,8 +41,23 @@ class TransitionId(object):
   @property
   def id(self):
     return '%x|%x|%x|%s|%s' % (self.room.room_id,
-        self.entry_room.room_id, self.exit_room.room_id, self.items,
+        self.entry_door.door_id, self.exit_door.door_id, self.items,
         self.beams)
+
+  @classmethod
+  def from_id(cls, id, rooms, doors):
+    m = re.match(r'(.*?)\|(.*?)\|(.*?)\|(.*?)\|(.*)', id)
+    if m:
+      s = m.group(1).upper()
+      room = rooms.by_id[int(m.group(1), 16)]
+      entry_door = doors.by_id[int(m.group(2), 16)]
+      exit_door = doors.by_id[int(m.group(3), 16)]
+      items = m.group(4)
+      beams = m.group(5)
+      return cls(room, entry_door, exit_door, items, beams)
+
+    else:
+      return None
 
   def __hash__(self):
     return hash((self.room, self.entry_room, self.exit_room, self.items, self.beams))

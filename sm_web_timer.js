@@ -966,9 +966,9 @@ class TimerClient {
     this.socket.send(msg);
   }
 
-  fetch_segment_history(tid) {
+  fetch_segment_history(segment_id) {
     // TODO: show spinner to indicate data is loading?
-    const msg = JSON.stringify([ 'segment_history', { room: tid } ]);
+    const msg = JSON.stringify([ 'segment_history', { segment: segment_id } ]);
     this.socket.send(msg);
   }
 }
