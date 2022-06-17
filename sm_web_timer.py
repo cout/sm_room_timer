@@ -300,7 +300,11 @@ class JsonEventGenerator(object):
     } for attempt in attempts ]
 
     self.send(session, 'segment_history', {
-      'segment': segment_id,
+      'segment': {
+        'id': segment.id,
+        'name': segment.name,
+        'brief_name': segment.brief_name,
+      },
       'times': times,
     })
 

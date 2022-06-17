@@ -897,7 +897,7 @@ const handle_room_history = function(data) {
 
 const handle_segment_history = function(data) {
   console.log('got segment history', data);
-  show_attempt_history('TODO', data);
+  show_attempt_history(data.segment.name, data);
 };
 
 class TimerClient {
