@@ -431,7 +431,7 @@ class Histogram extends Chart {
 // },
 // "room_in_segment": {"attempts": 0, "time": 0, "median_time": 0, "best_time": 0}}]
 
-const rn = function(o) {
+const room_link = function(o) {
   if (o === undefined) {
     return undefined;
   } else if (!o.room_name || o.room_name == '') {
@@ -439,7 +439,17 @@ const rn = function(o) {
   } else {
     return 'link';
   }
-}
+};
+
+const seg_link = function(o) {
+  if (o === undefined) {
+    return undefined;
+  } else if (!o.brief_name || o.brief_name == '') {
+    return undefined;
+  } else {
+    return 'link';
+  }
+};
 
 const tc = function(o) {
   if (o === undefined) {
@@ -490,7 +500,7 @@ const sssob = function(o) {
 };
 
 const room_times_columns = [
-  { label: "Room",   get: o => o.room_name,       cls: [ rn ],
+  { label: "Room",   get: o => o.room_name,       cls: [ room_link  ],
                      onclick: o => show_room_history(o.room) },
   { label: "#",      get: o => o.attempts,        cls: [ 'numeric' ]   },
   { label: "Type",   get: o => o.type,            cls: [ 'time-type' ] },
@@ -505,8 +515,8 @@ const room_times_div = new Widget(document.getElementById('room-times'));
 room_times_div.elem.appendChild(room_times_table.elem);
 
 const segment_times_columns = [
-  { label: "Room",         get: o => o.room_name,                     cls: [ rn ],
-                           onclick: o => show_room_history(o.room) },
+  { label: "Room",         get: o => o.room_name,                     cls: [ room_link ],
+                           onclick: o => show_room_history(o.room)                       },
   { label: "#",            get: o => o.attempts,                      cls: [ 'numeric' ]  },
   { label: "Time",         get: o => fc(o.time),                      cls: [ 'time', tc ] },
   // { label: "Old Median",get: o => fc(o.median_time),               cls: [ 'time' ]     },
@@ -519,7 +529,8 @@ const segment_times_div = new Widget(document.getElementById('segment-times'));
 segment_times_div.elem.appendChild(segment_times_table.elem);
 
 const segment_stats_columns = [
-  { label: "Segment",    get: o => o.brief_name,                                              },
+  { label: "Segment",    get: o => o.brief_name,                         cls: [ seg_link ],
+                         onclick: o => show_segment_history(o.id)                             },
   { label: "#",          get: o => o.success_count,                      cls: [ 'numeric' ]   },
   { label: "%",          get: o => pct(o.success_rate),                  cls: [ 'numeric' ]   },
   { label: "Median",     get: o => fc(o.median_time),                    cls: [ 'time', ssm ] },
@@ -595,7 +606,7 @@ const scroll_changed = function(elem) {
   } else {
     bottom_panel.elem.classList.remove('bottom-shadow');
   }
-}
+};
 
 const bottom_panel = new Widget(document.getElementById('bottom-panel'));
 
@@ -734,7 +745,7 @@ const handle_segment_stats = function(data) {
       if (last_updated_segment_row) {
         last_updated_segment_row.update({
           old: undefined,
-          last_updated_segment,
+          ...last_updated_segment,
         });
       }
 
@@ -809,7 +820,7 @@ const show_active_attempt_history_chart = function() {
       active_plot.show();
     }
   }
-}
+};
 
 const show_active_attempt_histogram = function() {
   const active_what_elems = document.querySelectorAll('#attempt-history-charts input[name="attempt-histogram-what"]:checked');
@@ -827,7 +838,7 @@ const show_active_attempt_histogram = function() {
       active_plot.show();
     }
   }
-}
+};
 
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
@@ -883,16 +894,22 @@ const handle_room_history = function(data) {
   });
 
   attempt_history_div.show();
-}
+};
+
+const handle_segment_history = function(data) {
+  console.log('got segment history', data);
+  // TODO
+};
 
 class TimerClient {
-  constructor(url, reconnect_interval, on_new_room_time, on_new_segment, on_segment_stats, on_room_history) {
+  constructor(url, reconnect_interval, on_new_room_time, on_new_segment, on_segment_stats, on_room_history, on_segment_history) {
     this.url = url;
     this.reconnect_interval = reconnect_interval;
     this.handle_new_room_time = on_new_room_time;
     this.handle_new_segment = on_new_segment;
     this.handle_segment_stats = on_segment_stats;
     this.handle_room_history = on_room_history;
+    this.handle_segment_history = on_segment_history;
 
     this.open_handler = (e) => this.handle_open(e);
     this.close_handler = (e) => this.handle_close(e);
@@ -948,15 +965,30 @@ class TimerClient {
     const msg = JSON.stringify([ 'room_history', { room: tid } ]);
     this.socket.send(msg);
   }
+
+  fetch_segment_history(tid) {
+    // TODO: show spinner to indicate data is loading?
+    const msg = JSON.stringify([ 'segment_history', { room: tid } ]);
+    this.socket.send(msg);
+  }
 }
 
 const params = new URLSearchParams(location.search);
 const port = params.get('port');
 const url = `ws://localhost:${port}`;
-const timer_client = new TimerClient(url, 10000, handle_new_room_time, handle_new_segment, handle_segment_stats, handle_room_history);
+const timer_client = new TimerClient(url, 10000, handle_new_room_time, handle_new_segment, handle_segment_stats, handle_room_history, handle_segment_history);
 
 const show_room_history = function(room) {
+  // TODO: no room history for segment row
   if (room) {
     timer_client.fetch_room_history(room);
+  }
+}
+
+const show_segment_history = function(segment_id) {
+  console.log('show_segment_history', segment_id);
+
+  if (segment_id) {
+    timer_client.fetch_segment_history(segment_id);
   }
 }
