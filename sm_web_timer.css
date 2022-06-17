@@ -355,3 +355,44 @@ td div.numeric {
 #room-history-title {
   text-align: center;
 }
+
+.chart-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-container .chart-buttons {
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.box-radio {
+  display: flex;
+	flex-direction: row;
+}
+
+.box-radio input[type=radio] {
+  display: none;
+}
+
+.box-radio input[type=radio] + label {
+  display: block;
+  cursor: pointer;
+  /* border: 2px solid #000000; */
+  text-align: center;
+	color: #ffffff;
+  /* align-items: center; */
+  /* justify-content: center; */
+  background-color: #000000;
+  font-size: xx-small;
+  width: 2em;
+  margin: 0.125em;
+  border-radius: 20%;
+  font-weight: bold;
+  padding-top: 0.125em; /* TODO: this is to offset baseline in whatever font I'm using, but the default font doesn't have this problem */
+}
+
+.box-radio input[type=radio]:checked + label {
+	color: #000000;
+	background-color: #ffffff;
+}

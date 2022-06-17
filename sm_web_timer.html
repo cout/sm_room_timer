@@ -26,9 +26,21 @@
       <p><span id="room-history-room-name"/></p>
     </div>
     <div id="room-history-charts">
-      <div id="room-history-chart"></div>
+      <div class="chart-container">
+        <div id="room-history-chart"></div>
+        <div id="room-history-chart-buttons" class="chart-buttons">
+          <div class="box-radio">
+            <input type="radio" id="room-time" name="room-history-chart-what" value="room" checked></input>
+            <label for="room-time">R</label>
+            <input type="radio" id="door-time" name="room-history-chart-what" value="door" checked></input>
+            <label for="door-time">D</label>
+          </div>
+        </div>
+      </div>
       <div id="room-history-charts-gutter"></div>
-      <div id="room-histogram"></div>
+      <div class="chart-container">
+        <div id="room-histogram"></div>
+      </div>
     </div>
     <div id="room-history-table"></div>
   </div>

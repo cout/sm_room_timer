@@ -335,14 +335,22 @@ class LineChart extends Chart {
     this.elem.classList.add('line-chart');
   }
 
-  plot({points, xlim, ylim, format}) {
+  plot({points, xlim, ylim, format, classes}) {
     const plot = this.create_plot();
     const tooltips = points.map(point => format(point));
     plot.appendChild(this.draw_axes(xlim, ylim));
     plot.appendChild(this.draw_lines(points, xlim, ylim));
     plot.appendChild(this.draw_points(points, tooltips, xlim, ylim));
 
+    if (classes !== undefined) {
+      for (const cls of classes) {
+        plot.classList.add(cls);
+      }
+    }
+
     this.elem.appendChild(plot);
+
+    return new Widget(plot);
   }
 };
 
@@ -372,9 +380,10 @@ class Histogram extends Chart {
     plot.appendChild(this.draw_bars(bins, tooltips, 0.8));
 
     this.elem.appendChild(plot);
+
+    return new Widget(plot);
   }
 }
-
 
 // js: ["new_room_time", {"room": {
 // "room_name": "Wrecked Ship Main Shaft",
@@ -544,6 +553,13 @@ document.getElementById('room-history-chart').appendChild(room_history_chart.ele
 
 const room_histogram = new Histogram();
 document.getElementById('room-histogram').appendChild(room_histogram.elem);
+
+for (const elem of document.querySelectorAll('#room-history-charts input[name="room-history-chart-what"]')) {
+  elem.addEventListener('change', function(event) {
+    console.log(event);
+    show_active_room_history_chart();
+  });
+}
 
 const room_history_close_button = new Widget(document.getElementById('room-history-close-button'));
 room_history_close_button.elem.addEventListener('click', () => {
@@ -766,6 +782,22 @@ const handle_segment_stats = function(data) {
   gutter.show();
 };
 
+const room_history_plots = { };
+
+const show_active_room_history_chart = function() {
+  const active_what_elems = document.querySelectorAll('#room-history-charts input[name="room-history-chart-what"]:checked');
+  const active_type = 'real';
+  for (const chart of Object.values(room_history_plots)) {
+    chart.hide();
+  }
+  for (const active_what_elem of active_what_elems) {
+    const active_what = active_what_elem.value;
+    const active_plot = room_history_plots[`${active_what}-${active_type}`];
+    console.log(active_plot);
+    active_plot.show();
+  }
+}
+
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
 
@@ -776,15 +808,35 @@ const handle_room_history = function(data) {
     room_history_table.body.clear();
   }
 
+  room_history_chart.clear();
+
+  for (const what of [ 'room', 'door' ]) {
+    for (const type of [ 'real', 'game', 'lag' ]) {
+      const times = data.times.map(t => t[what][type]);
+      const points = times.map((t,i) => [ i, t ]);
+      const xlim = [ 0, points.length ];
+      const ylim = [ Math.min(...times), Math.max(...times) ];
+      const name = `${what}-${type}`;
+
+      const plot = room_history_chart.plot({
+        points: points,
+        xlim: xlim,
+        ylim: ylim,
+        format: p => fc(p[1]),
+        classes: [ `${name}-time-chart`, 'hidden' ],
+      });
+
+      room_history_plots[name] = plot;
+    }
+  }
+
+  show_active_room_history_chart();
+
+  room_histogram.clear();
   const times = data.times.map(t => t.room.real);
   const points = times.map((t,i) => [ i, t ]);
   const xlim = [ 0, points.length ];
   const ylim = [ Math.min(...times), Math.max(...times) ];
-
-  room_history_chart.clear();
-  room_history_chart.plot({ points: points, xlim: xlim, ylim: ylim, format: p => fc(p[1]) });
-
-  room_histogram.clear();
   room_histogram.plot({ values: times, n: 27, format: v => fc(v) });
 
   data.times.forEach((times) => {
