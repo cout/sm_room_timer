@@ -382,21 +382,18 @@ td div.numeric {
 .box-radio input[type=radio] + span {
   display: block;
   cursor: pointer;
-  /* border: 2px solid #000000; */
   text-align: center;
 	color: #ffffff;
-  /* align-items: center; */
-  /* justify-content: center; */
   background-color: #000000;
   font-size: xx-small;
   width: 2em;
   margin: 0.125em;
-  border-radius: 20%;
+  border-radius: 22.5%;
   font-weight: bold;
-  padding-top: 0.125em; /* TODO: this is to offset baseline in whatever font I'm using, but the default font doesn't have this problem */
+  padding-top: 0.25em; /* TODO: this is to offset baseline in whatever font I'm using, but the default font doesn't have this problem */
+  border: 1px solid #ffffff00;
 }
 
 .box-radio input[type=radio]:checked + span {
-	color: #000000;
-	background-color: #ffffff;
+  border: 1px solid #ffffffff;
 }
