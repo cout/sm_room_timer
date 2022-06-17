@@ -155,7 +155,7 @@ td div.numeric {
   z-index: 100;
 }
 
-#room-history {
+#attempt-history {
   display: flex;
   flex-direction: column;
   background-color: #262626;
@@ -170,13 +170,13 @@ td div.numeric {
   box-shadow: 0.5em 0.5em 1em black;
 }
 
-#room-history-label {
+#attempt-history-label {
   flex-grow: 0;
   flex-shrink: 1;
   flex-basis: auto;
 }
 
-#room-history-table {
+#attempt-history-table {
   flex-grow: 1;
   flex-shrink: 1;
   flex-basis: auto;
@@ -258,13 +258,13 @@ td div.numeric {
     background: #000;
 }
 
-#room-history-close-button {
+#attempt-history-close-button {
   position: absolute;
   top: 0.5em;
   right: 0.5em;
 }
 
-#room-history-close-button::before {
+#attempt-history-close-button::before {
   display: inline-block;
   color: #ffffff;
   content: "\2715";
@@ -272,45 +272,45 @@ td div.numeric {
   opacity: 0.3;
 }
 
-#room-history-close-button:hover::Before {
+#attempt-history-close-button:hover::Before {
   opacity: 1;
 }
 
-#room-history-charts {
+#attempt-history-charts {
   display: flex;
   flex-direction: row;
   margin-bottom: 1em;
 }
 
-#room-history-chart {
+#attempt-history-chart {
   flex-basis: 50%;
   background-color: black;
 }
 
-#room-history-chart .chart {
+#attempt-history-chart .chart {
   width: 100%;
 }
 
-#room-history-chart .axis {
+#attempt-history-chart .axis {
   display: none;
 }
 
-#room-history-chart .lines {
+#attempt-history-chart .lines {
   transform-origin: 50% 50%;
 }
 
-#room-history-chart .points {
+#attempt-history-chart .points {
   transform-origin: 50% 50%;
 }
 
-#room-history-chart .line {
+#attempt-history-chart .line {
   stroke-width: 2.0;
   stroke: white;
   fill: none;
   vector-effect: non-scaling-stroke;
 }
 
-#room-history-chart .point {
+#attempt-history-chart .point {
   stroke-width: 2.0;
   stroke: #ff000000;
   stroke: #
@@ -318,41 +318,41 @@ td div.numeric {
   fill: #ff000000;
 }
 
-#room-history-chart .point:hover {
+#attempt-history-chart .point:hover {
   /* visibility: visible; */
   stroke: #ff0000ff;
   /* fill: #ff0000ff; */
 }
 
-#room-history-charts-gutter {
+#attempt-history-charts-gutter {
   flex-grow: 0;
   flex-shrink: 0;
   width: 1em;
 }
 
-#room-histogram {
+#attempt-histogram {
   flex-basis: 50%;
   background-color: black;
 }
 
-#room-histogram .chart {
+#attempt-histogram .chart {
   width: 100%;
 }
 
-#room-histogram .bars {
+#attempt-histogram .bars {
   transform: scaleY(-1);
   transform-origin: 50% 50%;
 }
 
-#room-histogram .bar {
+#attempt-histogram .bar {
   fill: #ffffff;
 }
 
-#room-histogram .bar:hover {
+#attempt-histogram .bar:hover {
   fill: #ff0000;
 }
 
-#room-history-title {
+#attempt-history-title {
   text-align: center;
 }
 

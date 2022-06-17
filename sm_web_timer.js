@@ -539,7 +539,7 @@ const segment_stats_footer_columns = [
   { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times) + '\n' + fc(o.best_time), cls: [ 'time', sssob ] },
 ];
 
-const room_history_columns = [
+const attempt_history_columns = [
   { label: "Room Game Time",   get: o => fc(o.room.game),   cls: [ 'time' ]  },
   { label: "Room Real Time",   get: o => fc(o.room.real),   cls: [ 'time' ]  },
   { label: "Room Lag Time",    get: o => fc(o.room.lag),    cls: [ 'time' ]  },
@@ -547,34 +547,34 @@ const room_history_columns = [
   { label: "Door Real Time",   get: o => fc(o.door.real),   cls: [ 'time' ]  },
   { label: "Door Lag Time",    get: o => fc(o.door.lag),    cls: [ 'time' ]  },
 ];
-const room_history_table = new Table(room_history_columns);
-const room_history_div = new Widget(document.getElementById('room-history'));
-document.getElementById('room-history-table').appendChild(room_history_table.elem);
+const attempt_history_table = new Table(attempt_history_columns);
+const attempt_history_div = new Widget(document.getElementById('attempt-history'));
+document.getElementById('attempt-history-table').appendChild(attempt_history_table.elem);
 
-const room_history_chart = new LineChart();
-document.getElementById('room-history-chart').appendChild(room_history_chart.elem);
+const attempt_history_chart = new LineChart();
+document.getElementById('attempt-history-chart').appendChild(attempt_history_chart.elem);
 
-const room_histogram = new Histogram();
-document.getElementById('room-histogram').appendChild(room_histogram.elem);
+const attempt_histogram = new Histogram();
+document.getElementById('attempt-histogram').appendChild(attempt_histogram.elem);
 
-for (const elem of document.querySelectorAll('#room-history-chart-buttons input[type="radio"]')) {
+for (const elem of document.querySelectorAll('#attempt-history-chart-buttons input[type="radio"]')) {
   elem.addEventListener('change', function(event) {
-    show_active_room_history_chart();
+    show_active_attempt_history_chart();
   });
 }
 
-for (const elem of document.querySelectorAll('#room-histogram-buttons input[type="radio"]')) {
+for (const elem of document.querySelectorAll('#attempt-histogram-buttons input[type="radio"]')) {
   elem.addEventListener('change', function(event) {
-    show_active_room_histogram();
+    show_active_attempt_histogram();
   });
 }
 
-const room_history_close_button = new Widget(document.getElementById('room-history-close-button'));
-room_history_close_button.elem.addEventListener('click', () => {
-  room_history_div.hide();
+const attempt_history_close_button = new Widget(document.getElementById('attempt-history-close-button'));
+attempt_history_close_button.elem.addEventListener('click', () => {
+  attempt_history_div.hide();
 });
 
-const room_history_room_name = new Widget(document.getElementById('room-history-room-name'));
+const attempt_history_name = new Widget(document.getElementById('attempt-history-name'));
 
 const gutter = new Widget(document.getElementById("gutter"));
 
@@ -790,14 +790,14 @@ const handle_segment_stats = function(data) {
   gutter.show();
 };
 
-const room_history_plots = { };
-const room_histogram_plots = { };
+const attempt_history_plots = { };
+const attempt_histogram_plots = { };
 
-const show_active_room_history_chart = function() {
-  const active_what_elems = document.querySelectorAll('#room-history-charts input[name="room-history-chart-what"]:checked');
-  const active_time_type_elems = document.querySelectorAll('#room-history-charts input[name="room-history-chart-time-type"]:checked');
+const show_active_attempt_history_chart = function() {
+  const active_what_elems = document.querySelectorAll('#attempt-history-charts input[name="attempt-history-chart-what"]:checked');
+  const active_time_type_elems = document.querySelectorAll('#attempt-history-charts input[name="attempt-history-chart-time-type"]:checked');
 
-  for (const chart of Object.values(room_history_plots)) {
+  for (const chart of Object.values(attempt_history_plots)) {
     chart.hide();
   }
 
@@ -805,17 +805,17 @@ const show_active_room_history_chart = function() {
     for (const active_time_type_elem of active_time_type_elems) {
       const active_what = active_what_elem.value;
       const active_time_type = active_time_type_elem.value;
-      const active_plot = room_history_plots[`${active_what}-${active_time_type}`];
+      const active_plot = attempt_history_plots[`${active_what}-${active_time_type}`];
       active_plot.show();
     }
   }
 }
 
-const show_active_room_histogram = function() {
-  const active_what_elems = document.querySelectorAll('#room-history-charts input[name="room-histogram-what"]:checked');
-  const active_time_type_elems = document.querySelectorAll('#room-history-charts input[name="room-histogram-time-type"]:checked');
+const show_active_attempt_histogram = function() {
+  const active_what_elems = document.querySelectorAll('#attempt-history-charts input[name="attempt-histogram-what"]:checked');
+  const active_time_type_elems = document.querySelectorAll('#attempt-history-charts input[name="attempt-histogram-time-type"]:checked');
 
-  for (const chart of Object.values(room_histogram_plots)) {
+  for (const chart of Object.values(attempt_histogram_plots)) {
     chart.hide();
   }
 
@@ -823,7 +823,7 @@ const show_active_room_histogram = function() {
     for (const active_time_type_elem of active_time_type_elems) {
       const active_what = active_what_elem.value;
       const active_time_type = active_time_type_elem.value;
-      const active_plot = room_histogram_plots[`${active_what}-${active_time_type}`];
+      const active_plot = attempt_histogram_plots[`${active_what}-${active_time_type}`];
       active_plot.show();
     }
   }
@@ -832,15 +832,15 @@ const show_active_room_histogram = function() {
 const handle_room_history = function(data) {
   // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
 
-  room_history_room_name.clear();
-  room_history_room_name.elem.appendChild(document.createTextNode(data.room.room_name));
+  attempt_history_name.clear();
+  attempt_history_name.elem.appendChild(document.createTextNode(data.room.room_name));
 
-  if (room_history_table.body) {
-    room_history_table.body.clear();
+  if (attempt_history_table.body) {
+    attempt_history_table.body.clear();
   }
 
-  room_history_chart.clear();
-  room_histogram.clear();
+  attempt_history_chart.clear();
+  attempt_histogram.clear();
 
   for (const what of [ 'room', 'door' ]) {
     for (const time_type of [ 'real', 'game', 'lag' ]) {
@@ -850,7 +850,7 @@ const handle_room_history = function(data) {
       const ylim = [ Math.min(...times), Math.max(...times) ];
       const name = `${what}-${time_type}`;
 
-      const history_plot = room_history_chart.plot({
+      const history_plot = attempt_history_chart.plot({
         points: points,
         xlim: xlim,
         ylim: ylim,
@@ -858,20 +858,20 @@ const handle_room_history = function(data) {
         classes: [ 'hidden' ],
       });
 
-      const histogram_plot = room_histogram.plot({
+      const histogram_plot = attempt_histogram.plot({
         values: times,
         n: 27,
         format: v => fc(v),
         classes: [ 'hidden' ],
       });
 
-      room_history_plots[name] = history_plot;
-      room_histogram_plots[name] = histogram_plot;
+      attempt_history_plots[name] = history_plot;
+      attempt_histogram_plots[name] = histogram_plot;
     }
   }
 
-  show_active_room_history_chart();
-  show_active_room_histogram();
+  show_active_attempt_history_chart();
+  show_active_attempt_histogram();
 
   const times = data.times.map(t => t.room.real);
   const points = times.map((t,i) => [ i, t ]);
@@ -879,10 +879,10 @@ const handle_room_history = function(data) {
   const ylim = [ Math.min(...times), Math.max(...times) ];
 
   data.times.forEach((times) => {
-    room_history_table.append_row(times);
+    attempt_history_table.append_row(times);
   });
 
-  room_history_div.show();
+  attempt_history_div.show();
 }
 
 class TimerClient {

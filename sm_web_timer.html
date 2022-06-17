@@ -7,6 +7,7 @@
   <script src="sm_web_timer.js" defer></script>
 </head>
 <body>
+
   <div id="help">
     <p>Welcome to the room and segment timer.</p>
 
@@ -20,44 +21,50 @@
     <p>This message will disappear when you have completed a room, or
     you may hide it now with the space bar.</p>
   </div>
-  <div id="room-history" class="hidden">
-    <div id="room-history-close-button"></div>
-    <div id="room-history-title">
-      <p><span id="room-history-room-name"/></p>
+
+  <div id="attempt-history" class="hidden">
+    <div id="attempt-history-close-button"></div>
+    <div id="attempt-history-title">
+      <p><span id="attempt-history-name"/></p>
     </div>
-    <div id="room-history-charts">
+
+    <div id="attempt-history-charts">
       <div class="chart-container">
-        <div id="room-history-chart"></div>
-        <div id="room-history-chart-buttons" class="chart-buttons">
+        <div id="attempt-history-chart"></div>
+        <div id="attempt-history-chart-buttons" class="chart-buttons">
           <div class="h-radio slash-separated xx-small">
-            <label><input type="radio" name="room-history-chart-what" value="room" checked></input><span>Room</span></label>
-            <label><input type="radio" name="room-history-chart-what" value="door"></input><span>Door</span></label>
+            <label><input type="radio" name="attempt-history-chart-what" value="room" checked></input><span>Room</span></label>
+            <label><input type="radio" name="attempt-history-chart-what" value="door"></input><span>Door</span></label>
           </div>
           <div class="h-radio slash-separated xx-small">
-            <label><input type="radio" name="room-history-chart-time-type" value="real" checked /><span>Real</span></label>
-            <label><input type="radio" name="room-history-chart-time-type" value="game" /><span>Game</span></label>
-            <label><input type="radio" name="room-history-chart-time-type" value="lag" /><span>Lag</span></label>
+            <label><input type="radio" name="attempt-history-chart-time-type" value="real" checked /><span>Real</span></label>
+            <label><input type="radio" name="attempt-history-chart-time-type" value="game" /><span>Game</span></label>
+            <label><input type="radio" name="attempt-history-chart-time-type" value="lag" /><span>Lag</span></label>
           </div>
         </div>
       </div>
-      <div id="room-history-charts-gutter"></div>
+
+      <div id="attempt-history-charts-gutter"></div>
+
       <div class="chart-container">
-        <div id="room-histogram"></div>
-        <div id="room-histogram-buttons" class="chart-buttons">
+        <div id="attempt-histogram"></div>
+        <div id="attempt-histogram-buttons" class="chart-buttons">
           <div class="h-radio slash-separated xx-small">
-            <label><input type="radio" name="room-histogram-what" value="room" checked></input><span>Room</span></label>
-            <label><input type="radio" name="room-histogram-what" value="door"></input><span>Door</span></label>
+            <label><input type="radio" name="attempt-histogram-what" value="room" checked></input><span>Room</span></label>
+            <label><input type="radio" name="attempt-histogram-what" value="door"></input><span>Door</span></label>
           </div>
           <div class="h-radio slash-separated xx-small">
-            <label><input type="radio" name="room-histogram-time-type" value="real" checked /><span>Real</span></label>
-            <label><input type="radio" name="room-histogram-time-type" value="game" /><span>Game</span></label>
-            <label><input type="radio" name="room-histogram-time-type" value="lag" /><span>Lag</span></label>
+            <label><input type="radio" name="attempt-histogram-time-type" value="real" checked /><span>Real</span></label>
+            <label><input type="radio" name="attempt-histogram-time-type" value="game" /><span>Game</span></label>
+            <label><input type="radio" name="attempt-histogram-time-type" value="lag" /><span>Lag</span></label>
           </div>
         </div>
       </div>
     </div>
-    <div id="room-history-table"></div>
+
+    <div id="attempt-history-table"></div>
   </div>
+
   <div class="main-view">
     <div class="top-panel">
       <div id="room-times" class=""></div>
@@ -68,5 +75,6 @@
       <div id="segment-stats" class="hidden"></div>
     </div>
   </div>
+
 </body>
 </html>
