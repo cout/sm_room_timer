@@ -37,7 +37,7 @@ const pct = function(rate) {
   if (rate === undefined) {
     return undefined;
   }
-  return `${Math.round(rate) * 100}%`;
+  return `${Math.round(rate * 100)}%`;
 }
 
 const add_classes = function(elem, classes, obj) {
