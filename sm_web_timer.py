@@ -413,14 +413,14 @@ class WebenginePage(QtWebEngineWidgets.QWebEnginePage):
   def javaScriptConsoleMessage(self, level, msg, line, source_id):
     print(msg)
 
-class Browser(object):
+class BrowserWindow(QtWidgets.QWidget):
   def __init__(self, url, zoom):
+    super().__init__()
+
     self.url = url
 
-    self.window = QtWidgets.QWidget()
-
     icon_path = os.path.join(sys.path[0], 'morph_ball_clock.png')
-    self.window.setWindowIcon(QtGui.QIcon(icon_path))
+    self.setWindowIcon(QtGui.QIcon(icon_path))
 
     self.layout = QtWidgets.QVBoxLayout()
 
@@ -433,16 +433,16 @@ class Browser(object):
 
     self.layout.setContentsMargins(0, 0, 0, 0)
     self.layout.addWidget(self.webview)
-    self.window.setLayout(self.layout)
+    self.setLayout(self.layout)
 
   def pre_run(self):
     self.webview.load(QtCore.QUrl(self.url))
-    self.window.show()
+    self.show()
 
 class BrowserApplication(object):
   def __init__(self, argv, url, zoom):
     self.app = QtWidgets.QApplication(argv)
-    self.browser = Browser(url, zoom)
+    self.browser = BrowserWindow(url, zoom)
 
   def run(self):
     self.browser.pre_run()
