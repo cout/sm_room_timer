@@ -439,6 +439,12 @@ class BrowserWindow(QtWidgets.QWidget):
     self.webview.load(QtCore.QUrl(self.url))
     self.show()
 
+  def keyPressEvent(self, event):
+    key = event.key()
+
+    if key == QtCore.Qt.Key_F5:
+      self.webview.reload()
+
 class BrowserApplication(object):
   def __init__(self, argv, url, zoom):
     self.app = QtWidgets.QApplication(argv)
