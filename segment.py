@@ -34,7 +34,7 @@ class Segment(object):
     m = re.match(r'\[(.*?)\]:\[(.*?)\]', id)
     if m:
       start = TransitionId.from_id(m.group(1), rooms=rooms, doors=doors)
-      end = TransitionId.from_id(m.group(1), rooms=rooms, doors=doors)
+      end = TransitionId.from_id(m.group(2), rooms=rooms, doors=doors)
       return cls.from_route(route, start, end)
     else:
       return None
