@@ -414,8 +414,7 @@ class WebenginePage(QtWebEngineWidgets.QWebEnginePage):
     print(msg)
 
 class Browser(object):
-  def __init__(self, argv, url, zoom):
-    self.app = QtWidgets.QApplication(argv)
+  def __init__(self, url, zoom):
     self.url = url
 
     self.window = QtWidgets.QWidget()
@@ -436,9 +435,17 @@ class Browser(object):
     self.layout.addWidget(self.webview)
     self.window.setLayout(self.layout)
 
-  def run(self):
+  def pre_run(self):
     self.webview.load(QtCore.QUrl(self.url))
     self.window.show()
+
+class BrowserApplication(object):
+  def __init__(self, argv, url, zoom):
+    self.app = QtWidgets.QApplication(argv)
+    self.browser = Browser(url, zoom)
+
+  def run(self):
+    self.browser.pre_run()
 
     # Capture exceptions from both signals (such as KeyboardInterrupt)
     # and threads (such as an exception raised by the TimerThread).
@@ -516,8 +523,8 @@ def default_zoom_level():
     os.environ.update(e)
 
 def run_qt_browser(url, zoom):
-  browser = Browser(sys.argv, url, zoom=zoom)
-  sys.exit(browser.run())
+  app = BrowserApplication(sys.argv, url, zoom=zoom)
+  sys.exit(app.run())
 
 def main():
   parser = argparse.ArgumentParser(description='SM Room Timer')
