@@ -419,3 +419,7 @@ td div.numeric {
 .slash-separated > label:not(:first-child)::before {
   content: '/';
 }
+
+.most-recent-segment {
+  border: 1px solid blue;
+}

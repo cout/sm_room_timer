@@ -743,6 +743,7 @@ const handle_segment_stats = function(data) {
     if (row) {
       // Clear out any colors from the last updated row
       if (last_updated_segment_row) {
+        last_updated_segment_row.elem.classList.remove('most-recent-segment');
         last_updated_segment_row.update({
           old: undefined,
           ...last_updated_segment,
@@ -756,6 +757,7 @@ const handle_segment_stats = function(data) {
         old: old_segment,
         ...segment
       });
+      row.elem.classList.add('most-recent-segment');
       row.elem.scrollIntoView({ behavior: 'smooth', block: 'center' })
 
       // Save segment stats for next time this row is updated
