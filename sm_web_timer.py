@@ -126,8 +126,8 @@ def apply_to_attempts(attempts, func):
       gametime=func(attempts.gametimes),
       realtime=func(attempts.realtimes),
       roomlag=func(attempts.roomlagtimes),
-      door=func(attempts.doortimes),
-      realtime_door=func(attempts.doortimes),
+      door=func(attempts.doorlagtimes),
+      realtime_door=func(attempts.doorlagtimes),
       doortime_is_real=True)
         # state.last_gametime_room, state.last_realtime_room,
         # state.last_room_lag, state.last_door_lag_frames,

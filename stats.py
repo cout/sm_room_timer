@@ -31,7 +31,7 @@ def transition_stats(id, attempts, iqr, exclude_doors, doors_only):
 
   values = [ ]
   if not doors_only: values.append(attempts.realtimes.values())
-  if not exclude_doors: values.append(attempts.doortimes.values())
+  if not exclude_doors: values.append(attempts.doorlagtimes.values())
 
   times = [ sum(v) for v in zip(*values) ]
 
@@ -41,7 +41,7 @@ def transition_stats(id, attempts, iqr, exclude_doors, doors_only):
   p75 = FrameCount(stats.scoreatpercentile(times, 75))
   p90 = FrameCount(stats.scoreatpercentile(times, 90))
   save = p75 - p25 if iqr else p50 - best
-  most_recent = attempts.realtimes.most_recent() + attempts.doortimes.most_recent()
+  most_recent = attempts.realtimes.most_recent() + attempts.doorlagtimes.most_recent()
   save_most_recent = max(most_recent - p50, FrameCount(0))
   items = id.items
   beams = id.beams

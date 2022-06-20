@@ -323,7 +323,7 @@ class RoomTimerTerminalFrontend(object):
     self.log('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
     self.log('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
     self.log('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
-    self.log('Door: %s' % self.colorize(transition.time.door, attempts.doortimes))
+    self.log('Door: %s' % self.colorize(transition.time.door, attempts.doorlagtimes))
     # self.log('RD:   %s (%s)' % (transition.time.realtime_door, transition.time.realtime_door - transition.time.door))
     self.log('Tot:  %s' % (transition.time.totalrealtime))
     self.log('')
