@@ -230,7 +230,7 @@ class RoomTimer(object):
         gametime=state.last_gametime_room,
         realtime=state.last_realtime_room,
         roomlag=state.last_room_lag,
-        door=state.last_door_lag_frames,
+        doorlag=state.last_door_lag_frames,
         realtime_door=state.last_realtime_door,
         doortime_is_real=True)
     transition = Transition(ts, transition_id, transition_time)
@@ -245,7 +245,7 @@ class RoomTimer(object):
         gametime=state.last_gametime_room,
         realtime=state.last_realtime_room,
         roomlag=state.last_room_lag,
-        door=FrameCount(0),
+        doorlag=FrameCount(0),
         realtime_door=state.last_realtime_door,
         doortime_is_real=True)
     transition = Transition(ts, transition_id, transition_time)
@@ -260,7 +260,7 @@ class RoomTimer(object):
         gametime=state.last_gametime_room,
         realtime=state.last_realtime_room,
         roomlag=state.last_room_lag,
-        door=FrameCount(0),
+        doorlag=FrameCount(0),
         realtime_door=state.last_realtime_door,
         doortime_is_real=True)
     transition = Transition(ts, transition_id, transition_time)
@@ -323,8 +323,7 @@ class RoomTimerTerminalFrontend(object):
     self.log('Game: %s' % self.colorize(transition.time.gametime, attempts.gametimes))
     self.log('Real: %s' % self.colorize(transition.time.realtime, attempts.realtimes))
     self.log('Lag:  %s' % self.colorize(transition.time.roomlag, attempts.roomlagtimes))
-    self.log('Door: %s' % self.colorize(transition.time.door, attempts.doorlagtimes))
-    # self.log('RD:   %s (%s)' % (transition.time.realtime_door, transition.time.realtime_door - transition.time.door))
+    self.log('Door: %s' % self.colorize(transition.time.doorlag, attempts.doorlagtimes))
     self.log('Tot:  %s' % (transition.time.totalrealtime))
     self.log('')
 

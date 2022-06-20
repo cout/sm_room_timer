@@ -30,7 +30,7 @@ class SegmentAttempt(object):
         gametime=FrameCount(0),
         realtime=FrameCount(0),
         roomlag=FrameCount(0),
-        door=FrameCount(0),
+        doorlag=FrameCount(0),
         realtime_door=FrameCount(0),
         doortime_is_real=True)
 

@@ -68,9 +68,9 @@ def encode_transition_time(time):
       'lag': time.roomlag,
     },
     'door': {
-      'game': time.realtime_door - time.door,
+      'game': time.realtime_door - time.doorlag,
       'real': time.realtime_door,
-      'lag': time.door,
+      'lag': time.doorlag,
     },
   }
 
@@ -126,7 +126,7 @@ def apply_to_attempts(attempts, func):
       gametime=func(attempts.gametimes),
       realtime=func(attempts.realtimes),
       roomlag=func(attempts.roomlagtimes),
-      door=func(attempts.doorlagtimes),
+      doorlag=func(attempts.doorlagtimes),
       realtime_door=func(attempts.doorlagtimes),
       doortime_is_real=True)
         # state.last_gametime_room, state.last_realtime_room,

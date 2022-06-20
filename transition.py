@@ -79,7 +79,7 @@ class TransitionTime(NamedTuple):
   gametime: FrameCount
   realtime: FrameCount
   roomlag: FrameCount
-  door: FrameCount
+  doorlag: FrameCount
   realtime_door: FrameCount
 
   # Older versions did not save real doortime, so we need to track
@@ -92,7 +92,7 @@ class TransitionTime(NamedTuple):
         gametime=(self.gametime + t.gametime),
         realtime=(self.realtime + t.realtime),
         roomlag=(self.roomlag + t.roomlag),
-        door=(self.door + t.door),
+        doorlag=(self.doorlag + t.doorlag),
         realtime_door=(self.realtime_door + t.realtime_door),
         doortime_is_real=(self.doortime_is_real and t.doortime_is_real))
 
@@ -109,7 +109,7 @@ class Transition(NamedTuple):
       return "Transition(%s,%s,%s,%s,%s,%s)" % (
         self.id, self.time.gametime,
         self.time.realtime, self.time.roomlag,
-        self.time.door, self.time.realtime_door)
+        self.time.doorlag, self.time.realtime_door)
 
   @classmethod
   def csv_headers(self):
@@ -136,7 +136,7 @@ class Transition(NamedTuple):
       round(self.time.realtime.to_seconds(), 3),
       round(self.time.roomlag.to_seconds(), 3),
       round(self.time.realtime_door.to_seconds(), 3) if self.time.doortime_is_real else None,
-      round(self.time.door.to_seconds(), 3))
+      round(self.time.doorlag.to_seconds(), 3))
 
   @classmethod
   def from_csv_row(self, rooms, doors, row):
@@ -185,7 +185,7 @@ class Transition(NamedTuple):
         gametime=FrameCount.from_seconds(float(row['gametime'])),
         realtime=FrameCount.from_seconds(float(row['realtime'])),
         roomlag=FrameCount.from_seconds(float(row['roomlagtime'])) if 'roomlagtime' in row else None,
-        door=doorlagtime,
+        doorlag=doorlagtime,
         realtime_door=doorrealtime,
         doortime_is_real=doortime_is_real)
     return Transition(ts, transition_id, transition_time)

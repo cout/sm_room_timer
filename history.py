@@ -22,7 +22,7 @@ class Attempts(object):
     self.gametimes.append(transition.time.gametime)
     self.realtimes.append(transition.time.realtime)
     self.roomlagtimes.append(transition.time.roomlag)
-    self.doorlagtimes.append(transition.time.door)
+    self.doorlagtimes.append(transition.time.doorlag)
     self.totalrealtimes.append(transition.time.totalrealtime)
 
   def __iter__(self):
