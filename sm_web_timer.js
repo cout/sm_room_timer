@@ -547,7 +547,7 @@ const segment_stats_footer_columns = [
   { label: "%",          get: o => '',                                       },
   { label: "Median",     get: o => fc(o.median_time),   cls: [ 'time', ssm ] },
   { label: "\u00b1Best", get: o => fc_delta(o.median_time, o.best_time) + '\n' + fc(o.best_time),         cls: [ 'time', ssb ]   },
-  { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times) + '\n' + fc(o.best_time), cls: [ 'time', sssob ] },
+  { label: "\u00b1SOB",  get: o => fc_delta(o.median_time, o.sum_of_best_times) + '\n' + fc(o.sum_of_best_times), cls: [ 'time', sssob ] },
 ];
 
 const attempt_history_columns = [
