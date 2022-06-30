@@ -366,7 +366,7 @@ def main():
         on_transitioned=tracker.transitioned,
         on_state_change=frontend.state_changed,
         on_reset=tracker.room_reset,
-        on_preset_loaded =self.tracker.preset_loaded)
+        on_preset_loaded=tracker.preset_loaded)
 
     while state_reader.is_alive(): timer.poll()
 
