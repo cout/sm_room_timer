@@ -40,6 +40,11 @@ thead th {
   z-index: 2;
 }
 
+thead th .group {
+  text-align: center;
+  border-bottom: 1px solid #ffffff;
+}
+
 tfoot td {
   position: sticky;
   bottom: 0;
