@@ -175,8 +175,6 @@ class Table extends Widget {
     }
     if (current_group.colspan > 0) groups.push(current_group);
 
-    console.log('groups:', groups);
-
     if (groups.length > 0) {
       const group_row = document.createElement('tr');
 
@@ -1027,8 +1025,6 @@ const show_room_history = function(room) {
 }
 
 const show_segment_history = function(segment_id) {
-  console.log('show_segment_history', segment_id);
-
   if (segment_id) {
     timer_client.fetch_segment_history(segment_id);
   }
