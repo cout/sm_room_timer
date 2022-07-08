@@ -164,28 +164,30 @@ class Table extends Widget {
 
   append_group_row() {
     const groups = [ ];
-    var current_group = { label: undefined, colspan: 0 };
+    var current_group = { label: undefined, colspan: 0, dummy_group: true };
     for (const col of this.columns) {
       if (col.group !== current_group.label) {
-        if (current_group.colspan > 0) groups.push(current_group);
+        groups.push(current_group);
         current_group = { label: col.group, colspan: 1 };
       } else {
-        if (current_group.colspan > 0) current_group.colspan += 1;
+        current_group.colspan += 1;
       }
     }
-    if (current_group.colspan > 0) groups.push(current_group);
+    groups.push(current_group);
 
-    if (groups.length > 0) {
+    if (!current_group.dummy_group) {
       const group_row = document.createElement('tr');
 
       for (const group of groups) {
         const cell = document.createElement('th');
         cell.setAttribute('colspan', group.colspan);
-        const div = document.createElement('div');
-        const text = document.createTextNode(group.label);
-        div.appendChild(text);
-        div.classList.add('group');
-        cell.appendChild(div);
+        if (group.label !== undefined) {
+          const div = document.createElement('div');
+          const text = document.createTextNode(group.label);
+          div.classList.add('group');
+          div.appendChild(text);
+          cell.appendChild(div);
+        }
         group_row.appendChild(cell);
       }
 
@@ -588,13 +590,13 @@ const segment_stats_footer_columns = [
 ];
 
 const attempt_history_columns = [
-  {                label: "TS",   get: o => o.timestamp,                     },
-  { group: "Room", label: "Game", get: o => fc(o.room.game), cls: [ 'time' ] },
-  { group: "Room", label: "Real", get: o => fc(o.room.real), cls: [ 'time' ] },
-  { group: "Room", label: "Lag",  get: o => fc(o.room.lag),  cls: [ 'time' ] },
-  { group: "Door", label: "Game", get: o => fc(o.door.game), cls: [ 'time' ] },
-  { group: "Door", label: "Real", get: o => fc(o.door.real), cls: [ 'time' ] },
-  { group: "Door", label: "Lag",  get: o => fc(o.door.lag),  cls: [ 'time' ] },
+  {                label: "Timestamp", get: o => o.timestamp,                     },
+  { group: "Room", label: "Game",      get: o => fc(o.room.game), cls: [ 'time' ] },
+  { group: "Room", label: "Real",      get: o => fc(o.room.real), cls: [ 'time' ] },
+  { group: "Room", label: "Lag",       get: o => fc(o.room.lag),  cls: [ 'time' ] },
+  { group: "Door", label: "Game",      get: o => fc(o.door.game), cls: [ 'time' ] },
+  { group: "Door", label: "Real",      get: o => fc(o.door.real), cls: [ 'time' ] },
+  { group: "Door", label: "Lag",       get: o => fc(o.door.lag),  cls: [ 'time' ] },
 ];
 const attempt_history_table = new Table(attempt_history_columns);
 const attempt_history_div = new Widget(document.getElementById('attempt-history'));
