@@ -359,6 +359,7 @@ td div.numeric {
 
 #attempt-history-title {
   text-align: center;
+  font-weight: bold;
 }
 
 .chart-container {
