@@ -38,7 +38,13 @@ const pct = function(rate) {
     return undefined;
   }
   return `${Math.round(rate * 100)}%`;
-}
+};
+
+const ts_format = new Intl.DateTimeFormat([], { dateStyle: 'short', timeStyle: 'short' });
+
+const ts = function(timestamp) {
+  return ts_format.format(Date.parse(timestamp));
+};
 
 const add_classes = function(elem, classes, obj) {
   if (classes) {
@@ -590,7 +596,7 @@ const segment_stats_footer_columns = [
 ];
 
 const attempt_history_columns = [
-  {                label: "Timestamp", get: o => o.timestamp,                     },
+  {                label: "Timestamp", get: o => ts(o.timestamp),                 },
   { group: "Room", label: "Game",      get: o => fc(o.room.game), cls: [ 'time' ] },
   { group: "Room", label: "Real",      get: o => fc(o.room.real), cls: [ 'time' ] },
   { group: "Room", label: "Lag",       get: o => fc(o.room.lag),  cls: [ 'time' ] },
