@@ -277,6 +277,7 @@ class JsonEventGenerator(object):
     transitions = [ history.all_transitions[idx] for idx in indexes ]
 
     times = [ {
+      'timestamp': transition.ts.isoformat(),
       **encode_transition_time(transition.time)
     } for transition in transitions ]
 
@@ -291,6 +292,7 @@ class JsonEventGenerator(object):
     attempts = find_segment_in_history(segment, history)
 
     times = [ {
+      'timestamp': attempt.transitions[0].ts.isoformat(),
       **encode_transition_time(attempt.time)
     } for attempt in attempts ]
 

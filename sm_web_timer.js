@@ -588,12 +588,13 @@ const segment_stats_footer_columns = [
 ];
 
 const attempt_history_columns = [
-  { group: "Room", label: "Game", get: o => fc(o.room.game), cls: [ 'time' ]  },
-  { group: "Room", label: "Real", get: o => fc(o.room.real), cls: [ 'time' ]  },
-  { group: "Room", label: "Lag",  get: o => fc(o.room.lag),  cls: [ 'time' ]  },
-  { group: "Door", label: "Game", get: o => fc(o.door.game), cls: [ 'time' ]  },
-  { group: "Door", label: "Real", get: o => fc(o.door.real), cls: [ 'time' ]  },
-  { group: "Door", label: "Lag",  get: o => fc(o.door.lag),  cls: [ 'time' ]  },
+  {                label: "TS",   get: o => o.timestamp,                     },
+  { group: "Room", label: "Game", get: o => fc(o.room.game), cls: [ 'time' ] },
+  { group: "Room", label: "Real", get: o => fc(o.room.real), cls: [ 'time' ] },
+  { group: "Room", label: "Lag",  get: o => fc(o.room.lag),  cls: [ 'time' ] },
+  { group: "Door", label: "Game", get: o => fc(o.door.game), cls: [ 'time' ] },
+  { group: "Door", label: "Real", get: o => fc(o.door.real), cls: [ 'time' ] },
+  { group: "Door", label: "Lag",  get: o => fc(o.door.lag),  cls: [ 'time' ] },
 ];
 const attempt_history_table = new Table(attempt_history_columns);
 const attempt_history_div = new Widget(document.getElementById('attempt-history'));
