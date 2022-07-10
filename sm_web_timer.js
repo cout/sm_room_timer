@@ -888,22 +888,15 @@ const show_active_attempt_histogram = function() {
   }
 };
 
-const show_attempt_history = function(name, data) {
-  // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
-
-  attempt_history_name.clear();
-  attempt_history_name.elem.appendChild(document.createTextNode(name));
-
-  if (attempt_history_table.body) {
-    attempt_history_table.body.clear();
-  }
-
+const redraw_attempt_history_charts = function(data) {
   attempt_history_chart.clear();
   attempt_histogram.clear();
 
-  for (const what of [ 'room', 'door' ]) {
+  for (const what of [ 'room', 'door', 'total' ]) {
     for (const time_type of [ 'real', 'game', 'lag' ]) {
-      const times = data.times.map(t => t[what][time_type]);
+      const times = what === 'total'
+        ? data.times.map(t => t['room'][time_type] + t['door'][time_type])
+        : data.times.map(t => t[what][time_type]);
       const points = times.map((t,i) => [ i, t ]);
       const xlim = [ 0, points.length ];
       const ylim = [ Math.min(...times), Math.max(...times) ];
@@ -931,6 +924,22 @@ const show_attempt_history = function(name, data) {
 
   show_active_attempt_history_chart();
   show_active_attempt_histogram();
+
+};
+
+const show_attempt_history = function(room_or_segment_name, data) {
+  // {"room": {"game": 463.0, "real": 463.0, "lag": 0.0}, "door": {"game": 120.0, "real": 162.0, "lag": 42.0}}
+
+  const title = document.createTextNode(room_or_segment_name);
+
+  attempt_history_name.clear();
+  attempt_history_name.elem.appendChild(title);
+
+  if (attempt_history_table.body) {
+    attempt_history_table.body.clear();
+  }
+
+  redraw_attempt_history_charts(data);
 
   data.times.forEach((times) => {
     attempt_history_table.append_row(times);
