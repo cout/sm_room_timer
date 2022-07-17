@@ -433,6 +433,7 @@ class BrowserWindow(QtWidgets.QWidget):
     self.setLayout(self.layout)
 
   def pre_run(self):
+    print("loading url %s" % self.url)
     self.webview.load(QtCore.QUrl(self.url))
     self.show()
 
@@ -629,9 +630,10 @@ def main():
 
     else:
       dirname = os.path.dirname(os.path.realpath(__file__))
-      filename = 'sm_web_timer.html'
+      filename = '%s/%s' % (dirname, 'sm_web_timer.html')
       port = args.port
-      url = 'file://%s/%s?port=%s' % (dirname, filename, port)
+      # url = 'file://%s/%s?port=%s' % (dirname, filename, port)
+      url = '%s?port=%s' % (QtCore.QUrl.fromLocalFile(filename).toString(), port)
       run_qt_browser(
           url,
           zoom=(args.zoom or default_zoom_level()))
