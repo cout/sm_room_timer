@@ -510,7 +510,8 @@ def default_zoom_level():
     scale_factor = qt_scale_factor()
 
     # Next, get the scale factor with fractional scaling
-    del os.environ['QT_AUTO_SCREEN_SCALE_FACTOR']
+    if 'QT_AUTO_SCREEN_SCALE_FACTOR' in os.environ:
+      del os.environ['QT_AUTO_SCREEN_SCALE_FACTOR']
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
     os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'PassThrough'
     fractional_scale_factor = qt_scale_factor()
