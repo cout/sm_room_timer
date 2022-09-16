@@ -2,6 +2,8 @@ import socket
 import select
 # import random
 
+import sys
+
 class DefaultLogger(object):
   def log(self, x):
     pass
@@ -17,16 +19,20 @@ class NetworkCommandSocket(object):
     self.logger = logger or DefaultLogger()
 
     try:
-      self.connect(addr, port)
-      self.logger.log("Connected on %s" % port)
-      self.read_core_ram(0, 0)
-      self.logger.log("OK")
+      try:
+        self._init(addr, port)
+      except:
+        port = 55354
+        self._init(addr, port)
     except:
-      port = 55354
-      self.connect(addr, port)
-      self.logger.log("Connected on %s" % port)
-      self.read_core_ram(0, 0)
-      self.logger.log("OK")
+      port = 55435
+      self._init(addr, port)
+
+  def _init(self, addr, port):
+    self.connect(addr, port)
+    self.logger.log("Connected on %s" % port)
+    self.read_core_ram(0, 0)
+    self.logger.log("OK")
 
   def connect(self, addr, port):
     self.port = port
@@ -39,7 +45,7 @@ class NetworkCommandSocket(object):
     self.socket.close()
 
   def send_command(self, msg):
-    self.socket.sendmsg([msg.encode()])
+    self.socket.send(msg.encode())
 
   def clear_responses(self):
     while self._read_response(timeout=0) is not None:
@@ -57,7 +63,7 @@ class NetworkCommandSocket(object):
     r, w, e = select.select([self.socket], [], [], timeout)
     if len(r) > 0:
       try:
-        msg, ancdata, flags, addr = self.socket.recvmsg(1024)
+        msg = self.socket.recv(1024)
       except ConnectionRefusedError:
         self.logger.log("connection refused")
         return None
