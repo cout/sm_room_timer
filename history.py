@@ -1,8 +1,6 @@
 from transition import Transition
 from frame_count_list import FrameCountList
 
-import csv
-
 class Attempts(object):
   def __init__(self, transitions=None):
     transitions = transitions or [ ]
