@@ -163,8 +163,15 @@ GUI timer (new!)
 ----------------
 
 A new web-based GUI timer is in development; it combines the room timer,
-segment timer, and segment stats watcher into a single application.  To
-run the web-based GUI timer:
+segment timer, and segment stats watcher into a single application.
+First, install the necessary requirements:
+
+```
+pip install pyqt5
+pip install pyqtwebengine
+```
+
+Then, to run it:
 
 ```
 ./sm_web_timer.py [-f <filename.csv>] [--splits <splits file>]
