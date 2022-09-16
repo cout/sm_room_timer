@@ -13,7 +13,7 @@ You must have python installed to use the timer (I use python 3.8.5, but
 it should work with newer versions too; if it does not, please file a
 bug report).
 
-You must have version 2.4.2 of the Super Metroid practice hack.
+You must have version 2.4.2 or 2.5.0 of the Super Metroid practice hack.
 
 The room timer will work with either qusb2snes or retroarch.  If you are
 using sd2snes, you will need to use qusb2snes.
