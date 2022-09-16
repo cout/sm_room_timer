@@ -358,12 +358,17 @@ class Chart extends Widget {
     const stride = (width / bars.length) + (1 - width) / (bars.length - 1);
 
     bars.forEach((height, i) => {
+      const x = stride * i;
+      const y = 0;
+      const w = stride * width;
+      const h = max_height == 0 ? 0 : height / max_height;
+
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
       rect.classList.add('bar');
-      rect.setAttribute('x', `${100 * stride * i}%`);
-      rect.setAttribute('y', 0);
-      rect.setAttribute('width', `${100 * stride * width}%`);
-      rect.setAttribute('height', `${100 * height / max_height}%`);
+      rect.setAttribute('x', `${100 * x}%`);
+      rect.setAttribute('y', `${100 * y}%`);
+      rect.setAttribute('width', `${100 * w}%`);
+      rect.setAttribute('height', `${100 * h}%`);
 
       const title = document.createElementNS("http://www.w3.org/2000/svg", "title");
       title.textContent = tooltips[i];
@@ -561,7 +566,7 @@ room_times_div.elem.appendChild(room_times_table.elem);
 
 const segment_times_columns = [
   { label: "Room",         get: o => o.room_name,                     cls: [ room_link ],
-                           onclick: o => show_room_history(o.room)                       },
+                           onclick: o => show_segment_room_history(o.room, o.segment_id)  },
   { label: "#",            get: o => o.attempts,                      cls: [ 'numeric' ]  },
   { label: "Time",         get: o => fc(o.time),                      cls: [ 'time', tc ] },
   // { label: "Old Median",get: o => fc(o.median_time),               cls: [ 'time' ]     },
@@ -764,6 +769,7 @@ const handle_new_room_time = function(data) {
   });
   current_segment_time_node = segment_times_table.append_row({
     room_name: 'Segment',
+    segment_id: data.segment.id,
     attempts: data.segment.attempts,
     time: data.segment.time,
     median_time: data.segment.prev_median_time,
@@ -1039,6 +1045,14 @@ const show_room_history = function(room) {
   // TODO: no room history for segment row
   if (room) {
     timer_client.fetch_room_history(room);
+  }
+}
+
+const show_segment_room_history = function(room, segment_id) {
+  if (room) {
+    show_room_history(room);
+  } else if (segment_id) {
+    show_segment_history(segment_id);
   }
 }
 
