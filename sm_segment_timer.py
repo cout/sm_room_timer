@@ -308,7 +308,9 @@ def main():
   parser.add_argument('--debug', dest='debug', action='store_true')
   parser.add_argument('--debug-log', dest='debug_log_filename')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
-  parser.add_argument('--usb2snes', action='store_true')
+  client_type_group = parser.add_mutually_exclusive_group(required=True)
+  client_type_group.add_argument('--usb2snes', dest='client_type', action='store_const', const='usb2snes')
+  client_type_group.add_argument('--retroarch', dest='client_type', action='store_const', const='retroarch')
   parser.add_argument('--route', action='store_true')
   parser.add_argument('--rebuild', action='store_true')
   # parser.add_argument('--segment', action='append', required=True)
@@ -357,7 +359,7 @@ def main():
 
   state_reader = ThreadedStateReader(
       rooms, doors,
-      usb2snes=args.usb2snes, logger=frontend)
+      client_type=args.client_type, logger=frontend)
   state_reader.start()
 
   try:

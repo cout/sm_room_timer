@@ -307,7 +307,7 @@ class JsonEventGenerator(object):
 
 class TimerThread(object):
   def __init__(self, history, rooms, doors, transition_log, route,
-      json_generator, server, usb2snes, split_segments):
+      json_generator, server, client_type, split_segments):
 
     self.history = history
     self.rooms = rooms
@@ -325,7 +325,7 @@ class TimerThread(object):
 
     self.state_reader = ThreadedStateReader(
         rooms, doors,
-        usb2snes=usb2snes, logger=json_generator)
+        client_type=client_type, logger=json_generator)
 
     self.timer = SegmentTimer(
         self.json_generator, self.state_reader,
@@ -542,7 +542,9 @@ def main():
   parser.add_argument('--debug', dest='debug', action='store_true')
   parser.add_argument('--debug-log', dest='debug_log_filename')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
-  parser.add_argument('--usb2snes', action='store_true')
+  client_type_group = parser.add_mutually_exclusive_group(required=True)
+  client_type_group.add_argument('--usb2snes', dest='client_type', action='store_const', const='usb2snes')
+  client_type_group.add_argument('--retroarch', dest='client_type', action='store_const', const='retroarch')
   parser.add_argument('--route', action='store_true')
   parser.add_argument('--rebuild', action='store_true')
   parser.add_argument('--port', type=int, default=15000)
@@ -620,7 +622,7 @@ def main():
         on_new_segment=json_generator.new_segment)
 
     timer_thread = TimerThread(history, rooms, doors, transition_log,
-        route, json_generator, server, usb2snes=args.usb2snes,
+        route, json_generator, server, client_type=args.client_type,
         split_segments=split_segments)
     timer_thread.start()
     shutdown.append(timer_thread.stop)

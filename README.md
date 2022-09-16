@@ -17,18 +17,16 @@ using sd2snes, you will need to use qusb2snes.
 Room timer
 ----------
 
-For retroarch (must have network commands enabled on port 55354 or
-55355):
+To run the room timer:
 
 ```
-./sm_room_timer.py [-f <filename.csv>] [--route]
+./sm_room_timer.py [-f <filename.csv>] [--route] [--usb2snes or --retroarch]
 ```
 
-For qusb2snes (required for sd2snes or snes9x-rr):
+If using qusb2snes, use `--usb2snes`.
 
-```
-./sm_room_timer.py --usb2snes [-f <filename.csv>] [--route]
-```
+if using retroarch, use `--retroarch` and enable network commands on
+port 55354 or 55355.
 
 Whenever you enter a new room, the script will capture the room time,
 door time, and lag time, and print them to the screen, along with
@@ -44,7 +42,7 @@ Segment timer
 To use the segment timer instead of the room timer:
 
 ```
-./sm_segment_timer.py [--usb2snes] [-f <filename.csv>] [--route]
+./sm_segment_timer.py [--usb2snes] [-f <filename.csv>] [--route] [--usb2snes or --retroarch]
 ```
 
 The segment timer will capture times just like the room timer, but
@@ -174,7 +172,7 @@ pip install pyqtwebengine
 Then, to run it:
 
 ```
-./sm_web_timer.py [-f <filename.csv>] [--splits <splits file>]
+./sm_web_timer.py [-f <filename.csv>] [--splits <splits file>] [--usb2snes or --retroarch]
 ```
 
 As with the room and segment timers, the `-f` and `--splits` options are
@@ -184,7 +182,7 @@ The web-based GUI timer requires Qt and QtWebengine.  If you do not have
 Qt and QtWebengine installed, you can still run it in headless mode:
 
 ```
-./sm_web_timer.py --headless --port 15000 [-f <filename.csv>] [--splits <splits file>]
+./sm_web_timer.py --headless --port 15000 [-f <filename.csv>] [--splits <splits file>] [--usb2snes or --retroarch]
 ```
 
 (you may need to comment out the import line for PyQt5 if it fails there)

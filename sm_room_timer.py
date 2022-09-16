@@ -366,10 +366,10 @@ def backup_and_rebuild(rooms, doors, filename):
       if unlink: os.unlink(tmp.name)
 
 class ThreadedStateReader(object):
-  def __init__(self, rooms, doors, usb2snes, logger):
+  def __init__(self, rooms, doors, client_type, logger):
     self.rooms = rooms
     self.doors = doors
-    self.usb2snes = usb2snes
+    self.client_type = client_type
     self.logger = logger
     self.queue = Queue()
     self.thread = Thread(target=self._run)
@@ -408,14 +408,18 @@ class ThreadedStateReader(object):
       loop.stop()
 
   def _create_sock(self):
-    if self.usb2snes:
+    if self.client_type == 'usb2snes':
       return WebsocketClient('sm_room_timer')
-    else:
+    elif self.client_type == 'retroarch':
       # TODO: since we are running in a thread, we should not use the
       # main logger, since it is not guaranteed to be thread-safe.
       # Instead, the socket should issue callbacks for events so we can
       # correctly capture them.
       return NetworkCommandSocket(logger=self.logger)
+    elif self.client_type is None:
+      raise ValueError('No client type provided')
+    else:
+      raise ValueError('Invalid client type %s' % self.client_type)
 
   def read_state(self):
     return self.queue.get()
@@ -428,7 +432,9 @@ def main():
   parser.add_argument('--debug', dest='debug', action='store_true')
   parser.add_argument('--debug-log', dest='debug_log_filename')
   parser.add_argument('--verbose', dest='verbose', action='store_true')
-  parser.add_argument('--usb2snes', action='store_true')
+  client_type_group = parser.add_mutually_exclusive_group(required=True)
+  client_type_group.add_argument('--usb2snes', dest='client_type', action='store_const', const='usb2snes')
+  client_type_group.add_argument('--retroarch', dest='client_type', action='store_const', const='retroarch')
   parser.add_argument('--route', action='store_true')
   parser.add_argument('--rebuild', action='store_true')
   args = parser.parse_args()
@@ -476,7 +482,7 @@ def main():
 
   state_reader = ThreadedStateReader(
       rooms, doors,
-      usb2snes=args.usb2snes, logger=frontend)
+      client_type=args.client_type, logger=frontend)
   state_reader.start()
 
   try:
