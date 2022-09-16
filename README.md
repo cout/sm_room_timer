@@ -9,10 +9,29 @@ while playing the [Super Metroid practice hack](https://smpractice.speedga.me/).
 Requirements
 ------------
 
+You must have python installed to use the timer (I use python 3.8.5, but
+it should work with newer versions too; if it does not, please file a
+bug report).
+
 You must have version 2.4.2 of the Super Metroid practice hack.
 
 The room timer will work with either qusb2snes or retroarch.  If you are
 using sd2snes, you will need to use qusb2snes.
+
+If you want to run the GUI version of the timer (`sm_web_timer.py`; see
+below), install requirements using:
+
+```
+pip install -r gui-requirements.txt
+```
+
+If you are only using the timers that run in a terminal
+(`sm_room_timer.py` and `sm_segment_timer.py`), install requirements
+using:
+
+```
+pip install -r requirements.txt
+```
 
 Room timer
 ----------
@@ -162,14 +181,8 @@ GUI timer (new!)
 
 A new web-based GUI timer is in development; it combines the room timer,
 segment timer, and segment stats watcher into a single application.
-First, install the necessary requirements:
 
-```
-pip install pyqt5
-pip install pyqtwebengine
-```
-
-Then, to run it:
+To run it:
 
 ```
 ./sm_web_timer.py [-f <filename.csv>] [--splits <splits file>] [--usb2snes or --retroarch]
