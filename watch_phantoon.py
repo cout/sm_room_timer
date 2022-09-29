@@ -77,6 +77,35 @@ class PhantoonState(object):
         realtime_room=realtime_room,
         )
 
+class PhantoonFight(object):
+  def __init__(self):
+    self.round_num = 0
+    self.sub_round_num = 0
+    self.round_id = None
+    self.round_count = 0
+    self.sub_round_count = 0
+
+  def new_round(self):
+    self.round_num += 1
+    self.sub_round_num = 0
+    self.round_id = self.round_num
+    self.round_count += 1
+
+  def new_sub_round(self):
+    self.sub_round_num += 1
+    self.round_id = '%d.%d' % (self.round_num, self.sub_round_num)
+    self.sub_round_count += 1
+
+  def is_fight_over(self, state):
+    return self.round_num > 0 and state.state in (
+      # 0xd948,
+      0xd98b,
+      0xda51,
+      0xda86,
+      0xdad7,
+      0xdb3d,
+      )
+
 class PhantoonWatcher(object):
   def __init__(self, sock):
     self.sock = sock
@@ -86,10 +115,7 @@ class PhantoonWatcher(object):
     self.reset()
 
   def reset(self):
-    self.round_num = 0
-    self.sub_round_num = 0
-    self.round_count = 0
-    self.sub_round_count = 0
+    self.fight = PhantoonFight()
     self.fast_patterns = 0
     self.mid_patterns = 0
     self.slow_patterns = 0
@@ -98,7 +124,6 @@ class PhantoonWatcher(object):
     self.slow_eye_close_patterns = 0
     self.eye_open_speeds = [ ]
     self.eye_close_speeds = [ ]
-    self.round_id = None
     self.side = None
     self.speed = None
     self.volleys = [ ]
@@ -112,7 +137,7 @@ class PhantoonWatcher(object):
     self.last_transition_time = None
 
   def side_from_state(self, state):
-    if self.round_num == 1 and self.sub_round_num == 0:
+    if self.fight.round_num == 1 and self.fight.sub_round_num == 0:
       return 'RIGHT' if state.round_one_side == 0 else 'LEFT'
     else:
       return 'RIGHT' if state.x_pos > 128 else 'LEFT'
@@ -126,7 +151,7 @@ class PhantoonWatcher(object):
       return 'FAST'
 
   def new_round(self, state):
-    if self.round_id is None:
+    if self.fight.round_id is None:
       return
 
     self.report_previous_round(state)
@@ -141,15 +166,15 @@ class PhantoonWatcher(object):
     self.in_dopplers = False
 
   def report_previous_round(self, state):
-    if self.sub_round_num == 0:
+    if self.fight.sub_round_num == 0:
       print()
 
-    if self.round_id is not None:
+    if self.fight.round_id is not None:
       if self.eye_close_speed is not None:
-        print('ROUND', self.round_id, 'was a', self.side, self.speed,
+        print('ROUND', self.fight.round_id, 'was a', self.side, self.speed,
         '(eye close %s)' % self.eye_close_speed)
       else:
-        print('ROUND', self.round_id, 'was a', self.side, self.speed)
+        print('ROUND', self.fight.round_id, 'was a', self.side, self.speed)
 
       if self.speed == 'FAST':
         self.fast_patterns += 1
@@ -165,7 +190,7 @@ class PhantoonWatcher(object):
       elif self.eye_close_speed == 'SLOW':
         self.slow_eye_close_patterns += 1
 
-      if self.sub_round_num == 0:
+      if self.fight.sub_round_num == 0:
         self.eye_open_speeds.append(self.speed)
       else:
         # self.eye_open_speeds[-1] += ("+%s" % self.speed)
@@ -191,7 +216,7 @@ class PhantoonWatcher(object):
       dopplers = [ str(t) for t in self.doppler_timings ]
       dopplers_hit = [ str(t) for t in self.doppler_hit_timings ]
 
-      print('ROUND', self.round_id, 'DAMAGE', last_round_damage, volley_damage)
+      print('ROUND', self.fight.round_id, 'DAMAGE', last_round_damage, volley_damage)
       print('  DOPPLERS:', ', '.join(dopplers))
       print('  DOPPLERS HIT:', ', '.join(dopplers_hit))
 
@@ -205,9 +230,9 @@ class PhantoonWatcher(object):
       print(state.hit_points, 'HIT POINTS REMAIN')
 
   def report_fight_summary(self, state):
-      rounds = '%s' % self.round_count
-      if self.sub_round_count > 0:
-        rounds += ('+%s' % self.sub_round_count)
+      rounds = '%s' % self.fight.round_count
+      if self.fight.sub_round_count > 0:
+        rounds += ('+%s' % self.fight.sub_round_count)
       # print('PHANTOON HAS LEFT THE SHIP')
       print()
       print('Fight summary:')
@@ -236,16 +261,6 @@ class PhantoonWatcher(object):
 
     return False
 
-  def is_fight_over(self, state):
-    return self.round_num > 0 and state.state in (
-      # 0xd948,
-      0xd98b,
-      0xda51,
-      0xda86,
-      0xdad7,
-      0xdb3d,
-      )
-
   def poll(self):
     state = PhantoonState.read_from(sock)
 
@@ -266,7 +281,7 @@ class PhantoonWatcher(object):
       self.last_round_hit_points = state.hit_points
       self.reset()
 
-    if self.is_fight_over(state) and not self.reported_fight_summary:
+    if self.fight.is_fight_over(state) and not self.reported_fight_summary:
       self.report_fight_summary(state)
       self.reported_fight_summary = True
 
@@ -278,13 +293,9 @@ class PhantoonWatcher(object):
     # d5e7 - first half of a round (phantoon invisible)
     if self.prev_state is not None and self.prev_state.state != 0xd5e7 and state.state == 0xd5e7:
       self.new_round(state)
+      self.fight.new_round()
 
       self.last_round_hit_points = state.hit_points
-
-      self.round_num += 1
-      self.round_count += 1
-      self.sub_round_num = 0
-      self.round_id = self.round_num
 
       self.side = self.side_from_state(state)
       self.speed = self.speed_from_state(state)
@@ -293,10 +304,7 @@ class PhantoonWatcher(object):
     if self.prev_state is not None and self.prev_state.state != 0xd82a and state.state == 0xd82a:
       self.missed_eye_close = True
       self.new_round(state)
-
-      self.sub_round_num += 1
-      self.sub_round_count += 1
-      self.round_id = '%d.%d' % (self.round_num, self.sub_round_num)
+      self.fight.new_sub_round()
 
       self.side = self.side_from_state(state)
       self.speed = self.speed_from_state(state)
