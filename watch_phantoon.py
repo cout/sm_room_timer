@@ -15,6 +15,9 @@ import sys
 
 WRAM_START = 0x7EFD00 - 0x7E0000
 
+def format_time(frames):
+  return "%s'%02d" % (frames // 60, frames % 60)
+
 class PhantoonState(object):
   def __init__(self, **attrs):
     for name in attrs:
@@ -92,6 +95,8 @@ class PhantoonFight(object):
     self.eye_open_speeds = [ ]
     self.eye_close_speeds = [ ]
 
+    self.fight_time = None
+
   def new_round(self, state):
     self.round_num += 1
     self.sub_round_num = 0
@@ -123,6 +128,9 @@ class PhantoonFight(object):
     else:
       return 'FAST'
 
+  def fight_ended(self, state):
+    self.fight_time = state.realtime_room + 726 # 1024 if called from state d948
+
   def is_fight_over(self, state):
     return self.round_num > 0 and state.state in (
       # 0xd948,
@@ -131,6 +139,21 @@ class PhantoonFight(object):
       0xda86,
       0xdad7,
       0xdb3d,
+      )
+
+  def summary(self):
+      rounds = '%s' % self.round_count
+      if self.sub_round_count > 0:
+        rounds += ('+%s' % self.sub_round_count)
+
+      fight_time = format_time(self.fight_time)
+      eye_open_speeds = ', '.join(self.eye_open_speeds)
+      eye_close_speeds = ', '.join(self.eye_close_speeds)
+
+      return (
+        'Phantoon was defeated in %s rounds in %s' % (rounds, fight_time),
+        'Eye open speeds were: %s' % eye_open_speeds,
+        'Eye close speeds were: %s' % eye_close_speeds,
       )
 
 class PhantoonWatcher(object):
@@ -192,9 +215,6 @@ class PhantoonWatcher(object):
         else:
           self.fight.eye_close_speeds.append(self.eye_close_speed)
 
-  def format_time(self, frames):
-    return "%s'%02d" % (frames // 60, frames % 60)
-
   def report_damage(self, state):
     last_round_damage = self.last_round_hit_points - state.hit_points
 
@@ -210,7 +230,6 @@ class PhantoonWatcher(object):
       print('  DOPPLERS HIT:', ', '.join(dopplers_hit))
 
     if state.hit_points == 0:
-      # self.report_fight_summary(state)
       print()
       print('PHANTOON HAS LEFT THE SHIP')
       pass
@@ -218,18 +237,11 @@ class PhantoonWatcher(object):
     elif last_round_damage > 0:
       print(state.hit_points, 'HIT POINTS REMAIN')
 
-  def report_fight_summary(self, state):
-      rounds = '%s' % self.fight.round_count
-      if self.fight.sub_round_count > 0:
-        rounds += ('+%s' % self.fight.sub_round_count)
-      # print('PHANTOON HAS LEFT THE SHIP')
+  def report_fight_summary(self):
       print()
       print('Fight summary:')
-      print('  Phantoon was defeated in', rounds, 'rounds in',
-          # self.format_time(state.realtime_room + 1024))
-          self.format_time(state.realtime_room + 726))
-      print('  Eye open speeds were:', ', '.join(self.fight.eye_open_speeds))
-      print('  Eye close speeds were:', ', '.join(self.fight.eye_close_speeds))
+      for line in self.fight.summary():
+        print('  %s' % line)
 
   # TODO TODO TODO
   #
@@ -268,7 +280,8 @@ class PhantoonWatcher(object):
       self.reset()
 
     if self.fight.is_fight_over(state) and not self.reported_fight_summary:
-      self.report_fight_summary(state)
+      self.fight.fight_ended(state)
+      self.report_fight_summary()
       self.reported_fight_summary = True
 
     # d408 - initial fireball spin
