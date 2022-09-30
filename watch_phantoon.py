@@ -91,6 +91,7 @@ class PhantoonFight(object):
 
     self.speed = None
     self.side = None
+    self.eye_close_speed = None
 
     self.eye_open_speeds = [ ]
     self.eye_close_speeds = [ ]
@@ -113,6 +114,7 @@ class PhantoonFight(object):
   def _new_round_or_sub_round(self, state):
     self.side = self._side_from_state(state)
     self.speed = self._speed_from_state(state)
+    self.eye_close_speed = None
 
   def _side_from_state(self, state):
     if self.round_num == 1 and self.sub_round_num == 0:
@@ -127,6 +129,14 @@ class PhantoonFight(object):
       return 'MID'
     else:
       return 'FAST'
+
+  def eye_opened(self, state):
+    if state.timer > 30:
+      self.eye_close_speed = 'SLOW'
+    elif state.timer > 15:
+      self.eye_close_speed = 'MID'
+    else:
+      self.eye_close_speed = 'FAST'
 
   def fight_ended(self, state):
     self.fight_time = state.realtime_room + 726 # 1024 if called from state d948
@@ -167,7 +177,6 @@ class PhantoonWatcher(object):
   def reset(self):
     self.fight = PhantoonFight()
     self.volleys = [ ]
-    self.eye_close_speed = None
     self.missed_eye_close = False
     self.doppler_timings = [ ]
     self.doppler_hit_times = [ ]
@@ -184,7 +193,6 @@ class PhantoonWatcher(object):
     self.report_damage(state)
 
     self.volleys = [ ]
-    self.eye_close_speed = None
     self.missed_eye_close = False
     self.doppler_timings = [ ]
     self.doppler_hit_times = [ ]
@@ -196,10 +204,10 @@ class PhantoonWatcher(object):
       print()
 
     if self.fight.round_id is not None:
-      if self.eye_close_speed is not None:
+      if self.fight.eye_close_speed is not None:
         print('ROUND', self.fight.round_id, 'was a',
             self.fight.side, self.fight.speed,
-            '(eye close %s)' % self.eye_close_speed)
+            '(eye close %s)' % self.fight.eye_close_speed)
       else:
         print('ROUND', self.fight.round_id, 'was a',
             self.fight.side, self.fight.speed)
@@ -209,11 +217,11 @@ class PhantoonWatcher(object):
       else:
         self.fight.eye_open_speeds[-1] += ("+%s" % self.fight.speed.lower())
 
-      if self.eye_close_speed is not None:
+      if self.fight.eye_close_speed is not None:
         if self.missed_eye_close:
-          self.fight.eye_close_speeds.append(self.eye_close_speed + ' (missed)')
+          self.fight.eye_close_speeds.append(self.fight.eye_close_speed + ' (missed)')
         else:
-          self.fight.eye_close_speeds.append(self.eye_close_speed)
+          self.fight.eye_close_speeds.append(self.fight.eye_close_speed)
 
   def report_damage(self, state):
     last_round_damage = self.last_round_hit_points - state.hit_points
@@ -311,13 +319,8 @@ class PhantoonWatcher(object):
         self.volleys.append(self.prev_state.volley_damage)
 
     # d60d - phantoon's eye is open
-    if state.state == 0xd60d and self.eye_close_speed is None:
-      if state.timer > 30:
-        self.eye_close_speed = 'SLOW'
-      elif state.timer > 15:
-        self.eye_close_speed = 'MID'
-      else:
-        self.eye_close_speed = 'FAST'
+    if state.state == 0xd60d and self.prev_state.state != 0xd60d:
+      self.fight.eye_opened(state)
 
     # d678 - phantoon is swooping
     if state.state == 0xd678:
