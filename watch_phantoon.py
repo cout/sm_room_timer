@@ -174,6 +174,8 @@ class PhantoonFight(object):
       else:
         self.eye_close_speeds.append(self.eye_close_speed)
 
+    self.last_round_damage = self.round_start_hit_points - state.hit_points
+
   def fight_ended(self, state):
     self.fight_time = state.realtime_room + 726 # 1024 if called from state d948
 
@@ -196,6 +198,18 @@ class PhantoonFight(object):
     else:
       l.append('ROUND %s was a %s %s' % (self.round_id, self.side,
         self.speed))
+
+    if self.last_round_damage > 0:
+      volleys = [ str(volley) for volley in self.volleys ]
+      volley_damage = '(%s)' % (', '.join(volleys))
+
+      dopplers = [ str(t) for t in self.doppler_timings ]
+      dopplers_hit = [ str(t) for t in self.doppler_hit_timings ]
+
+      l.append('ROUND %s DAMAGE %s %s ' % (self.round_id,
+        self.last_round_damage, volley_damage))
+      l.append('  DOPPLERS: %s' % ', '.join(dopplers))
+      l.append('  DOPPLERS HIT: %s' % ', '.join(dopplers_hit))
 
     return l
 
@@ -234,7 +248,14 @@ class PhantoonWatcher(object):
   def round_ended(self, state):
     self.fight.round_ended(state)
     self.report_previous_round(state)
-    self.report_previous_round_damage(state)
+
+    if state.hit_points == 0:
+      print()
+      print('PHANTOON HAS LEFT THE SHIP')
+      pass
+
+    elif self.fight.last_round_damage > 0:
+      print(state.hit_points, 'HIT POINTS REMAIN')
 
     self.in_dopplers = False
 
@@ -245,28 +266,6 @@ class PhantoonWatcher(object):
     if self.fight.round_id is not None:
       for line in self.fight.round_summary():
         print(line)
-
-  def report_previous_round_damage(self, state):
-    last_round_damage = self.fight.round_start_hit_points - state.hit_points
-
-    if last_round_damage > 0:
-      volleys = [ str(volley) for volley in self.fight.volleys ]
-      volley_damage = '(%s)' % (', '.join(volleys))
-
-      dopplers = [ str(t) for t in self.fight.doppler_timings ]
-      dopplers_hit = [ str(t) for t in self.fight.doppler_hit_timings ]
-
-      print('ROUND', self.fight.round_id, 'DAMAGE', last_round_damage, volley_damage)
-      print('  DOPPLERS:', ', '.join(dopplers))
-      print('  DOPPLERS HIT:', ', '.join(dopplers_hit))
-
-    if state.hit_points == 0:
-      print()
-      print('PHANTOON HAS LEFT THE SHIP')
-      pass
-
-    elif last_round_damage > 0:
-      print(state.hit_points, 'HIT POINTS REMAIN')
 
   def report_fight_summary(self):
       print()
