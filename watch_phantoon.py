@@ -94,6 +94,9 @@ class PhantoonFight(object):
     self.eye_close_speed = None
     self.missed_eye_close = None
     self.volleys = [ ]
+    self.doppler_timings = [ ]
+    self.doppler_hit_times = [ ]
+    self.doppler_hit_timings = [ ]
 
     self.eye_open_speeds = [ ]
     self.eye_close_speeds = [ ]
@@ -120,6 +123,9 @@ class PhantoonFight(object):
     self.speed = self._speed_from_state(state)
     self.eye_close_speed = None
     self.volleys = [ ]
+    self.doppler_timings = [ ]
+    self.doppler_hit_times = [ ]
+    self.doppler_hit_timings = [ ]
 
   def _side_from_state(self, state):
     if self.round_num == 1 and self.sub_round_num == 0:
@@ -145,6 +151,15 @@ class PhantoonFight(object):
 
   def volley_ended(self, volley_damage):
     self.volleys.append(volley_damage)
+
+  def shot_doppler(self, shot_timer):
+    self.doppler_timings.append(shot_timer)
+
+  def doppler_hit(self, realtime_room):
+    if len(self.doppler_hit_times) > 0:
+      hit_timing = realtime_room - self.doppler_hit_times[-1]
+      self.doppler_hit_timings.append(hit_timing)
+    self.doppler_hit_times.append(realtime_room)
 
   def fight_ended(self, state):
     self.fight_time = state.realtime_room + 726 # 1024 if called from state d948
@@ -184,9 +199,6 @@ class PhantoonWatcher(object):
 
   def reset(self):
     self.fight = PhantoonFight()
-    self.doppler_timings = [ ]
-    self.doppler_hit_times = [ ]
-    self.doppler_hit_timings = [ ]
     self.in_dopplers = False
     self.reported_fight_summary = False
     self.last_transition_time = None
@@ -198,9 +210,6 @@ class PhantoonWatcher(object):
     self.report_previous_round(state)
     self.report_damage(state)
 
-    self.doppler_timings = [ ]
-    self.doppler_hit_times = [ ]
-    self.doppler_hit_timings = [ ]
     self.in_dopplers = False
 
   def report_previous_round(self, state):
@@ -234,8 +243,8 @@ class PhantoonWatcher(object):
       volleys = [ str(volley) for volley in self.fight.volleys ]
       volley_damage = '(%s)' % (', '.join(volleys))
 
-      dopplers = [ str(t) for t in self.doppler_timings ]
-      dopplers_hit = [ str(t) for t in self.doppler_hit_timings ]
+      dopplers = [ str(t) for t in self.fight.doppler_timings ]
+      dopplers_hit = [ str(t) for t in self.fight.doppler_hit_timings ]
 
       print('ROUND', self.fight.round_id, 'DAMAGE', last_round_damage, volley_damage)
       print('  DOPPLERS:', ', '.join(dopplers))
@@ -327,19 +336,18 @@ class PhantoonWatcher(object):
     # d678 - phantoon is swooping
     if state.state == 0xd678:
       if not self.in_dopplers:
-        # print("DOPPLER START")
         self.in_dopplers = True
 
       if self.prev_state is not None and \
         state.shot_timer < self.prev_state.shot_timer and \
         state.selected_item == 1:
-        self.doppler_timings.append(self.prev_state.shot_timer)
+        self.fight.shot_doppler(self.prev_state.shot_timer)
 
       if state.hit_points != self.prev_state.hit_points:
-        if len(self.doppler_hit_times) > 0:
-          self.doppler_hit_timings.append(
-              state.realtime_room - self.doppler_hit_times[-1])
-        self.doppler_hit_times.append(state.realtime_room)
+        if len(self.fight.doppler_hit_times) > 0:
+          self.fight.doppler_hit_timings.append(
+              state.realtime_room - self.fight.doppler_hit_times[-1])
+        self.fight.doppler_hit_times.append(state.realtime_room)
 
     self.prev_state = state
 
