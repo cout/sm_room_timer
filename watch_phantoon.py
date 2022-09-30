@@ -126,6 +126,7 @@ class PhantoonFight(object):
     self.doppler_timings = [ ]
     self.doppler_hit_times = [ ]
     self.doppler_hit_timings = [ ]
+    self.round_start_hit_points = state.hit_points
 
   def _side_from_state(self, state):
     if self.round_num == 1 and self.sub_round_num == 0:
@@ -218,7 +219,6 @@ class PhantoonWatcher(object):
     self.sock = sock
 
     self.prev_state = None
-    self.last_round_hit_points = 0
     self.reset()
 
   def reset(self):
@@ -247,7 +247,7 @@ class PhantoonWatcher(object):
         print(line)
 
   def report_previous_round_damage(self, state):
-    last_round_damage = self.last_round_hit_points - state.hit_points
+    last_round_damage = self.fight.round_start_hit_points - state.hit_points
 
     if last_round_damage > 0:
       volleys = [ str(volley) for volley in self.fight.volleys ]
@@ -307,7 +307,6 @@ class PhantoonWatcher(object):
       # print('Selected item is now:', state.selected_item)
 
     if self.is_reset(state):
-      self.last_round_hit_points = state.hit_points
       self.reset()
 
     if self.fight.is_fight_over(state) and not self.reported_fight_summary:
@@ -324,8 +323,6 @@ class PhantoonWatcher(object):
     if self.prev_state is not None and self.prev_state.state != 0xd5e7 and state.state == 0xd5e7:
       self.new_round(state)
       self.fight.new_round(state)
-
-      self.last_round_hit_points = state.hit_points
 
     # d82a - second half of a round (phantoon visible)
     if self.prev_state is not None and self.prev_state.state != 0xd82a and state.state == 0xd82a:
