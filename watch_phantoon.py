@@ -93,6 +93,7 @@ class PhantoonFight(object):
     self.side = None
     self.eye_close_speed = None
     self.missed_eye_close = None
+    self.volleys = [ ]
 
     self.eye_open_speeds = [ ]
     self.eye_close_speeds = [ ]
@@ -118,6 +119,7 @@ class PhantoonFight(object):
     self.side = self._side_from_state(state)
     self.speed = self._speed_from_state(state)
     self.eye_close_speed = None
+    self.volleys = [ ]
 
   def _side_from_state(self, state):
     if self.round_num == 1 and self.sub_round_num == 0:
@@ -140,6 +142,9 @@ class PhantoonFight(object):
       self.eye_close_speed = 'MID'
     else:
       self.eye_close_speed = 'FAST'
+
+  def volley_ended(self, volley_damage):
+    self.volleys.append(volley_damage)
 
   def fight_ended(self, state):
     self.fight_time = state.realtime_room + 726 # 1024 if called from state d948
@@ -179,7 +184,6 @@ class PhantoonWatcher(object):
 
   def reset(self):
     self.fight = PhantoonFight()
-    self.volleys = [ ]
     self.doppler_timings = [ ]
     self.doppler_hit_times = [ ]
     self.doppler_hit_timings = [ ]
@@ -194,7 +198,6 @@ class PhantoonWatcher(object):
     self.report_previous_round(state)
     self.report_damage(state)
 
-    self.volleys = [ ]
     self.doppler_timings = [ ]
     self.doppler_hit_times = [ ]
     self.doppler_hit_timings = [ ]
@@ -228,7 +231,7 @@ class PhantoonWatcher(object):
     last_round_damage = self.last_round_hit_points - state.hit_points
 
     if last_round_damage > 0:
-      volleys = [ str(volley) for volley in self.volleys ]
+      volleys = [ str(volley) for volley in self.fight.volleys ]
       volley_damage = '(%s)' % (', '.join(volleys))
 
       dopplers = [ str(t) for t in self.doppler_timings ]
@@ -314,9 +317,8 @@ class PhantoonWatcher(object):
       self.new_round(state)
 
     if self.prev_state is not None and self.prev_state.volley_damage != state.volley_damage:
-      # print('VOLLEY DAMAGE', state.volley_damage)
       if state.volley_damage == 0:
-        self.volleys.append(self.prev_state.volley_damage)
+        self.fight.volley_ended(self.prev_state.volley_damage)
 
     # d60d - phantoon's eye is open
     if state.state == 0xd60d and self.prev_state.state != 0xd60d:
