@@ -89,6 +89,9 @@ class PhantoonFight(object):
     self.speed = None
     self.side = None
 
+    self.eye_open_speeds = [ ]
+    self.eye_close_speeds = [ ]
+
   def new_round(self, state):
     self.round_num += 1
     self.sub_round_num = 0
@@ -140,8 +143,6 @@ class PhantoonWatcher(object):
 
   def reset(self):
     self.fight = PhantoonFight()
-    self.eye_open_speeds = [ ]
-    self.eye_close_speeds = [ ]
     self.volleys = [ ]
     self.eye_close_speed = None
     self.missed_eye_close = False
@@ -181,15 +182,15 @@ class PhantoonWatcher(object):
             self.fight.side, self.fight.speed)
 
       if self.fight.sub_round_num == 0:
-        self.eye_open_speeds.append(self.fight.speed)
+        self.fight.eye_open_speeds.append(self.fight.speed)
       else:
-        self.eye_open_speeds[-1] += ("+%s" % self.fight.speed.lower())
+        self.fight.eye_open_speeds[-1] += ("+%s" % self.fight.speed.lower())
 
       if self.eye_close_speed is not None:
         if self.missed_eye_close:
-          self.eye_close_speeds.append(self.eye_close_speed + ' (missed)')
+          self.fight.eye_close_speeds.append(self.eye_close_speed + ' (missed)')
         else:
-          self.eye_close_speeds.append(self.eye_close_speed)
+          self.fight.eye_close_speeds.append(self.eye_close_speed)
 
   def format_time(self, frames):
     return "%s'%02d" % (frames // 60, frames % 60)
@@ -227,8 +228,8 @@ class PhantoonWatcher(object):
       print('  Phantoon was defeated in', rounds, 'rounds in',
           # self.format_time(state.realtime_room + 1024))
           self.format_time(state.realtime_room + 726))
-      print('  Eye open speeds were:', ', '.join(self.eye_open_speeds))
-      print('  Eye close speeds were:', ', '.join(self.eye_close_speeds))
+      print('  Eye open speeds were:', ', '.join(self.fight.eye_open_speeds))
+      print('  Eye close speeds were:', ', '.join(self.fight.eye_close_speeds))
 
   # TODO TODO TODO
   #
