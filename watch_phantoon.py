@@ -161,6 +161,18 @@ class PhantoonFight(object):
       self.doppler_hit_timings.append(hit_timing)
     self.doppler_hit_times.append(realtime_room)
 
+  def round_ended(self, state):
+    if self.sub_round_num == 0:
+      self.eye_open_speeds.append(self.speed)
+    else:
+      self.eye_open_speeds[-1] += ("+%s" % self.speed.lower())
+
+    if self.eye_close_speed is not None:
+      if self.missed_eye_close:
+        self.eye_close_speeds.append(self.eye_close_speed + ' (missed)')
+      else:
+        self.eye_close_speeds.append(self.eye_close_speed)
+
   def fight_ended(self, state):
     self.fight_time = state.realtime_room + 726 # 1024 if called from state d948
 
@@ -173,6 +185,18 @@ class PhantoonFight(object):
       0xdad7,
       0xdb3d,
       )
+
+  def round_summary(self):
+    l = [ ]
+
+    if self.eye_close_speed is not None:
+      l.append('ROUND %s was a %s %s (eye close %s)' % (self.round_id,
+        self.side, self.speed, self.eye_close_speed))
+    else:
+      l.append('ROUND %s was a %s %s' % (self.round_id, self.side,
+        self.speed))
+
+    return l
 
   def summary(self):
       rounds = '%s' % self.round_count
@@ -204,11 +228,13 @@ class PhantoonWatcher(object):
     self.last_transition_time = None
 
   def new_round(self, state):
-    if self.fight.round_id is None:
-      return
+    if self.fight.round_id is not None:
+      self.round_ended(state)
 
+  def round_ended(self, state):
+    self.fight.round_ended(state)
     self.report_previous_round(state)
-    self.report_damage(state)
+    self.report_previous_round_damage(state)
 
     self.in_dopplers = False
 
@@ -217,26 +243,10 @@ class PhantoonWatcher(object):
       print()
 
     if self.fight.round_id is not None:
-      if self.fight.eye_close_speed is not None:
-        print('ROUND', self.fight.round_id, 'was a',
-            self.fight.side, self.fight.speed,
-            '(eye close %s)' % self.fight.eye_close_speed)
-      else:
-        print('ROUND', self.fight.round_id, 'was a',
-            self.fight.side, self.fight.speed)
+      for line in self.fight.round_summary():
+        print(line)
 
-      if self.fight.sub_round_num == 0:
-        self.fight.eye_open_speeds.append(self.fight.speed)
-      else:
-        self.fight.eye_open_speeds[-1] += ("+%s" % self.fight.speed.lower())
-
-      if self.fight.eye_close_speed is not None:
-        if self.fight.missed_eye_close:
-          self.fight.eye_close_speeds.append(self.fight.eye_close_speed + ' (missed)')
-        else:
-          self.fight.eye_close_speeds.append(self.fight.eye_close_speed)
-
-  def report_damage(self, state):
+  def report_previous_round_damage(self, state):
     last_round_damage = self.last_round_hit_points - state.hit_points
 
     if last_round_damage > 0:
