@@ -81,7 +81,7 @@ class PhantoonState(object):
         )
 
 class PhantoonRound(object):
-  def __init__(self, round_num, sub_round_num):
+  def __init__(self, round_num, sub_round_num, state):
     self.round_num = round_num
     self.sub_round_num = sub_round_num
 
@@ -89,6 +89,24 @@ class PhantoonRound(object):
       self.round_id = round_num
     else:
       self.round_id = '%d.%d' % (round_num, sub_round_num)
+
+    self.side = self._side_from_state(state)
+    self.speed = self._speed_from_state(state)
+
+  def _side_from_state(self, state):
+    if self.round_num == 1 and self.sub_round_num == 0:
+      return 'RIGHT' if state.round_one_side == 0 else 'LEFT'
+    else:
+      return 'RIGHT' if state.x_pos > 128 else 'LEFT'
+
+  def _speed_from_state(self, state):
+    if state.pattern_timer > 360:
+      return 'SLOW'
+    elif state.pattern_timer > 60:
+      return 'MID'
+    else:
+      return 'FAST'
+
 
 class PhantoonFight(object):
   def __init__(self):
@@ -99,8 +117,6 @@ class PhantoonFight(object):
     self.round_count = 0
     self.sub_round_count = 0
 
-    self.speed = None
-    self.side = None
     self.eye_close_speed = None
     self.missed_eye_close = None
     self.volleys = [ ]
@@ -116,41 +132,25 @@ class PhantoonFight(object):
   def new_round(self, state):
     self.round_num += 1
     self.sub_round_num = 0
-    self.round = PhantoonRound(self.round_num, self.sub_round_num)
+    self.round = PhantoonRound(self.round_num, self.sub_round_num, state)
     self.round_count += 1
     self.missed_eye_close = False
     self._new_round_or_sub_round(state)
 
   def new_sub_round(self, state):
     self.sub_round_num += 1
-    self.round = PhantoonRound(self.round_num, self.sub_round_num)
+    self.round = PhantoonRound(self.round_num, self.sub_round_num, state)
     self.sub_round_count += 1
     self.missed_eye_close = True
     self._new_round_or_sub_round(state)
 
   def _new_round_or_sub_round(self, state):
-    self.side = self._side_from_state(state)
-    self.speed = self._speed_from_state(state)
     self.eye_close_speed = None
     self.volleys = [ ]
     self.doppler_timings = [ ]
     self.doppler_hit_times = [ ]
     self.doppler_hit_timings = [ ]
     self.round_start_hit_points = state.hit_points
-
-  def _side_from_state(self, state):
-    if self.round_num == 1 and self.sub_round_num == 0:
-      return 'RIGHT' if state.round_one_side == 0 else 'LEFT'
-    else:
-      return 'RIGHT' if state.x_pos > 128 else 'LEFT'
-
-  def _speed_from_state(self, state):
-    if state.pattern_timer > 360:
-      return 'SLOW'
-    elif state.pattern_timer > 60:
-      return 'MID'
-    else:
-      return 'FAST'
 
   def eye_opened(self, state):
     if state.timer > 30:
@@ -174,9 +174,9 @@ class PhantoonFight(object):
 
   def round_ended(self, state):
     if self.sub_round_num == 0:
-      self.eye_open_speeds.append(self.speed)
+      self.eye_open_speeds.append(self.round.speed)
     else:
-      self.eye_open_speeds[-1] += ("+%s" % self.speed.lower())
+      self.eye_open_speeds[-1] += ("+%s" % self.round.speed.lower())
 
     if self.eye_close_speed is not None:
       if self.missed_eye_close:
@@ -204,10 +204,10 @@ class PhantoonFight(object):
 
     if self.eye_close_speed is not None:
       l.append('ROUND %s was a %s %s (eye close %s)' % (self.round.round_id,
-        self.side, self.speed, self.eye_close_speed))
+        self.round.side, self.round.speed, self.eye_close_speed))
     else:
-      l.append('ROUND %s was a %s %s' % (self.round.round_id, self.side,
-        self.speed))
+      l.append('ROUND %s was a %s %s' % (self.round.round_id,
+        self.round.side, self.round.speed))
 
     if self.last_round_damage > 0:
       volleys = [ str(volley) for volley in self.volleys ]
