@@ -92,6 +92,7 @@ class PhantoonRound(object):
 
     self.side = self._side_from_state(state)
     self.speed = self._speed_from_state(state)
+    self.eye_close_speed = None
 
   def _side_from_state(self, state):
     if self.round_num == 1 and self.sub_round_num == 0:
@@ -107,6 +108,13 @@ class PhantoonRound(object):
     else:
       return 'FAST'
 
+  def eye_opened(self, state):
+    if state.timer > 30:
+      self.eye_close_speed = 'SLOW'
+    elif state.timer > 15:
+      self.eye_close_speed = 'MID'
+    else:
+      self.eye_close_speed = 'FAST'
 
 class PhantoonFight(object):
   def __init__(self):
@@ -117,7 +125,6 @@ class PhantoonFight(object):
     self.round_count = 0
     self.sub_round_count = 0
 
-    self.eye_close_speed = None
     self.missed_eye_close = None
     self.volleys = [ ]
     self.doppler_timings = [ ]
@@ -145,7 +152,6 @@ class PhantoonFight(object):
     self._new_round_or_sub_round(state)
 
   def _new_round_or_sub_round(self, state):
-    self.eye_close_speed = None
     self.volleys = [ ]
     self.doppler_timings = [ ]
     self.doppler_hit_times = [ ]
@@ -153,12 +159,7 @@ class PhantoonFight(object):
     self.round_start_hit_points = state.hit_points
 
   def eye_opened(self, state):
-    if state.timer > 30:
-      self.eye_close_speed = 'SLOW'
-    elif state.timer > 15:
-      self.eye_close_speed = 'MID'
-    else:
-      self.eye_close_speed = 'FAST'
+    self.round.eye_opened(state)
 
   def volley_ended(self, volley_damage):
     self.volleys.append(volley_damage)
@@ -178,11 +179,11 @@ class PhantoonFight(object):
     else:
       self.eye_open_speeds[-1] += ("+%s" % self.round.speed.lower())
 
-    if self.eye_close_speed is not None:
+    if self.round.eye_close_speed is not None:
       if self.missed_eye_close:
-        self.eye_close_speeds.append(self.eye_close_speed + ' (missed)')
+        self.eye_close_speeds.append(self.round.eye_close_speed + ' (missed)')
       else:
-        self.eye_close_speeds.append(self.eye_close_speed)
+        self.eye_close_speeds.append(self.round.eye_close_speed)
 
     self.last_round_damage = self.round_start_hit_points - state.hit_points
 
@@ -202,9 +203,9 @@ class PhantoonFight(object):
   def round_summary(self):
     l = [ ]
 
-    if self.eye_close_speed is not None:
+    if self.round.eye_close_speed is not None:
       l.append('ROUND %s was a %s %s (eye close %s)' % (self.round.round_id,
-        self.round.side, self.round.speed, self.eye_close_speed))
+        self.round.side, self.round.speed, self.round.eye_close_speed))
     else:
       l.append('ROUND %s was a %s %s' % (self.round.round_id,
         self.round.side, self.round.speed))
