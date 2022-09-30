@@ -80,11 +80,21 @@ class PhantoonState(object):
         realtime_room=realtime_room,
         )
 
+class PhantoonRound(object):
+  def __init__(self, round_num, sub_round_num):
+    self.round_num = round_num
+    self.sub_round_num = sub_round_num
+
+    if sub_round_num == 0:
+      self.round_id = round_num
+    else:
+      self.round_id = '%d.%d' % (round_num, sub_round_num)
+
 class PhantoonFight(object):
   def __init__(self):
     self.round_num = 0
     self.sub_round_num = 0
-    self.round_id = None
+    self.round = None
 
     self.round_count = 0
     self.sub_round_count = 0
@@ -106,14 +116,14 @@ class PhantoonFight(object):
   def new_round(self, state):
     self.round_num += 1
     self.sub_round_num = 0
-    self.round_id = self.round_num
+    self.round = PhantoonRound(self.round_num, self.sub_round_num)
     self.round_count += 1
     self.missed_eye_close = False
     self._new_round_or_sub_round(state)
 
   def new_sub_round(self, state):
     self.sub_round_num += 1
-    self.round_id = '%d.%d' % (self.round_num, self.sub_round_num)
+    self.round = PhantoonRound(self.round_num, self.sub_round_num)
     self.sub_round_count += 1
     self.missed_eye_close = True
     self._new_round_or_sub_round(state)
@@ -193,10 +203,10 @@ class PhantoonFight(object):
     l = [ ]
 
     if self.eye_close_speed is not None:
-      l.append('ROUND %s was a %s %s (eye close %s)' % (self.round_id,
+      l.append('ROUND %s was a %s %s (eye close %s)' % (self.round.round_id,
         self.side, self.speed, self.eye_close_speed))
     else:
-      l.append('ROUND %s was a %s %s' % (self.round_id, self.side,
+      l.append('ROUND %s was a %s %s' % (self.round.round_id, self.side,
         self.speed))
 
     if self.last_round_damage > 0:
@@ -206,7 +216,7 @@ class PhantoonFight(object):
       dopplers = [ str(t) for t in self.doppler_timings ]
       dopplers_hit = [ str(t) for t in self.doppler_hit_timings ]
 
-      l.append('ROUND %s DAMAGE %s %s ' % (self.round_id,
+      l.append('ROUND %s DAMAGE %s %s ' % (self.round.round_id,
         self.last_round_damage, volley_damage))
       l.append('  DOPPLERS: %s' % ', '.join(dopplers))
       l.append('  DOPPLERS HIT: %s' % ', '.join(dopplers_hit))
@@ -242,7 +252,7 @@ class PhantoonWatcher(object):
     self.last_transition_time = None
 
   def new_round(self, state):
-    if self.fight.round_id is not None:
+    if self.fight.round is not None:
       self.round_ended(state)
 
   def round_ended(self, state):
@@ -263,7 +273,7 @@ class PhantoonWatcher(object):
     if self.fight.sub_round_num == 0:
       print()
 
-    if self.fight.round_id is not None:
+    if self.fight.round is not None:
       for line in self.fight.round_summary():
         print(line)
 
