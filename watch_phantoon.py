@@ -159,6 +159,8 @@ class PhantoonFight(object):
     self.round_start_hit_points = state.hit_points
 
   def eye_opened(self, state):
+    if self.round is None: return
+
     self.round.eye_opened(state)
 
   def volley_ended(self, volley_damage):
@@ -174,6 +176,8 @@ class PhantoonFight(object):
     self.doppler_hit_times.append(realtime_room)
 
   def round_ended(self, state):
+    if self.round is None: return
+
     if self.sub_round_num == 0:
       self.eye_open_speeds.append(self.round.speed)
     else:
@@ -201,6 +205,8 @@ class PhantoonFight(object):
       )
 
   def round_summary(self):
+    if self.round is None: return
+
     l = [ ]
 
     if self.round.eye_close_speed is not None:
