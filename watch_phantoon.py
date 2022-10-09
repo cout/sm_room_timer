@@ -258,14 +258,17 @@ class PhantoonWatcher(object):
     self.reported_fight_summary = False
     self.last_transition_time = None
 
-  def new_round(self, state):
-    if self.fight.round is not None:
-      self.round_ended(state)
-
   def round_ended(self, state):
+    # if this is the first round, then there is no round to end
+    if self.fight.round is None: return
+
     self.fight.round_ended(state)
     self.report_previous_round(state)
+    self.report_phantoon_hit_points(state)
 
+    self.in_dopplers = False
+
+  def report_phantoon_hit_points(self, state):
     if state.hit_points == 0:
       print()
       print('PHANTOON HAS LEFT THE SHIP')
@@ -273,8 +276,6 @@ class PhantoonWatcher(object):
 
     elif self.fight.last_round_damage > 0:
       print(state.hit_points, 'HIT POINTS REMAIN')
-
-    self.in_dopplers = False
 
   def report_previous_round(self, state):
     if self.fight.sub_round_num == 0:
@@ -337,16 +338,17 @@ class PhantoonWatcher(object):
 
     # d5e7 - first half of a round (phantoon invisible)
     if self.prev_state is not None and self.prev_state.state != 0xd5e7 and state.state == 0xd5e7:
-      self.new_round(state)
+      self.round_ended(state)
       self.fight.new_round(state)
 
     # d82a - second half of a round (phantoon visible)
     if self.prev_state is not None and self.prev_state.state != 0xd82a and state.state == 0xd82a:
-      self.new_round(state)
+      self.round_ended(state)
       self.fight.new_sub_round(state)
 
+    # round ended due to phantoon death (no hit points remaining)
     if self.prev_state is not None and state.hit_points == 0 and self.prev_state.hit_points > 0:
-      self.new_round(state)
+      self.round_ended(state)
 
     if self.prev_state is not None and self.prev_state.volley_damage != state.volley_damage:
       if state.volley_damage == 0:
