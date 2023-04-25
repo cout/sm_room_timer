@@ -1,6 +1,13 @@
 from rooms import NullRoom
 from frame_count import FrameCount
 
+def is_preset(state):
+  if state.game_state != 'NormalGameplay': return False
+  if state.room.name == 'Ceres Elevator': return False
+  if state.room.name == 'Mother Brain' and state.last_realtime_room <= FrameCount(8): return True
+  if state.last_realtime_room == FrameCount(0): return True
+  return False
+
 class StateChange(object):
   def __init__(self, prev_state, state, current_room):
     self.prev_state = prev_state
@@ -11,7 +18,7 @@ class StateChange(object):
     self.escaped_ceres = state.game_state == 'StartOfCeresCutscene' and prev_state.game_state == 'NormalGameplay' and state.room.name == 'Ceres Elevator'
     self.reached_ship = state.reached_ship and not prev_state.reached_ship
     self.is_reset = state.igt < prev_state.igt
-    self.is_preset = state.game_state == 'NormalGameplay' and state.last_realtime_room == FrameCount(0) and state.room.name != 'Ceres Elevator'
+    self.is_preset = is_preset(state)
     self.is_loading_preset = prev_state.loading_preset != state.loading_preset and state.loading_preset != 0
     self.door_changed = prev_state.door != state.door
     self.game_state_changed = prev_state.game_state != state.game_state
