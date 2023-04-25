@@ -50,3 +50,6 @@ class FrameCountList(object):
     median = self.median() if len(self.values()) > 0 else "NaN"
     best = self.best() if len(self.values()) > 0 else "NaN"
     return 'avg %s, median %s, best %s' % (mean, median, best)
+
+  def __len__(self):
+    return len(self._values)

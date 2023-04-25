@@ -99,8 +99,13 @@ class SingleSegmentStats(object):
     self.segment_success_count = len(successful_attempts)
     self.rate = self.segment_success_count / self.segment_attempt_count if self.segment_attempt_count > 0 else 0
 
-    self.p50 = successful_attempts.totalrealtimes.median()
-    self.p0 = successful_attempts.totalrealtimes.best()
+    if len(successful_attempts.totalrealtimes) > 0:
+      self.p50 = successful_attempts.totalrealtimes.median()
+      self.p0 = successful_attempts.totalrealtimes.best()
+    else:
+      self.p50 = None
+      self.p0 = None
+
     self.sob = sum_of_best(segment, history)
 
     if any(( is_ceres_escape(tid) for tid in segment )):
@@ -123,9 +128,9 @@ class SegmentStats(object):
       stats = SingleSegmentStats(segment, history)
       self.segments.append(stats)
 
-      self.total_p50 += stats.p50
-      self.total_p0 += stats.p0
-      self.total_sob += stats.sob
+      if stats.p50 is not None: self.total_p50 += stats.p50
+      if stats.p0 is not None: self.total_p0 += stats.p0
+      if stats.sob is not None: self.total_sob += stats.sob
 
 def print_segment_stats(history, segments):
   stats = SegmentStats(history, segments)
