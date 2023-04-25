@@ -45,7 +45,8 @@ class Route(object):
         if n <= 0:
           return tid
 
-    raise RuntimeError("Could not find %s in route" % room.name)
+    route = ", ".join(id.room.name for id in self)
+    raise RuntimeError("Could not find %s in route: %s" % (room.name, route))
 
   def __len__(self):
     return len(self._ids)
