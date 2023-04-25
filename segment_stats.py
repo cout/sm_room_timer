@@ -13,6 +13,7 @@ from sm_segment_timer import find_segment_in_history
 
 import sys
 import argparse
+from dataclasses import dataclass
 
 def sum_of_best(segment, history):
   total = FrameCount(0)
@@ -82,10 +83,15 @@ def print_room_stats(history, segment_history, segments):
     print(table.render())
     print('')
 
+@dataclass
 class SingleSegmentStats(object):
   """
-  Tracks statistics on a single segment within a route.
+  Summary statistics for a single segment within a route.
   """
+
+  p50: FrameCount
+  p0: FrameCount
+  sob: FrameCount
 
   def __init__(self, segment, history):
     self.segment = segment
@@ -113,10 +119,16 @@ class SingleSegmentStats(object):
       self.p0 += FrameCount(2591)
       self.sob += FrameCount(2591)
 
+@dataclass
 class SegmentStats(object):
   """
-  A collection that tracks statistics for all the segments in a route.
+  Summary statistics for all the segments in a route.
   """
+
+  segments: list[Splits]
+  total_p50: FrameCount
+  total_p0: FrameCount
+  total_sob: FrameCount
 
   def __init__(self, history, segments):
     self.segments = [ ]
