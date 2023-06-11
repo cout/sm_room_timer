@@ -528,6 +528,10 @@ def default_zoom_level():
     os.environ.update(e)
 
 def run_qt_browser(url, zoom):
+  # This is required to get the app to run on newer versions of
+  # PyQtWebEngine
+  os.environ['QTWEBENGINE_CHROMIUM_FLAGS'] = '--no-sandbox'
+
   app = BrowserApplication(sys.argv, url, zoom=zoom)
   sys.exit(app.run())
 
