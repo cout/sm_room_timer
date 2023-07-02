@@ -1,4 +1,3 @@
-scipy
-websockets
+-r base-requirements.txt
 pyqt5
 pyqtwebengine
