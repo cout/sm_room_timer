@@ -9,9 +9,9 @@ while playing the [Super Metroid practice hack](https://smpractice.speedga.me/).
 Requirements
 ------------
 
-You must have python installed to use the timer (I use python 3.8.5, but
-it should work with newer versions too; if it does not, please file a
-bug report).
+You must have python installed to use the timer (I use python 3.10.6,
+but it should work with newer versions too; if it does not, please file
+a bug report).
 
 You must have version 2.4.2 or 2.5.0 of the Super Metroid practice hack.
 
