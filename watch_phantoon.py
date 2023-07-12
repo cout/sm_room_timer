@@ -363,16 +363,15 @@ class PhantoonWatcher(object):
       if not self.in_dopplers:
         self.in_dopplers = True
 
+      # TODO - The shot timer is only incremented if the infohud is set
+      # to shot timer mode
       if self.prev_state is not None and \
         state.shot_timer < self.prev_state.shot_timer and \
         state.selected_item == 1:
         self.fight.shot_doppler(self.prev_state.shot_timer)
 
       if state.hit_points != self.prev_state.hit_points:
-        if len(self.fight.doppler_hit_times) > 0:
-          self.fight.doppler_hit_timings.append(
-              state.realtime_room - self.fight.doppler_hit_times[-1])
-        self.fight.doppler_hit_times.append(state.realtime_room)
+        self.fight.doppler_hit(state.realtime_room)
 
     self.prev_state = state
 
