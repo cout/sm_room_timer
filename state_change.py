@@ -2,10 +2,19 @@ from rooms import NullRoom
 from frame_count import FrameCount
 
 def is_preset(state):
+  # TODO: explain why this is here
   if state.game_state != 'NormalGameplay': return False
+
+  # TODO: explain why this is here
   if state.room.name == 'Ceres Elevator': return False
-  if state.room.name == 'Mother Brain' and state.last_realtime_room <= FrameCount(8): return True
+
+  # TODO: explain why this is here (the tourian escape preset does not
+  # clear out the last_realtime_room counter)
+  if state.room.name == 'Mother Brain' and state.last_realtime_room <= FrameCount(16): return True
+
+  # TODO: explain why this is here
   if state.last_realtime_room == FrameCount(0): return True
+
   return False
 
 class StateChange(object):
