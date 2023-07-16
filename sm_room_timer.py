@@ -147,6 +147,9 @@ class RoomTimer(object):
         self.logger.log("Ignoring next transition due to loading a preset")
         self.ignore_next_transition = True
 
+    # TODO: currently, the only thing this does is set a flag in the
+    # segment timer, but really it should only be invoked when a preset
+    # is loaded, not every frame in the room after the preset is loaded
     self.on_preset_loaded(state, change)
 
   def handle_reset(self, state, change):
