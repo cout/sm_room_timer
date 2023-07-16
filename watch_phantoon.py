@@ -370,6 +370,19 @@ class PhantoonWatcher(object):
         state.selected_item == 1:
         self.fight.shot_doppler(self.prev_state.shot_timer)
 
+      # TODO:
+      # 1. This assumes the hit points were reduced from a doppler, but
+      #    it could have been a missile or a charge shot (probably
+      #    impossible to know just from scraping memory)
+      # 2. The two initial missile volleys are also counted as dopplers,
+      #    but they probably should not be.  Phantoon's state is the
+      #    same in both cases, but iirc there is another variable that
+      #    controls phantoon's movement in the swoop.
+      # - ideally we would count the number of volleys, but we currently
+      #   count volleys based on when the volley damage value goes to 0.
+      #   As a result, the second and third volleys get lumped together
+      #   into a single volley (which is how the boss logic works, but
+      #   not how most players think about it).
       if state.hit_points != self.prev_state.hit_points:
         self.fight.doppler_hit(state.realtime_room)
 
